@@ -1,0 +1,28 @@
+{
+  "name": "mfee74-final-team3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node --watch index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-mysql-session": "^3.0.3",
+    "express-session": "^1.19.0",
+    "moment-timezone": "^0.6.2",
+    "multer": "^2.1.1",
+    "mysql2": "^3.22.3",
+    "uuid": "^14.0.0",
+    "bcrypt": "^6.0.0",
+    "nodemailer": "^8.0.7"
+  }
+}
