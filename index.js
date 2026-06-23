@@ -10,12 +10,11 @@ import multer from "multer"; // 檔案上傳中間件
 import moment from "moment-timezone"; // 時間處理工具
 import pool, { closeMysqlPool } from "./utils/connect-mysql.js"; // 測試+監控SQL連線池
 
-// import authRoutes from "./routes/auth.js";
-// import productRoutes from "./routes/products.js";
-// import cmsRoutes from "./routes/cms.js";
-// import petsRoutes from "./routes/pets.js";
-// import orderRoutes from "./routes/orders.js";
-// import couponRoutes from "./routes/coupons.js";
+import authRoutes from "./routes/auth.js";
+import productRoutes from "./routes/products.js";
+import petsRoutes from "./routes/pets.js";
+import orderRoutes from "./routes/orders.js";
+import couponRoutes from "./routes/coupons.js";
 
 /* ===== 建立 server 個體 ===== */
 const app = express();
@@ -42,22 +41,20 @@ app.use((req, res, next) => {
 });
 
 /* ===== 定義 API Router ===== */
-app.get("/", async (req, res) => {
+app.get("/", (req, res) => {
   res.json({ success: true });
 });
 
-// // 會員
-// app.use("/auth/api", authRoutes);
-// // 首頁、活動頁
-// app.use("/cms/api", cmsRoutes);
-// // 商品
-// app.use("/products/api", productRoutes);
-// // 寵物
-// app.use("/pets/api", petsRoutes);
-// // 訂單
-// app.use("/orders/api", orderRoutes);
-// // 優惠券
-// app.use("/coupons/api", couponRoutes);
+// 會員
+app.use("/api/auth", authRoutes);
+// 商品
+app.use("/api/products", productRoutes);
+// 寵物
+app.use("/api/pets", petsRoutes);
+// 訂單
+app.use("/api/orders", orderRoutes);
+// 優惠券
+app.use("/api/coupons", couponRoutes);
 
 /* ===== 伺服器啟動+監聽 ===== */
 const port = process.env.PORT || 3001;
