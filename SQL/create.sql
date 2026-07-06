@@ -1,4 +1,4 @@
--- Active: 1780228993227@@127.0.0.1@3306@final_team3
+-- Active: 1782194421861@@127.0.0.1@3306@final_team3
 -- 請先選擇目標資料庫後再匯入；本檔不建立資料庫或 member 資料表。
 DROP SCHEMA IF EXISTS final_team3;
 
@@ -66,7 +66,6 @@ CREATE TABLE `items` (
 
 CREATE TABLE `product_special_tags` (
     `id` INT NOT NULL AUTO_INCREMENT,
-    `tag_code` VARCHAR(10) NOT NULL,
     `tag_ch` VARCHAR(50) NOT NULL,
     `tag_slug` VARCHAR(50) NOT NULL,
     PRIMARY KEY (`id`)
@@ -151,7 +150,6 @@ ADD CONSTRAINT `uq_product_item_name` UNIQUE (`prod_id_fk`, `item_name`),
 ADD CONSTRAINT `uq_sku` UNIQUE (`sku`);
 
 ALTER TABLE `product_special_tags`
-ADD CONSTRAINT `uq_special_tag_code` UNIQUE (`tag_code`),
 ADD CONSTRAINT `uq_special_tag_ch` UNIQUE (`tag_ch`),
 ADD CONSTRAINT `uq_special_tag_slug` UNIQUE (`tag_slug`);
 

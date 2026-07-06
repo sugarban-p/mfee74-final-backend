@@ -15,7 +15,7 @@ const getProductListData = async () => {
 };
 
 const getItemListData = async () => {
-  const sql = "SELECT * FROM product_items ORDER BY id ASC;";
+  const sql = "SELECT * FROM items ORDER BY id ASC;";
   const [rows] = await pool.query(sql);
   return {
     success: true,
