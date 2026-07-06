@@ -10094,5 +10094,20 @@ VALUES (1, '大地淺棕', 'CTSP001003'),
 
 INSERT INTO
     product_special_tags (tag_ch, tag_slug)
-VALUES ('幼齡(0~1歲)', 'kitten'),
-    ('孕貓', 'pregnant-cat');
+VALUES ('幼齡(0~1歲)', 'young'),
+    ('成年(1~7歲)', 'adult'),
+    ('熟齡', 'senior'),
+    ('懷孕/產後', 'mom-care'),
+    ('皮膚保健', 'skin-care'),
+    ('腸胃養護', 'stomach-care'),
+    ('毛髮照護', 'coat-care'),
+    ('化毛', 'hairball-care'),
+    ('體重控制', 'weight-control'),
+    ('關節保健', 'joint-care'),
+    ('牙齒保健', 'dental-care'),
+    ('治挑食', 'picky-eater'),
+    ('泌尿保健', 'urinary-care'),
+    ('情緒安撫', 'stress-care'),
+    ('眼睛保健', 'eye-care'),
+    ('低敏', 'hypoallergenic'),
+    ('補水', 'hydration');
