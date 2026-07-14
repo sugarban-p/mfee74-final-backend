@@ -268,7 +268,7 @@ CREATE TABLE `product_images` (
 
 CREATE TABLE `user_favorites` (
     `id` INT NOT NULL AUTO_INCREMENT,
-    `user_id_fk` INT NOT NULL,
+    `user_id_fk` BIGINT NOT NULL,
     `prod_id_fk` INT NOT NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
@@ -298,7 +298,7 @@ CREATE TABLE `pet_attr_details` (
 
 CREATE TABLE `pets` (
     `id` INT NOT NULL AUTO_INCREMENT,
-    `user_id_fk` INT NOT NULL,
+    `user_id_fk` BIGINT NOT NULL,
     `pet_name` VARCHAR(50) NOT NULL,
     `avatar_url` VARCHAR(255),
     `species_option_id_fk` INT NOT NULL,
@@ -334,7 +334,7 @@ CREATE TABLE `pet_health_product_tags` (
 
 CREATE TABLE `pet_ai_logs` (
     `id` INT NOT NULL AUTO_INCREMENT,
-    `user_id_fk` INT NOT NULL,
+    `user_id_fk` BIGINT NOT NULL,
     `pet_id_fk` INT NOT NULL,
     `entry_source` VARCHAR(50) NOT NULL DEFAULT 'pet_dashboard',
     `question` TEXT NOT NULL,
@@ -346,7 +346,7 @@ CREATE TABLE `pet_ai_logs` (
 
 CREATE TABLE `cart_items` (
     `id` INT NOT NULL AUTO_INCREMENT,
-    `user_id_fk` INT NOT NULL,
+    `user_id_fk` BIGINT NOT NULL,
     `sku_id_fk` INT NOT NULL,
     `quantity` INT NOT NULL DEFAULT 1,
     `is_selected` TINYINT NOT NULL DEFAULT 1,
@@ -373,7 +373,7 @@ CREATE TABLE `coupons` (
 CREATE TABLE `orders` (
     `id` INT NOT NULL AUTO_INCREMENT,
     `order_no` VARCHAR(30) NOT NULL,
-    `user_id_fk` INT NOT NULL,
+    `user_id_fk` BIGINT NOT NULL,
     `order_status` TINYINT NOT NULL DEFAULT 1 COMMENT '1=處理中,2=已完成,3=已取消,4=退款中,5=退貨中',
     `payment_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0=未付款,1=付款中,2=已付款,3=付款失敗,4=付款逾期,5=退款中,6=已退款',
     `shipping_status` TINYINT NOT NULL DEFAULT 1 COMMENT '0=無需配送,1=待出貨,2=備貨中,3=已出貨,4=運送中,5=已送達,6=已取貨,7=退貨中,8=已退回',
