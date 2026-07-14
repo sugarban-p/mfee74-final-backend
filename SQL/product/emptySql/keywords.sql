@@ -1,1 +1,0 @@
-INSERT INTO `keywords` (`id`, `keyword`, `slug`) VALUES ();
