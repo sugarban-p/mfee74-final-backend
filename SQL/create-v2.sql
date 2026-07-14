@@ -344,6 +344,124 @@ CREATE TABLE `pet_ai_logs` (
     PRIMARY KEY (`id`)
 ) COMMENT = '寵物 AI 導購問答紀錄';
 
+CREATE TABLE `cart_items` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `user_id_fk` INT NOT NULL,
+    `sku_id_fk` INT NOT NULL,
+    `quantity` INT NOT NULL DEFAULT 1,
+    `is_selected` TINYINT NOT NULL DEFAULT 1,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) COMMENT = '購物車列表';
+
+CREATE TABLE `coupons` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `title` VARCHAR(50) NOT NULL,
+    `code` VARCHAR(30) NOT NULL,
+    `discount_type` ENUM('percent', 'fixed') NOT NULL,
+    `discount_value` INT NOT NULL DEFAULT 0,
+    `min_amount` INT NOT NULL DEFAULT 0,
+    `start_at` DATETIME NULL,
+    `end_at` DATETIME NULL,
+    `is_active` TINYINT NOT NULL DEFAULT 1,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) COMMENT = '優惠券';
+
+CREATE TABLE `orders` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `order_no` VARCHAR(30) NOT NULL,
+    `user_id_fk` INT NOT NULL,
+    `order_status` TINYINT NOT NULL DEFAULT 1 COMMENT '1=處理中,2=已完成,3=已取消,4=退款中,5=退貨中',
+    `payment_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0=未付款,1=付款中,2=已付款,3=付款失敗,4=付款逾期,5=退款中,6=已退款',
+    `shipping_status` TINYINT NOT NULL DEFAULT 1 COMMENT '0=無需配送,1=待出貨,2=備貨中,3=已出貨,4=運送中,5=已送達,6=已取貨,7=退貨中,8=已退回',
+    `items_amount` INT NOT NULL DEFAULT 0,
+    `shipping_fee` INT NOT NULL DEFAULT 0,
+    `coupon_id_fk` INT NULL,
+    `coupon_code` VARCHAR(30) NULL,
+    `coupon_discount` INT NOT NULL DEFAULT 0,
+    `final_amount` INT NOT NULL DEFAULT 0,
+    `payment_method` VARCHAR(20) NOT NULL COMMENT 'credit / atm',
+    `paid_at` DATETIME NULL,
+    `cancelled_at` DATETIME NULL,
+    `completed_at` DATETIME NULL,
+    `invoice_type` VARCHAR(20) NULL,
+    `carrier_no` VARCHAR(50) NULL,
+    `tax_id` VARCHAR(10) NULL,
+    `tax_title` VARCHAR(100) NULL,
+    `remark` TEXT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) COMMENT = '訂單主表';
+
+CREATE TABLE `order_shipping_infos` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `order_id_fk` INT NOT NULL,
+    `receiver_name` VARCHAR(50) NOT NULL,
+    `receiver_phone` VARCHAR(20) NOT NULL,
+    `shipping_method` VARCHAR(20) NOT NULL,
+    `receiver_address` VARCHAR(255) NULL,
+    `store_name` VARCHAR(100) NULL,
+    `store_code` VARCHAR(30) NULL,
+    `tracking_no` VARCHAR(50) NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) COMMENT = '收件資訊';
+
+CREATE TABLE `order_items` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `order_id_fk` INT NOT NULL,
+    `sku_id_fk` INT NOT NULL,
+    `product_name` VARCHAR(100) NOT NULL,
+    `sku_name` VARCHAR(100) NULL,
+    `product_image` VARCHAR(255) NULL,
+    `price` INT NOT NULL DEFAULT 0,
+    `quantity` INT NOT NULL DEFAULT 1,
+    `subtotal` INT NOT NULL DEFAULT 0,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) COMMENT = '訂單明細';
+
+CREATE TABLE `order_status_logs` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `order_id_fk` INT NOT NULL,
+    `status_type` ENUM(
+        'order',
+        'payment',
+        'shipping'
+    ) NOT NULL,
+    `status_value` TINYINT NOT NULL,
+    `note` VARCHAR(255) NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) COMMENT = '訂單狀態歷程';
+
+CREATE TABLE `ecpay_payments` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `order_id_fk` INT NOT NULL,
+    `provider` VARCHAR(20) NOT NULL DEFAULT 'ecpay',
+    `payment_method` VARCHAR(20) NOT NULL COMMENT 'credit / atm',
+    `merchant_trade_no` VARCHAR(50) NOT NULL,
+    `trade_no` VARCHAR(50) NULL,
+    `amount` INT NOT NULL DEFAULT 0,
+    `status` VARCHAR(20) NOT NULL DEFAULT 'pending' COMMENT 'pending / paid / failed / expired / cancelled',
+    `bank_code` VARCHAR(10) NULL,
+    `v_account` VARCHAR(30) NULL,
+    `expire_date` DATETIME NULL,
+    `rtn_code` VARCHAR(20) NULL,
+    `rtn_msg` VARCHAR(255) NULL,
+    `payment_type` VARCHAR(50) NULL,
+    `trade_date` DATETIME NULL,
+    `raw_result` JSON NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) COMMENT = '綠界付款紀錄';
+
 -- 2. UNIQUE KEY
 ALTER TABLE `users`
 ADD CONSTRAINT `uq_users_user_no` UNIQUE (`user_no`);
@@ -435,6 +553,22 @@ ADD CONSTRAINT `uq_pet_health_product_tag` UNIQUE (
     `product_special_tag_id_fk`
 );
 
+ALTER TABLE `cart_items`
+ADD CONSTRAINT `uq_cart_items_user_sku` UNIQUE (`user_id_fk`, `sku_id_fk`);
+
+ALTER TABLE `coupons`
+ADD CONSTRAINT `uq_coupons_code` UNIQUE (`code`);
+
+ALTER TABLE `orders`
+ADD CONSTRAINT `uq_orders_order_no` UNIQUE (`order_no`);
+
+ALTER TABLE `order_shipping_infos`
+ADD CONSTRAINT `uq_order_shipping_infos_order` UNIQUE (`order_id_fk`);
+
+ALTER TABLE `ecpay_payments`
+ADD CONSTRAINT `uq_ecpay_payments_merchant_trade_no` UNIQUE (`merchant_trade_no`),
+ADD CONSTRAINT `uq_ecpay_payments_trade_no` UNIQUE (`trade_no`);
+
 -- 3. FOREIGN KEY
 ALTER TABLE `user_oauth_accounts`
 ADD CONSTRAINT `fk_user_oauth_accounts_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
@@ -517,3 +651,24 @@ ADD CONSTRAINT `fk_pet_health_product_tags_product_tag` FOREIGN KEY (`product_sp
 ALTER TABLE `pet_ai_logs`
 ADD CONSTRAINT `fk_pet_ai_logs_user` FOREIGN KEY (`user_id_fk`) REFERENCES `users` (`id`),
 ADD CONSTRAINT `fk_pet_ai_logs_pet` FOREIGN KEY (`pet_id_fk`) REFERENCES `pets` (`id`);
+
+ALTER TABLE `cart_items`
+ADD CONSTRAINT `fk_cart_items_user` FOREIGN KEY (`user_id_fk`) REFERENCES `users` (`id`),
+ADD CONSTRAINT `fk_cart_items_sku` FOREIGN KEY (`sku_id_fk`) REFERENCES `items` (`id`);
+
+ALTER TABLE `orders`
+ADD CONSTRAINT `fk_orders_user` FOREIGN KEY (`user_id_fk`) REFERENCES `users` (`id`),
+ADD CONSTRAINT `fk_orders_coupon` FOREIGN KEY (`coupon_id_fk`) REFERENCES `coupons` (`id`);
+
+ALTER TABLE `order_shipping_infos`
+ADD CONSTRAINT `fk_order_shipping_infos_order` FOREIGN KEY (`order_id_fk`) REFERENCES `orders` (`id`);
+
+ALTER TABLE `order_items`
+ADD CONSTRAINT `fk_order_items_order` FOREIGN KEY (`order_id_fk`) REFERENCES `orders` (`id`),
+ADD CONSTRAINT `fk_order_items_sku` FOREIGN KEY (`sku_id_fk`) REFERENCES `items` (`id`);
+
+ALTER TABLE `order_status_logs`
+ADD CONSTRAINT `fk_order_status_logs_order` FOREIGN KEY (`order_id_fk`) REFERENCES `orders` (`id`);
+
+ALTER TABLE `ecpay_payments`
+ADD CONSTRAINT `fk_ecpay_payments_order` FOREIGN KEY (`order_id_fk`) REFERENCES `orders` (`id`);
