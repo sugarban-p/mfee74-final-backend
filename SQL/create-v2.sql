@@ -279,7 +279,7 @@ CREATE TABLE `user_favorites` (
     PRIMARY KEY (`id`)
 ) COMMENT = '用戶收藏商品清單';
 
--- 寵物：單選資料直接存在 pets；多選資料統一存在 pet_selected_options。
+-- 寵物：單選資料存於 pets；多選資料存於 pet_selected_options。
 CREATE TABLE `pet_attributes` (
     `id` INT NOT NULL AUTO_INCREMENT,
     `group_name` VARCHAR(50) NOT NULL,
@@ -328,6 +328,14 @@ CREATE TABLE `pet_selected_options` (
     `option_id_fk` INT NOT NULL,
     PRIMARY KEY (`id`)
 ) COMMENT = '寵物多選屬性關聯表';
+
+-- 健康情況選項對應商品特殊標籤，供 AI 導購先篩選候選品項。
+CREATE TABLE `pet_health_product_tags` (
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `health_option_id_fk` INT NOT NULL,
+    `product_special_tag_id_fk` INT NOT NULL,
+    PRIMARY KEY (`id`)
+) COMMENT = '寵物健康情況對應商品特殊標籤';
 
 CREATE TABLE `pet_ai_logs` (
     `id` INT NOT NULL AUTO_INCREMENT,
@@ -422,6 +430,12 @@ ADD CONSTRAINT `uq_pet_selected_option` UNIQUE (
     `option_id_fk`
 );
 
+ALTER TABLE `pet_health_product_tags`
+ADD CONSTRAINT `uq_pet_health_product_tag` UNIQUE (
+    `health_option_id_fk`,
+    `product_special_tag_id_fk`
+);
+
 -- 3. FOREIGN KEY
 ALTER TABLE user_oauth_accounts
 ADD CONSTRAINT fk_user_oauth_accounts_user_id FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
@@ -496,6 +510,10 @@ ALTER TABLE `pet_selected_options`
 ADD CONSTRAINT `fk_pet_selected_options_pet` FOREIGN KEY (`pet_id_fk`) REFERENCES `pets` (`id`),
 ADD CONSTRAINT `fk_pet_selected_options_group` FOREIGN KEY (`option_group_id_fk`) REFERENCES `pet_attributes` (`id`),
 ADD CONSTRAINT `fk_pet_selected_options_option` FOREIGN KEY (`option_id_fk`) REFERENCES `pet_attr_details` (`id`);
+
+ALTER TABLE `pet_health_product_tags`
+ADD CONSTRAINT `fk_pet_health_product_tags_health_option` FOREIGN KEY (`health_option_id_fk`) REFERENCES `pet_attr_details` (`id`),
+ADD CONSTRAINT `fk_pet_health_product_tags_product_tag` FOREIGN KEY (`product_special_tag_id_fk`) REFERENCES `product_special_tags` (`id`);
 
 ALTER TABLE `pet_ai_logs`
 ADD CONSTRAINT `fk_pet_ai_logs_user` FOREIGN KEY (`user_id_fk`) REFERENCES `users` (`id`),
