@@ -6,10 +6,10 @@ import pool from "../utils/connect-mysql.js";
 const router = Router();
 
 const sortList = {
-  default: "sold ASC",
-  latest: "created_at ASC",
-  price_asc: "price ASC",
-  price_desc: "price DESC",
+  default: "total_sold ASC",
+  latest: "p.created_at ASC",
+  price_asc: "p.price ASC",
+  price_desc: "p.price DESC",
 };
 
 const getPetTypeData = async () => {
@@ -26,11 +26,27 @@ const getCategoryData = async () => {
 };
 const categoryList = await getCategoryData();
 
+const attachItemsToProducts = async (products) => {
+  const productIds = products.map((p) => p.id);
+  const sql = `SELECT * FROM items WHERE prod_id_fk IN (?) ORDER BY prod_id_fk, id;`;
+  const [itemRows] = await pool.query(sql, [productIds]);
+
+  const itemMap = {};
+  for (const item of itemRows) {
+    if (!itemMap[item.prod_id_fk]) itemMap[item.prod_id_fk] = [];
+    itemMap[item.prod_id_fk].push(item);
+  }
+
+  return products.map((product) => ({
+    ...product,
+    items: itemMap[product.id] || [],
+  }));
+};
+
 const getProductListData = async (req) => {
   const petType = req.params.petType;
   const category = req.query.category || "";
-  console.log("cat=", category);
-  let tags = req.query.tags || [];
+  let tags = req.query.tags || "";
   let keywords = req.query.keywords || "";
   let priceMin = +req.query["min-value"] || -1;
   let priceMax = +req.query["max-value"] || -1;
@@ -43,7 +59,7 @@ const getProductListData = async (req) => {
     ? categoryList.find((elem) => elem["tag_slug"] === category).id
     : 0;
 
-  const filters = [`WHERE pet_tag_id_fk=${petId}`];
+  const filters = [`WHERE p.pet_tag_id_fk=${petId}`];
   if (categoryId) {
     filters.push(`category_id_fk=${categoryId}`);
   }
@@ -54,35 +70,36 @@ const getProductListData = async (req) => {
     filters.push(`price<=${priceMax}`);
   }
   const sql_filter = filters.join(" AND ");
-  const t_sql = `SELECT COUNT(*) totalRows FROM products ${sql_filter} ;`;
+  const t_sql = `SELECT COUNT(*) totalRows FROM products p ${sql_filter} ;`;
   const [[{ totalRows }]] = await pool.query(t_sql);
   let totalPages = 0;
   let rows = [];
   if (totalRows > 0) {
     totalPages = Math.ceil(totalRows / perPage);
 
-    const sql = `SELECT * FROM products ${sql_filter} ORDER BY id LIMIT ?,?;`;
+    const sql_sort = `ORDER BY ${sortList[sort]} , p.id ASC`;
+
+    const sql = `
+  SELECT
+    p.*,
+    COALESCE(item_stats.total_sold, 0) AS total_sold,
+    COALESCE(item_stats.total_stock, 0) AS total_stock
+  FROM products p
+  LEFT JOIN (
+    SELECT
+      prod_id_fk,
+      SUM(sold) AS total_sold,
+      SUM(stock) AS total_stock
+    FROM items
+    GROUP BY prod_id_fk
+  ) item_stats ON item_stats.prod_id_fk = p.id
+  ${sql_filter}
+  ${sql_sort}
+  LIMIT ?,?;
+`;
     [rows] = await pool.query(sql, [(page - 1) * perPage, perPage]);
 
-    const productIds = rows.map((p) => p.id);
-    let itemRows = [];
-
-    const item_sql = `SELECT * FROM items WHERE prod_id_fk IN (?) ORDER BY prod_id_fk, id;`;
-
-    [itemRows] = await pool.query(item_sql, [productIds]);
-    const itemMap = {};
-
-    for (const item of itemRows) {
-      if (!itemMap[item.prod_id_fk]) {
-        itemMap[item.prod_id_fk] = [];
-      }
-
-      itemMap[item.prod_id_fk].push(item);
-    }
-    rows = rows.map((product) => ({
-      ...product,
-      items: itemMap[product.id] || [],
-    }));
+    if (rows.length) rows = await attachItemsToProducts(rows);
   }
 
   return {
