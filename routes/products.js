@@ -50,12 +50,14 @@ const attachItemsToProducts = async (products) => {
 // 讀取商品列表
 const getProductListData = async (req) => {
   const petType = req.params.petType;
-  const category = req.query.category || "";
-  let tags = req.query.tags || "";
-  let keywords = req.query.keywords || "";
+  const category = req.query.category ?? "";
+  const tags = req.query.tags ? req.query.tags.split(",").filter(Boolean) : [];
+  const keywords = req.query.keywords
+    ? req.query.keywords.split(" ").filter(Boolean)
+    : [];
   let priceMin = +req.query["min-value"] || -1;
   let priceMax = +req.query["max-value"] || -1;
-  let sort = req.query.sort || "default";
+  let sort = req.query.sort ?? "default";
   let page = +req.query.page || 1;
   const perPage = 16;
 
