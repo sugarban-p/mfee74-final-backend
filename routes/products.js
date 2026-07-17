@@ -44,6 +44,26 @@ const getKeywordData = async () => {
 };
 // const keywordList = await getKeywordData();
 
+// sql - 商品說明
+const getProductIntros = async (products) => {
+  const productIds = products.map((p) => p.id);
+  const sql = `
+    SELECT intro_type, intro_text
+    FROM product_intros
+    WHERE prod_id_fk = ?
+    ORDER BY id;
+  `;
+  for (const productId in productIds) {
+    const rows = (await pool.query(sql, 1))[0];
+    const result = rows.reduce((obj, item) => {
+      obj[item.intro_type] = item.intro_text;
+      return obj;
+    }, {});
+    products[productId] = { ...products[productId], intros: result };
+  }
+  return products;
+};
+
 // sql - 品項關鍵字 + tags
 const getItemDetails = async (itemList) => {
   if (!itemList.length) return [];
@@ -173,7 +193,10 @@ const getProductListData = async (filterOptions) => {
       `;
     [rows] = await pool.query(sql, [(currentPage - 1) * perPage, perPage]);
 
-    if (rows.length) rows = await attachItemsToProducts(rows);
+    if (rows.length) {
+      rows = await getProductIntros(rows);
+      rows = await attachItemsToProducts(rows);
+    }
   }
 
   return {
@@ -185,7 +208,7 @@ const getProductListData = async (filterOptions) => {
 };
 
 router.get("/", (req, res) => {
-  return res.redirect("./cat");
+  return res.json({ success: true, page: "product" });
 });
 
 // 取得前端資訊
