@@ -64,6 +64,38 @@ const getProductIntros = async (products) => {
   return products;
 };
 
+// sql - 商品縮圖
+const getProductAvatars = async (products) => {
+  const productIds = products.map((p) => p.id);
+  const sql = `
+    SELECT src, thumbnail, avatar_order
+    FROM product_avatars
+    WHERE prod_id_fk = ?
+    ORDER BY id;
+  `;
+  for (const productId in productIds) {
+    const rows = (await pool.query(sql, 1))[0];
+    products[productId] = { ...products[productId], avatars: rows };
+  }
+  return products;
+};
+
+// sql - 商品介紹圖
+const getProductImages = async (products) => {
+  const productIds = products.map((p) => p.id);
+  const sql = `
+    SELECT src, image_order
+    FROM product_images
+    WHERE prod_id_fk = ?
+    ORDER BY id;
+  `;
+  for (const productId in productIds) {
+    const rows = (await pool.query(sql, 1))[0];
+    products[productId] = { ...products[productId], images: rows };
+  }
+  return products;
+};
+
 // sql - 品項關鍵字 + tags
 const getItemDetails = async (itemList) => {
   if (!itemList.length) return [];
@@ -195,6 +227,8 @@ const getProductListData = async (filterOptions) => {
 
     if (rows.length) {
       rows = await getProductIntros(rows);
+      rows = await getProductAvatars(rows);
+      rows = await getProductImages(rows);
       rows = await attachItemsToProducts(rows);
     }
   }
@@ -249,7 +283,7 @@ router.get("/:petType", async (req, res) => {
     success: true,
     params,
     categories: categoriesCount,
-    products: productData,
+    productData,
   });
 });
 
