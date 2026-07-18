@@ -7,7 +7,7 @@ const router = Router();
 
 // sql - 排序選項 對照
 const sortList = {
-  default: "total_sold ASC",
+  default: "total_sold DESC",
   latest: "p.created_at ASC",
   price_asc: "p.price ASC",
   price_desc: "p.price DESC",
@@ -40,30 +40,6 @@ const countCategoryProduct = async (pet_tag_id) => {
     ORDER BY pct.id;
   `;
   const rows = await pool.query(sql, [pet_tag_id]);
-  return rows[0];
-};
-
-// sql - 關鍵字列表
-const getKeywordData = async (keywordList = []) => {
-  let sql = "SELECT * FROM keywords;";
-  const sqlValues = [];
-  if (keywordList.length) {
-    sql = "SELECT * FROM keywords WHERE id IN (?) ORDER BY id;";
-    sqlValues.push(keywordList);
-  }
-  const rows = await pool.query(sql, sqlValues);
-  return rows[0];
-};
-
-// sql - 商品標籤列表
-const getTagData = async (tagList = []) => {
-  let sql = "SELECT * FROM product_special_tags;";
-  const sqlValues = [];
-  if (tagList.length) {
-    sql = "SELECT * FROM product_special_tags WHERE id IN (?) ORDER BY id;";
-    sqlValues.push(tagList);
-  }
-  const rows = await pool.query(sql, sqlValues);
   return rows[0];
 };
 
@@ -140,8 +116,8 @@ const getItemDetails = async (itemList) => {
 
   const keywordMap = {};
   for (const row of keywordRows) {
-    if (!keywordMap[row.item_id_fk]) keywordMap[row.item_id_fk] = [];
-    keywordMap[row.item_id_fk].push(row.keyword_id_fk);
+    if (!keywordMap[row.item_id_fk]) keywordMap[row.item_id_fk] = new Set();
+    keywordMap[row.item_id_fk].add(row.keyword_id_fk);
   }
 
   const sql_tag = `
@@ -154,14 +130,14 @@ const getItemDetails = async (itemList) => {
 
   const tagMap = {};
   for (const row of tagRows) {
-    if (!tagMap[row.item_id_fk]) tagMap[row.item_id_fk] = [];
-    tagMap[row.item_id_fk].push(row.tag_id_fk);
+    if (!tagMap[row.item_id_fk]) tagMap[row.item_id_fk] = new Set();
+    tagMap[row.item_id_fk].add(row.tag_id_fk);
   }
 
   return itemList.map((item) => ({
     ...item,
-    keywords_id: keywordMap[item.id] || [],
-    tags_id: tagMap[item.id] || [],
+    keywords_id: [...(keywordMap[item.id] || [])],
+    tags_id: [...(tagMap[item.id] || [])],
   }));
 };
 
@@ -175,27 +151,63 @@ const getProductItemMap = async (productIds) => {
   for (const item of itemRows) {
     if (!itemDataMap[item.prod_id_fk]) {
       itemDataMap[item.prod_id_fk] = {
-        keywords_id: [],
-        tags_id: [],
+        keywordSet: new Set(),
+        tagSet: new Set(),
         items: [],
       };
     }
     const itemData = itemDataMap[item.prod_id_fk];
     itemData.items.push(item);
     for (const keywordId of item.keywords_id) {
-      if (!itemData.keywords_id.includes(keywordId)) {
-        itemData.keywords_id.push(keywordId);
-      }
+      itemData.keywordSet.add(keywordId);
     }
     for (const tagId of item.tags_id) {
-      if (!itemData.tags_id.includes(tagId)) itemData.tags_id.push(tagId);
+      itemData.tagSet.add(tagId);
     }
   }
+
+  for (const itemData of Object.values(itemDataMap)) {
+    itemData.keywords_id = [...itemData.keywordSet];
+    itemData.tags_id = [...itemData.tagSet];
+    delete itemData.keywordSet;
+    delete itemData.tagSet;
+  }
+
   return itemDataMap;
 };
 
-// sql - 讀取商品列表
-const getProductListData = async (filterOptions) => {
+// sql - 自由文字搜尋條件
+const searchFilters = [
+  "p.prod_name LIKE ?",
+  `
+    EXISTS (
+      SELECT 1
+      FROM items search_i
+      WHERE search_i.prod_id_fk = p.id AND search_i.item_name LIKE ?
+    )
+  `,
+  `
+    EXISTS (
+      SELECT 1
+      FROM items search_keyword_i
+      INNER JOIN item_keywords search_ik ON search_ik.item_id_fk = search_keyword_i.id
+      INNER JOIN keywords search_k ON search_k.id = search_ik.keyword_id_fk
+      WHERE search_keyword_i.prod_id_fk = p.id AND search_k.keyword LIKE ?
+    )
+  `,
+];
+
+const buildSearchFilter = (search) => {
+  if (!search) return null;
+
+  const likeSearch = `%${search}%`;
+  return {
+    sql: `(${searchFilters.join(" OR ")})`,
+    values: searchFilters.map(() => likeSearch),
+  };
+};
+
+const buildProductFilters = (filterOptions) => {
   const {
     petTypeId,
     selectedCategoryId,
@@ -203,14 +215,12 @@ const getProductListData = async (filterOptions) => {
     selectedKeywords = [],
     priceMin,
     priceMax,
-    sort,
-    currentPage,
+    search,
   } = filterOptions;
-  const perPage = 16;
 
-  // 篩選條件
   const filters = ["p.pet_tag_id_fk = ?"];
   const sqlValues = [petTypeId];
+
   if (selectedCategoryId) {
     filters.push("p.category_id_fk = ?");
     sqlValues.push(selectedCategoryId);
@@ -245,17 +255,89 @@ const getProductListData = async (filterOptions) => {
     `);
     sqlValues.push(keywordId);
   }
-  const sql_filter = `WHERE ${filters.join(" AND ")}`;
 
-  // 讀取商品與品項資料後再計算 pagination
-  let totalRows = 0;
-  let totalPages = 0;
-  let rows = [];
-  let keywordList = [];
-  let keywordData = [];
-  let tagList = [];
-  let tagData = [];
-  const sql_sort = `ORDER BY ${sortList[sort]} , p.id ASC`;
+  const searchFilter = buildSearchFilter(search);
+  if (searchFilter) {
+    filters.push(searchFilter.sql);
+    sqlValues.push(...searchFilter.values);
+  }
+
+  return {
+    sql: `WHERE ${filters.join(" AND ")}`,
+    values: sqlValues,
+  };
+};
+
+const getFacetKeywordData = async (sqlFilter, sqlValues) => {
+  const sql = `
+    SELECT DISTINCT k.*
+    FROM keywords k
+    INNER JOIN item_keywords ik ON ik.keyword_id_fk = k.id
+    INNER JOIN items i ON i.id = ik.item_id_fk
+    INNER JOIN products p ON p.id = i.prod_id_fk
+    ${sqlFilter}
+    ORDER BY k.id;
+  `;
+  const [rows] = await pool.query(sql, sqlValues);
+  return rows;
+};
+
+const getFacetTagData = async (sqlFilter, sqlValues) => {
+  const sql = `
+    SELECT DISTINCT pst.*
+    FROM product_special_tags pst
+    INNER JOIN item_tags it ON it.tag_id_fk = pst.id
+    INNER JOIN items i ON i.id = it.item_id_fk
+    INNER JOIN products p ON p.id = i.prod_id_fk
+    ${sqlFilter}
+    ORDER BY pst.id;
+  `;
+  const [rows] = await pool.query(sql, sqlValues);
+  return rows;
+};
+
+const getProductListData = async (filterOptions) => {
+  const { sort, currentPage } = filterOptions;
+  const perPage = 16;
+
+  // 篩選條件
+  const { sql: sqlFilter, values: sqlValues } =
+    buildProductFilters(filterOptions);
+
+  // 先計算總數與 facet，再只讀取目前頁面的商品明細
+  const sqlSort = `ORDER BY ${sortList[sort]} , p.id ASC`;
+  const countSql = `
+    SELECT COUNT(*) AS totalRows
+    FROM products p
+    ${sqlFilter};
+  `;
+  const [[countData]] = await pool.query(countSql, sqlValues);
+  const totalRows = countData.totalRows;
+  const totalPages = Math.ceil(totalRows / perPage);
+  const pagination = {
+    currentPage,
+    perPage,
+    totalRows,
+    totalPages,
+  };
+  const [keywordData, tagData] = await Promise.all([
+    getFacetKeywordData(sqlFilter, sqlValues),
+    getFacetTagData(sqlFilter, sqlValues),
+  ]);
+
+  if (totalRows && currentPage > totalPages) {
+    return {
+      success: false,
+      facets: {
+        keywords: keywordData,
+        tags: tagData,
+      },
+      pagination,
+      products: [],
+    };
+  }
+
+  const offset = (currentPage - 1) * perPage;
   const sql = `
       SELECT
         p.*,
@@ -270,26 +352,21 @@ const getProductListData = async (filterOptions) => {
         FROM items
         GROUP BY prod_id_fk
       ) item_stats ON item_stats.prod_id_fk = p.id
-      ${sql_filter}
-      ${sql_sort}
+      ${sqlFilter}
+      ${sqlSort}
+      LIMIT ? OFFSET ?
       `;
-  [rows] = await pool.query(sql, sqlValues);
+  let [rows] = await pool.query(sql, [...sqlValues, perPage, offset]);
 
   if (rows.length) {
-    totalRows = rows.length;
-    totalPages = Math.ceil(totalRows / perPage);
-    if (currentPage > totalPages) {
-      return {
-        success: false,
-        totalRows,
-        totalPages,
-        keywordData,
-        tagData,
-        products: [],
-      };
-    }
+    const productIds = rows.map((p) => p.id);
+    const [itemDataMap, introMap, avatarMap, imageMap] = await Promise.all([
+      getProductItemMap(productIds),
+      getProductIntroMap(productIds),
+      getProductAvatarMap(productIds),
+      getProductImageMap(productIds),
+    ]);
 
-    const itemDataMap = await getProductItemMap(rows.map((p) => p.id));
     rows = rows.map((product) => {
       const itemData = itemDataMap[product.id] || {};
       return {
@@ -297,59 +374,20 @@ const getProductListData = async (filterOptions) => {
         keywords_id: itemData.keywords_id || [],
         tags_id: itemData.tags_id || [],
         items: itemData.items || [],
-      };
-    });
-
-    if (rows.length) {
-      const productIds = rows.map((p) => p.id);
-      const [introMap, avatarMap, imageMap] = await Promise.all([
-        getProductIntroMap(productIds),
-        getProductAvatarMap(productIds),
-        getProductImageMap(productIds),
-      ]);
-      rows = rows.map((product) => ({
-        ...product,
         intros: introMap[product.id] || {},
         avatars: avatarMap[product.id] || [],
         images: imageMap[product.id] || [],
-      }));
-    }
-
-    keywordList = rows.reduce((obj, item) => {
-      for (const keywordId of item.keywords_id) {
-        if (!obj.includes(keywordId)) {
-          obj.push(keywordId);
-        }
-      }
-      return obj;
-    }, []);
-
-    if (keywordList.length) {
-      keywordData = await getKeywordData(keywordList);
-    }
-
-    tagList = rows.reduce((obj, item) => {
-      for (const tagId of item.tags_id) {
-        if (!obj.includes(tagId)) {
-          obj.push(tagId);
-        }
-      }
-      return obj;
-    }, []);
-
-    if (tagList.length) {
-      tagData = await getTagData(tagList);
-    }
-
-    rows = rows.slice((currentPage - 1) * perPage, currentPage * perPage);
+      };
+    });
   }
 
   return {
     success: true,
-    totalRows,
-    totalPages,
-    keywordData,
-    tagData,
+    facets: {
+      keywords: keywordData,
+      tags: tagData,
+    },
+    pagination,
     products: rows,
   };
 };
@@ -374,6 +412,7 @@ const getParams = (req) => {
   const priceMax = +req.query["max-value"] || -1;
   const sort = sortList[req.query.sort] ? req.query.sort : "default";
   const currentPage = parsePositiveInt(req.query.page, 1);
+  const search = `${req.query.search ?? ""}`.trim();
   return {
     petTypeId: petTypeData.id,
     selectedCategoryId: categoryData?.id || 0,
@@ -383,6 +422,7 @@ const getParams = (req) => {
     priceMax,
     sort,
     currentPage,
+    search,
   };
 };
 
@@ -391,15 +431,14 @@ const parsePositiveInt = (value, defaultValue) => {
   return Number.isInteger(number) && number > 0 ? number : defaultValue;
 };
 
-const parseIdList = (value) =>
-  [
-    ...new Set(
-      (Array.isArray(value) ? value.join(",") : `${value ?? ""}`)
-        .split(/[,\s]+/)
-        .map((id) => +id)
-        .filter((id) => Number.isInteger(id) && id > 0),
-    ),
-  ];
+const parseIdList = (value) => [
+  ...new Set(
+    (Array.isArray(value) ? value.join(",") : `${value ?? ""}`)
+      .split(/[,\s]+/)
+      .map((id) => +id)
+      .filter((id) => Number.isInteger(id) && id > 0),
+  ),
+];
 
 router.get("/:petType", async (req, res) => {
   const params = getParams(req);
@@ -408,10 +447,15 @@ router.get("/:petType", async (req, res) => {
   const categoriesCount = await countCategoryProduct(params.petTypeId);
   const productData = await getProductListData(params);
   res.json({
-    success: true,
+    success: productData.success,
     params,
-    categories: categoriesCount,
-    productData,
+    facets: {
+      categories: categoriesCount,
+      keywords: productData.facets.keywords,
+      tags: productData.facets.tags,
+    },
+    pagination: productData.pagination,
+    products: productData.products,
   });
 });
 
