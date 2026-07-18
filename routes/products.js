@@ -31,18 +31,41 @@ const categoryList = await getCategoryData();
 
 // sql - 貓/狗 各類別商品數量
 const countCategoryProduct = async (pet_tag_id) => {
-  const sql = `SELECT pct.*, COUNT(p.category_id_fk) AS catCount FROM ( SELECT * FROM products WHERE pet_tag_id_fk = ? ) p LEFT JOIN product_category_tags pct ON p.category_id_fk=pct.id GROUP BY pct.tag_ch ORDER BY pct.id;`;
-  const rows = await pool.query(sql, pet_tag_id);
+  const sql = `
+    SELECT pct.*, COUNT(p.id) AS catCount
+    FROM product_category_tags pct
+    INNER JOIN products p ON p.category_id_fk = pct.id
+    WHERE p.pet_tag_id_fk = ?
+    GROUP BY pct.id, pct.tag_code, pct.tag_ch, pct.tag_slug
+    ORDER BY pct.id;
+  `;
+  const rows = await pool.query(sql, [pet_tag_id]);
   return rows[0];
 };
 
 // sql - 關鍵字列表
-const getKeywordData = async () => {
-  const sql = "SELECT * FROM keywords;";
-  const rows = await pool.query(sql);
+const getKeywordData = async (keywordList = []) => {
+  let sql = "SELECT * FROM keywords;";
+  const sqlValues = [];
+  if (keywordList.length) {
+    sql = "SELECT * FROM keywords WHERE id IN (?) ORDER BY id;";
+    sqlValues.push(keywordList);
+  }
+  const rows = await pool.query(sql, sqlValues);
   return rows[0];
 };
-// const keywordList = await getKeywordData();
+
+// sql - 商品標籤列表
+const getTagData = async (tagList = []) => {
+  let sql = "SELECT * FROM product_special_tags;";
+  const sqlValues = [];
+  if (tagList.length) {
+    sql = "SELECT * FROM product_special_tags WHERE id IN (?) ORDER BY id;";
+    sqlValues.push(tagList);
+  }
+  const rows = await pool.query(sql, sqlValues);
+  return rows[0];
+};
 
 // sql - 商品說明
 const getProductIntroMap = async (productIds) => {
@@ -176,6 +199,8 @@ const getProductListData = async (filterOptions) => {
   const {
     petTypeId,
     selectedCategoryId,
+    selectedTags = [],
+    selectedKeywords = [],
     priceMin,
     priceMax,
     sort,
@@ -184,29 +209,54 @@ const getProductListData = async (filterOptions) => {
   const perPage = 16;
 
   // 篩選條件
-  const filters = [`WHERE p.pet_tag_id_fk=${petTypeId}`];
+  const filters = ["p.pet_tag_id_fk = ?"];
+  const sqlValues = [petTypeId];
   if (selectedCategoryId) {
-    filters.push(`category_id_fk=${selectedCategoryId}`);
+    filters.push("p.category_id_fk = ?");
+    sqlValues.push(selectedCategoryId);
   }
   if (priceMin > 0) {
-    filters.push(`price>=${priceMin}`);
+    filters.push("p.price >= ?");
+    sqlValues.push(priceMin);
   }
   if (priceMax > 0) {
-    filters.push(`price<=${priceMax}`);
+    filters.push("p.price <= ?");
+    sqlValues.push(priceMax);
   }
-  const sql_filter = filters.join(" AND ");
+  if (selectedTags.length) {
+    filters.push(`
+      EXISTS (
+        SELECT 1
+        FROM items tag_i
+        INNER JOIN item_tags it ON it.item_id_fk = tag_i.id
+        WHERE tag_i.prod_id_fk = p.id AND it.tag_id_fk IN (?)
+      )
+    `);
+    sqlValues.push(selectedTags);
+  }
+  for (const keywordId of selectedKeywords) {
+    filters.push(`
+      EXISTS (
+        SELECT 1
+        FROM items keyword_i
+        INNER JOIN item_keywords ik ON ik.item_id_fk = keyword_i.id
+        WHERE keyword_i.prod_id_fk = p.id AND ik.keyword_id_fk = ?
+      )
+    `);
+    sqlValues.push(keywordId);
+  }
+  const sql_filter = `WHERE ${filters.join(" AND ")}`;
 
-  // 讀取商品數量(pagination用)
-  const t_sql = `SELECT COUNT(*) totalRows FROM products p ${sql_filter} ;`;
-  const [[{ totalRows }]] = await pool.query(t_sql);
-
+  // 讀取商品與品項資料後再計算 pagination
+  let totalRows = 0;
   let totalPages = 0;
   let rows = [];
-  if (totalRows > 0) {
-    totalPages = Math.ceil(totalRows / perPage);
-    if (currentPage > totalPages) return { success: false };
-    const sql_sort = `ORDER BY ${sortList[sort]} , p.id ASC`;
-    const sql = `
+  let keywordList = [];
+  let keywordData = [];
+  let tagList = [];
+  let tagData = [];
+  const sql_sort = `ORDER BY ${sortList[sort]} , p.id ASC`;
+  const sql = `
       SELECT
         p.*,
         COALESCE(item_stats.total_sold, 0) AS total_sold,
@@ -222,37 +272,84 @@ const getProductListData = async (filterOptions) => {
       ) item_stats ON item_stats.prod_id_fk = p.id
       ${sql_filter}
       ${sql_sort}
-      LIMIT ?,?;
       `;
-    [rows] = await pool.query(sql, [(currentPage - 1) * perPage, perPage]);
+  [rows] = await pool.query(sql, sqlValues);
+
+  if (rows.length) {
+    totalRows = rows.length;
+    totalPages = Math.ceil(totalRows / perPage);
+    if (currentPage > totalPages) {
+      return {
+        success: false,
+        totalRows,
+        totalPages,
+        keywordData,
+        tagData,
+        products: [],
+      };
+    }
+
+    const itemDataMap = await getProductItemMap(rows.map((p) => p.id));
+    rows = rows.map((product) => {
+      const itemData = itemDataMap[product.id] || {};
+      return {
+        ...product,
+        keywords_id: itemData.keywords_id || [],
+        tags_id: itemData.tags_id || [],
+        items: itemData.items || [],
+      };
+    });
 
     if (rows.length) {
       const productIds = rows.map((p) => p.id);
-      const [introMap, avatarMap, imageMap, itemDataMap] = await Promise.all([
+      const [introMap, avatarMap, imageMap] = await Promise.all([
         getProductIntroMap(productIds),
         getProductAvatarMap(productIds),
         getProductImageMap(productIds),
-        getProductItemMap(productIds),
       ]);
-      rows = rows.map((product) => {
-        const itemData = itemDataMap[product.id] || {};
-        return {
-          ...product,
-          intros: introMap[product.id] || {},
-          avatars: avatarMap[product.id] || [],
-          images: imageMap[product.id] || [],
-          keywords_id: itemData.keywords_id || [],
-          tags_id: itemData.tags_id || [],
-          items: itemData.items || [],
-        };
-      });
+      rows = rows.map((product) => ({
+        ...product,
+        intros: introMap[product.id] || {},
+        avatars: avatarMap[product.id] || [],
+        images: imageMap[product.id] || [],
+      }));
     }
+
+    keywordList = rows.reduce((obj, item) => {
+      for (const keywordId of item.keywords_id) {
+        if (!obj.includes(keywordId)) {
+          obj.push(keywordId);
+        }
+      }
+      return obj;
+    }, []);
+
+    if (keywordList.length) {
+      keywordData = await getKeywordData(keywordList);
+    }
+
+    tagList = rows.reduce((obj, item) => {
+      for (const tagId of item.tags_id) {
+        if (!obj.includes(tagId)) {
+          obj.push(tagId);
+        }
+      }
+      return obj;
+    }, []);
+
+    if (tagList.length) {
+      tagData = await getTagData(tagList);
+    }
+
+    rows = rows.slice((currentPage - 1) * perPage, currentPage * perPage);
   }
 
   return {
     success: true,
     totalRows,
     totalPages,
+    keywordData,
+    tagData,
     products: rows,
   };
 };
@@ -264,26 +361,24 @@ router.get("/", (req, res) => {
 // 取得前端資訊
 const getParams = (req) => {
   const petType = req.params.petType;
-  const petTypeId = petTypeList.find((elem) => elem["tag_slug"] === petType).id;
+  const petTypeData = /^\d+$/.test(petType)
+    ? petTypeList.find((elem) => elem.id === +petType)
+    : petTypeList.find((elem) => elem["tag_slug"] === petType);
+  if (!petTypeData) return null;
+
   const selectedCategory = req.query.category ?? "";
-  const selectedCategoryId = selectedCategory.length
-    ? categoryList.find((elem) => elem["tag_slug"] === selectedCategory).id
-    : 0;
-  const selectedTags = req.query.tags
-    ? req.query.tags.split(",").filter(Boolean)
-    : [];
-  const selectedKeywords = req.query.keywords
-    ? req.query.keywords.split(" ").filter(Boolean)
-    : [];
+  const categoryData = /^\d+$/.test(selectedCategory)
+    ? categoryList.find((elem) => elem.id === +selectedCategory)
+    : categoryList.find((elem) => elem["tag_slug"] === selectedCategory);
   const priceMin = +req.query["min-value"] || -1;
   const priceMax = +req.query["max-value"] || -1;
-  const sort = req.query.sort ?? "default";
-  const currentPage = +req.query.page || 1;
+  const sort = sortList[req.query.sort] ? req.query.sort : "default";
+  const currentPage = parsePositiveInt(req.query.page, 1);
   return {
-    petTypeId,
-    selectedCategoryId,
-    selectedTags,
-    selectedKeywords,
+    petTypeId: petTypeData.id,
+    selectedCategoryId: categoryData?.id || 0,
+    selectedTags: parseIdList(req.query.tags),
+    selectedKeywords: parseIdList(req.query.keywords),
     priceMin,
     priceMax,
     sort,
@@ -291,8 +386,25 @@ const getParams = (req) => {
   };
 };
 
+const parsePositiveInt = (value, defaultValue) => {
+  const number = +value;
+  return Number.isInteger(number) && number > 0 ? number : defaultValue;
+};
+
+const parseIdList = (value) =>
+  [
+    ...new Set(
+      (Array.isArray(value) ? value.join(",") : `${value ?? ""}`)
+        .split(/[,\s]+/)
+        .map((id) => +id)
+        .filter((id) => Number.isInteger(id) && id > 0),
+    ),
+  ];
+
 router.get("/:petType", async (req, res) => {
   const params = getParams(req);
+  if (!params) return res.status(400).json({ success: false });
+
   const categoriesCount = await countCategoryProduct(params.petTypeId);
   const productData = await getProductListData(params);
   res.json({
