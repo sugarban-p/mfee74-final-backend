@@ -45,55 +45,61 @@ const getKeywordData = async () => {
 // const keywordList = await getKeywordData();
 
 // sql - 商品說明
-const getProductIntros = async (products) => {
-  const productIds = products.map((p) => p.id);
+const getProductIntroMap = async (productIds) => {
   const sql = `
-    SELECT intro_type, intro_text
+    SELECT prod_id_fk, intro_type, intro_text
     FROM product_intros
-    WHERE prod_id_fk = ?
-    ORDER BY id;
+    WHERE prod_id_fk IN (?)
+    ORDER BY prod_id_fk, id;
   `;
-  for (const productId in productIds) {
-    const rows = (await pool.query(sql, 1))[0];
-    const result = rows.reduce((obj, item) => {
-      obj[item.intro_type] = item.intro_text;
-      return obj;
-    }, {});
-    products[productId] = { ...products[productId], intros: result };
+  const [introRows] = await pool.query(sql, [productIds]);
+  const introMap = {};
+  for (const row of introRows) {
+    if (!introMap[row.prod_id_fk]) introMap[row.prod_id_fk] = {};
+    introMap[row.prod_id_fk][row.intro_type] = row.intro_text;
   }
-  return products;
+  return introMap;
 };
 
 // sql - 商品縮圖
-const getProductAvatars = async (products) => {
-  const productIds = products.map((p) => p.id);
+const getProductAvatarMap = async (productIds) => {
   const sql = `
-    SELECT src, thumbnail, avatar_order
+    SELECT prod_id_fk, src, thumbnail, avatar_order
     FROM product_avatars
-    WHERE prod_id_fk = ?
-    ORDER BY id;
+    WHERE prod_id_fk IN (?)
+    ORDER BY prod_id_fk, id;
   `;
-  for (const productId in productIds) {
-    const rows = (await pool.query(sql, 1))[0];
-    products[productId] = { ...products[productId], avatars: rows };
+  const [avatarRows] = await pool.query(sql, [productIds]);
+  const avatarMap = {};
+  for (const row of avatarRows) {
+    if (!avatarMap[row.prod_id_fk]) avatarMap[row.prod_id_fk] = [];
+    avatarMap[row.prod_id_fk].push({
+      src: row.src,
+      thumbnail: row.thumbnail,
+      avatar_order: row.avatar_order,
+    });
   }
-  return products;
+  return avatarMap;
 };
 
 // sql - 商品介紹圖
-const getProductImages = async (products) => {
-  const productIds = products.map((p) => p.id);
+const getProductImageMap = async (productIds) => {
   const sql = `
-    SELECT src, image_order
+    SELECT prod_id_fk, src, image_order
     FROM product_images
-    WHERE prod_id_fk = ?
-    ORDER BY id;
+    WHERE prod_id_fk IN (?)
+    ORDER BY prod_id_fk, id;
   `;
-  for (const productId in productIds) {
-    const rows = (await pool.query(sql, 1))[0];
-    products[productId] = { ...products[productId], images: rows };
+  const [imageRows] = await pool.query(sql, [productIds]);
+  const imageMap = {};
+  for (const row of imageRows) {
+    if (!imageMap[row.prod_id_fk]) imageMap[row.prod_id_fk] = [];
+    imageMap[row.prod_id_fk].push({
+      src: row.src,
+      image_order: row.image_order,
+    });
   }
-  return products;
+  return imageMap;
 };
 
 // sql - 品項關鍵字 + tags
@@ -137,37 +143,32 @@ const getItemDetails = async (itemList) => {
 };
 
 // sql - 依商品(篩選後)讀取底下的所有品項
-const attachItemsToProducts = async (products) => {
-  const productIds = products.map((p) => p.id);
+const getProductItemMap = async (productIds) => {
   const sql = `SELECT * FROM items WHERE prod_id_fk IN (?) ORDER BY prod_id_fk, id;`;
   let [itemRows] = await pool.query(sql, [productIds]);
   itemRows = await getItemDetails(itemRows);
 
-  const itemMap = {};
-  const keywordMap = {};
-  const tagMap = {};
+  const itemDataMap = {};
   for (const item of itemRows) {
-    if (!itemMap[item.prod_id_fk]) {
-      itemMap[item.prod_id_fk] = [];
-      keywordMap[item.prod_id_fk] = [];
-      tagMap[item.prod_id_fk] = [];
+    if (!itemDataMap[item.prod_id_fk]) {
+      itemDataMap[item.prod_id_fk] = {
+        keywords_id: [],
+        tags_id: [],
+        items: [],
+      };
     }
-    itemMap[item.prod_id_fk].push(item);
-    item.keywords_id.map((k) => {
-      if (!keywordMap[item.prod_id_fk].includes(k))
-        keywordMap[item.prod_id_fk].push(k);
-    });
-    item.tags_id.map((k) => {
-      if (!tagMap[item.prod_id_fk].includes(k)) tagMap[item.prod_id_fk].push(k);
-    });
+    const itemData = itemDataMap[item.prod_id_fk];
+    itemData.items.push(item);
+    for (const keywordId of item.keywords_id) {
+      if (!itemData.keywords_id.includes(keywordId)) {
+        itemData.keywords_id.push(keywordId);
+      }
+    }
+    for (const tagId of item.tags_id) {
+      if (!itemData.tags_id.includes(tagId)) itemData.tags_id.push(tagId);
+    }
   }
-
-  return products.map((product) => ({
-    ...product,
-    keywords_id: keywordMap[product.id] || [],
-    tags_id: tagMap[product.id] || [],
-    items: itemMap[product.id] || [],
-  }));
+  return itemDataMap;
 };
 
 // sql - 讀取商品列表
@@ -226,10 +227,25 @@ const getProductListData = async (filterOptions) => {
     [rows] = await pool.query(sql, [(currentPage - 1) * perPage, perPage]);
 
     if (rows.length) {
-      rows = await getProductIntros(rows);
-      rows = await getProductAvatars(rows);
-      rows = await getProductImages(rows);
-      rows = await attachItemsToProducts(rows);
+      const productIds = rows.map((p) => p.id);
+      const [introMap, avatarMap, imageMap, itemDataMap] = await Promise.all([
+        getProductIntroMap(productIds),
+        getProductAvatarMap(productIds),
+        getProductImageMap(productIds),
+        getProductItemMap(productIds),
+      ]);
+      rows = rows.map((product) => {
+        const itemData = itemDataMap[product.id] || {};
+        return {
+          ...product,
+          intros: introMap[product.id] || {},
+          avatars: avatarMap[product.id] || [],
+          images: imageMap[product.id] || [],
+          keywords_id: itemData.keywords_id || [],
+          tags_id: itemData.tags_id || [],
+          items: itemData.items || [],
+        };
+      });
     }
   }
 
