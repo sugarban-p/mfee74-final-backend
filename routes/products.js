@@ -440,6 +440,96 @@ const parseIdList = (value) => [
   ),
 ];
 
+// 新增/修改品項數量 到 購物車 `cart_items`
+router.post("/updateCart/:itemId", async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: "請先登入",
+    });
+  }
+
+  const itemId = +req.params.itemId;
+  const qty = +req.body.qty; // 修改後的數量（absolute quantity），不是變動量（delta）
+
+  if (
+    !Number.isInteger(itemId) ||
+    itemId <= 0 ||
+    !Number.isInteger(qty) ||
+    qty <= 0
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "品項或數量格式錯誤",
+    });
+  }
+
+  try {
+    await pool.query(
+      `
+        INSERT INTO cart_items (user_id_fk, sku_id_fk, quantity)
+        VALUES (?, ?, ?)
+        ON DUPLICATE KEY UPDATE quantity = ?;
+      `,
+      [userId, itemId, qty, qty],
+    );
+
+    return res.json({ success: true });
+  } catch (err) {
+    if (err.code === "ER_NO_REFERENCED_ROW_2") {
+      return res.status(404).json({
+        success: false,
+        message: "找不到品項",
+      });
+    }
+
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "更新購物車失敗",
+    });
+  }
+});
+
+// 移除 購物車品項 `cart_items`
+router.delete("/updatecart/:itemId", async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: "請先登入",
+    });
+  }
+
+  const itemId = +req.params.itemId;
+
+  if (!Number.isInteger(itemId) || itemId <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "品項格式錯誤",
+    });
+  }
+
+  try {
+    await pool.query(
+      `
+        DELETE FROM cart_items
+        WHERE user_id_fk = ? AND sku_id_fk = ?;
+      `,
+      [userId, itemId],
+    );
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "移除購物車品項失敗",
+    });
+  }
+});
+
 router.get("/:petType/:productId", async (req, res) => {
   const params = getParams(req);
   if (!params) return res.status(400).json({ success: false });
