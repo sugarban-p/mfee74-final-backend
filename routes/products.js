@@ -440,6 +440,65 @@ const parseIdList = (value) => [
   ),
 ];
 
+// 讀取購物車
+router.get("/getCart", async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: "請先登入",
+    });
+  }
+
+  try {
+    const [cartItems] = await pool.query(
+      `
+        SELECT
+          ci.id AS cart_id,
+          ci.sku_id_fk AS item_id,
+          ci.quantity,
+          ci.is_selected,
+          i.sku,
+          i.item_name,
+          i.stock,
+          p.id AS product_id,
+          p.prod_name,
+          p.slug,
+          p.price,
+          p.price * ci.quantity AS subtotal,
+          (
+            SELECT pa.src
+            FROM product_avatars pa
+            WHERE pa.prod_id_fk = p.id
+            ORDER BY pa.avatar_order, pa.id
+            LIMIT 1
+          ) AS avatar
+        FROM cart_items ci
+        INNER JOIN items i ON i.id = ci.sku_id_fk
+        INNER JOIN products p ON p.id = i.prod_id_fk
+        WHERE ci.user_id_fk = ?
+        ORDER BY ci.updated_at DESC, ci.id DESC;
+      `,
+      [userId],
+    );
+
+    return res.json({
+      success: true,
+      cartItems,
+      totalAmount: cartItems.reduce(
+        (sum, item) => sum + Number(item.subtotal),
+        0,
+      ),
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "讀取購物車失敗",
+    });
+  }
+});
+
 // 新增/修改品項數量 到 購物車 `cart_items`
 router.post("/updateCart/:itemId", async (req, res) => {
   const userId = req.user?.id;
