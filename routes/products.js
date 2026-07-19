@@ -5,6 +5,12 @@ import pool from "../utils/connect-mysql.js";
 
 const router = Router();
 
+// 測試用：假登入
+router.use((req, res, next) => {
+  req.user = { id: 1 };
+  next();
+});
+
 // sql - 排序選項 對照
 const sortList = {
   default: "total_sold DESC",
