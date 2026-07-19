@@ -440,6 +440,59 @@ const parseIdList = (value) => [
   ),
 ];
 
+router.get("/:petType/:productId", async (req, res) => {
+  const params = getParams(req);
+  if (!params) return res.status(400).json({ success: false });
+
+  const productId = req.params.productId;
+  const productFilter = /^\d+$/.test(productId) ? "p.id = ?" : "p.slug = ?";
+  const [[product]] = await pool.query(
+    `
+      SELECT p.*
+      FROM products p
+      WHERE p.pet_tag_id_fk = ? AND ${productFilter}
+      LIMIT 1;
+    `,
+    [params.petTypeId, /^\d+$/.test(productId) ? +productId : productId],
+  );
+
+  if (!product) return res.status(404).json({ success: false });
+
+  const [itemDataMap, introMap, avatarMap, imageMap, [tags]] =
+    await Promise.all([
+      getProductItemMap([product.id]),
+      getProductIntroMap([product.id]),
+      getProductAvatarMap([product.id]),
+      getProductImageMap([product.id]),
+      pool.query(
+        `
+          SELECT DISTINCT pst.*
+          FROM product_special_tags pst
+          INNER JOIN item_tags it ON it.tag_id_fk = pst.id
+          INNER JOIN items i ON i.id = it.item_id_fk
+          WHERE i.prod_id_fk = ?
+          ORDER BY pst.id;
+        `,
+        [product.id],
+      ),
+    ]);
+  const itemData = itemDataMap[product.id] || {};
+
+  res.json({
+    success: true,
+    productData: {
+      id: product.id,
+      productName: product.prod_name,
+      tags,
+      price: product.price,
+      items: itemData.items || [],
+      avatars: avatarMap[product.id] || [],
+      images: imageMap[product.id] || [],
+      intros: introMap[product.id] || {},
+    },
+  });
+});
+
 router.get("/:petType", async (req, res) => {
   const params = getParams(req);
   if (!params) return res.status(400).json({ success: false });
