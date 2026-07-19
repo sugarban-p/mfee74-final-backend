@@ -440,6 +440,117 @@ const parseIdList = (value) => [
   ),
 ];
 
+// 新增/取消 收藏商品 `user_favorites`
+router.patch("/updateFavorite/:productId", async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: "請先登入",
+    });
+  }
+  const productId = +req.params.productId;
+  const isFavorite = req.body.favorite; // Boolean (true=收藏，false=取消收藏)
+
+  if (
+    !Number.isInteger(productId) ||
+    productId <= 0 ||
+    typeof isFavorite !== "boolean"
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "商品或收藏狀態格式錯誤",
+    });
+  }
+
+  try {
+    if (isFavorite) {
+      await pool.query(
+        `
+          INSERT INTO user_favorites (user_id_fk, prod_id_fk)
+          VALUES (?, ?)
+          ON DUPLICATE KEY UPDATE prod_id_fk = prod_id_fk;
+        `,
+        [userId, productId],
+      );
+    } else {
+      await pool.query(
+        `
+          DELETE FROM user_favorites
+          WHERE user_id_fk = ? AND prod_id_fk = ?;
+        `,
+        [userId, productId],
+      );
+    }
+
+    return res.json({ success: true, favorite: isFavorite });
+  } catch (err) {
+    if (err.code === "ER_NO_REFERENCED_ROW_2") {
+      return res.status(404).json({
+        success: false,
+        message: "找不到商品",
+      });
+    }
+
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "更新收藏失敗",
+    });
+  }
+});
+
+// 讀取收藏列表 `user_favorites`
+router.get("/getFavorite", async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({
+      success: false,
+      message: "請先登入",
+    });
+  }
+
+  try {
+    const [favorites] = await pool.query(
+      `
+        SELECT
+          uf.id AS favorite_id,
+          uf.prod_id_fk AS product_id,
+          uf.created_at AS favorited_at,
+          p.prod_name,
+          p.slug,
+          p.price,
+          (
+            SELECT pi.intro_text
+            FROM product_intros pi
+            WHERE pi.prod_id_fk = p.id AND pi.intro_type = 'slogan'
+            LIMIT 1
+          ) AS slogan,
+          (
+            SELECT pa.src
+            FROM product_avatars pa
+            WHERE pa.prod_id_fk = p.id
+            ORDER BY pa.avatar_order, pa.id
+            LIMIT 1
+          ) AS avatar
+        FROM user_favorites uf
+        INNER JOIN products p ON p.id = uf.prod_id_fk
+        WHERE uf.user_id_fk = ?
+        ORDER BY uf.created_at DESC, uf.id DESC;
+      `,
+      [userId],
+    );
+
+    return res.json({ success: true, favorites });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "讀取收藏列表失敗",
+    });
+  }
+});
+
 // 讀取購物車
 router.get("/getCart", async (req, res) => {
   const userId = req.user?.id;
