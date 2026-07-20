@@ -6,7 +6,7 @@ node_modules/
 *.html
 temp.*
 
-*.rest
+# *.rest
 
 test-pets-api.http
 
