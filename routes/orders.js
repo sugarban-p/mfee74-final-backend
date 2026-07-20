@@ -3,9 +3,10 @@
 import crypto from "crypto";
 import { Router } from "express";
 import pool from "../utils/connect-mysql.js";
+import { requireAuth } from "../utils/auth-session.js";
 
 const router = Router();
-const demoUserId = 1;
+router.use(requireAuth);
 
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 const backendUrl = process.env.BACKEND_URL || "http://localhost:3001";
@@ -81,7 +82,10 @@ function getPaymentText(method) {
 function getOrderBadge(order) {
   if (order.order_status === 3) return orderStatusMap[3];
   if (order.order_status === 2) return orderStatusMap[2];
-  return shippingStatusMap[order.shipping_status] || orderStatusMap[order.order_status];
+  return (
+    shippingStatusMap[order.shipping_status] ||
+    orderStatusMap[order.order_status]
+  );
 }
 
 function getPaymentBadge(status) {
@@ -192,6 +196,7 @@ router.get("/", (req, res) => {
 });
 
 router.get("/cart", async (req, res) => {
+  const demoUserId = req.currentUser.id;
   const [rows] = await pool.query(
     `SELECT
       ci.id,
@@ -221,6 +226,7 @@ router.get("/cart", async (req, res) => {
 });
 
 router.patch("/cart/:id", async (req, res) => {
+  const demoUserId = req.currentUser.id;
   const quantity = Math.max(1, Number(req.body.quantity) || 1);
 
   await pool.query(
@@ -232,6 +238,7 @@ router.patch("/cart/:id", async (req, res) => {
 });
 
 router.delete("/cart/:id", async (req, res) => {
+  const demoUserId = req.currentUser.id;
   await pool.query(`DELETE FROM cart_items WHERE id = ? AND user_id_fk = ?`, [
     req.params.id,
     demoUserId,
@@ -252,6 +259,7 @@ router.get("/coupons", async (req, res) => {
 });
 
 router.get("/list", async (req, res) => {
+  const demoUserId = req.currentUser.id;
   const [orders] = await pool.query(
     `SELECT
       o.id,
@@ -291,8 +299,9 @@ router.get("/list", async (req, res) => {
             : order.firstProduct,
         payment: getPaymentText(order.paymentMethod),
         total: order.total,
-        images: Array.from({ length: Math.min(Number(order.itemCount) || 1, 3) }, (_, imageIndex) =>
-          getProductImage(index + imageIndex),
+        images: Array.from(
+          { length: Math.min(Number(order.itemCount) || 1, 3) },
+          (_, imageIndex) => getProductImage(index + imageIndex),
         ),
       };
     }),
@@ -300,6 +309,7 @@ router.get("/list", async (req, res) => {
 });
 
 router.get("/list/:orderNo", async (req, res) => {
+  const demoUserId = req.currentUser.id;
   const [[order]] = await pool.query(
     `SELECT
       o.*,

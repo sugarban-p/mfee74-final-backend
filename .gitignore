@@ -7,3 +7,8 @@ node_modules/
 temp.*
 
 *.rest
+
+test-pets-api.http
+
+# 使用者上傳的圖片只保存在執行環境，不提交到 Git。
+/public/uploads/
