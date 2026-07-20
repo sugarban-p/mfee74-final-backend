@@ -1,5 +1,3 @@
-// Functionality: bootstrap the Express backend and mount feature APIs. Purpose: provide a single Node.js entrypoint for frontend integration.
-
 import "dotenv/config";
 import express from "express";
 import session from "express-session";
@@ -7,7 +5,9 @@ import cookieParser from "cookie-parser";
 import http from "http";
 import path from "path";
 
-import { closeMysqlPool } from "./utils/connect-mysql.js";
+import MySQLStore from "express-mysql-session"; // 把 session 存到 SQL
+import moment from "moment-timezone"; // 時間處理工具
+import pool, { closeMysqlPool } from "./utils/connect-mysql.js"; // 測試+監控SQL連線池
 
 import authRoutes from "./routes/auth.js";
 import otpRoutes from "./routes/otp.js";
@@ -23,6 +23,41 @@ import { initRealtimeChat } from "./utils/realtime-chat.js";
 
 /* ===== 建立 server 個體 ===== */
 const app = express();
+
+/**
+ * ===== 前後端跨來源請求（CORS） =====
+ *
+ * 前端開發網址是 http://localhost:3000，
+ * 後端 API 網址是 http://localhost:3001。
+ * 即使 hostname 相同，只要 port 不同，瀏覽器就會視為不同來源。
+ *
+ * 目前會員登入尚未整併，寵物 API 暫時使用 PET_DEMO_USER_ID；
+ * 先保留 Allow-Credentials，之後整併登入 Session 時才能攜帶 Cookie。
+ */
+app.use((req, res, next) => {
+  // credentials 模式不能使用 "*"，必須指定允許的前端來源。
+  res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+  res.header("Access-Control-Allow-Credentials", "true");
+
+  // 允許前端以 JSON 格式傳送資料。
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept",
+  );
+
+  // 允許目前 API 會使用的 HTTP 方法。
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+  );
+
+  // 瀏覽器在部分跨來源請求前會先送 OPTIONS 預檢請求。
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
 
 /* ===== 設置全域 middleware ===== */
 app.use(express.json());
