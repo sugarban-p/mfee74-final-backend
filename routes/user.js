@@ -1,13 +1,77 @@
 // Functionality: provide profile, security, and account update APIs for logged-in users. Purpose: power member dashboard profile and security tabs.
 
+import crypto from "crypto";
+import fs from "fs/promises";
+import path from "path";
 import bcrypt from "bcrypt";
 import { Router } from "express";
+import multer from "multer";
 
 import pool from "../utils/connect-mysql.js";
 import { formatZhDateTime, requireAuth } from "../utils/auth-session.js";
 import { hasTable } from "../utils/schema.js";
 
 const router = Router();
+
+const avatarUploadDir = path.join(process.cwd(), "uploads", "avatars");
+const avatarMimeExtMap = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+};
+
+const avatarUpload = multer({
+  storage: multer.diskStorage({
+    destination: async (req, file, cb) => {
+      try {
+        await fs.mkdir(avatarUploadDir, { recursive: true });
+        cb(null, avatarUploadDir);
+      } catch (error) {
+        cb(error);
+      }
+    },
+    filename: (req, file, cb) => {
+      const mappedExt = avatarMimeExtMap[file.mimetype] || ".jpg";
+      const filename = `u${req.currentUser.id}-${Date.now()}-${crypto.randomUUID().slice(0, 8)}${mappedExt}`;
+      cb(null, filename);
+    },
+  }),
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!avatarMimeExtMap[file.mimetype]) {
+      return cb(new Error("INVALID_AVATAR_MIME"));
+    }
+    return cb(null, true);
+  },
+});
+
+function withAvatarUpload(req, res, next) {
+  avatarUpload.single("avatar")(req, res, (error) => {
+    if (!error) return next();
+
+    if (
+      error instanceof multer.MulterError &&
+      error.code === "LIMIT_FILE_SIZE"
+    ) {
+      return res.status(400).json({
+        error: "INVALID_INPUT",
+        details: [{ path: ["avatar"], message: "頭像大小不可超過 2MB" }],
+      });
+    }
+
+    if (error.message === "INVALID_AVATAR_MIME") {
+      return res.status(400).json({
+        error: "INVALID_INPUT",
+        details: [
+          { path: ["avatar"], message: "頭像格式僅支援 JPG、PNG、WEBP" },
+        ],
+      });
+    }
+
+    console.error("[user/avatar-upload]", error);
+    return res.status(500).json({ error: "INTERNAL_ERROR" });
+  });
+}
 
 router.use(requireAuth);
 
@@ -29,17 +93,26 @@ router.get("/profile", async (req, res) => {
   });
 });
 
-router.patch("/update", async (req, res) => {
+router.patch("/update", withAvatarUpload, async (req, res) => {
   try {
     const user = req.currentUser;
     const { name, nickname, phone, address, avatar } = req.body || {};
+
+    const uploadedAvatar = req.file
+      ? `${req.protocol}://${req.get("host")}/uploads/avatars/${req.file.filename}`
+      : undefined;
 
     const nextData = {
       name: name === undefined ? undefined : String(name).trim(),
       nickname: nickname === undefined ? undefined : String(nickname).trim(),
       phone: phone === undefined ? undefined : String(phone).trim(),
       address: address === undefined ? undefined : String(address).trim(),
-      avatar: avatar === undefined ? undefined : String(avatar).trim(),
+      avatar:
+        uploadedAvatar !== undefined
+          ? uploadedAvatar
+          : avatar === undefined
+            ? undefined
+            : String(avatar).trim(),
     };
 
     if (nextData.name !== undefined && nextData.name.length === 0) {
