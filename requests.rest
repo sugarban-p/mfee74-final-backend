@@ -1,0 +1,56 @@
+@baseUrl = http://localhost:3001
+@petType = cat
+@productId = 1
+@itemId = 1
+
+### 登入 - 取得測試 token
+
+# @name mockLogin
+POST {{baseUrl}}/api/auth/dev/mock-oauth-google
+Content-Type: application/json
+
+{
+  "email": "product-test@gmail.com"
+}
+
+### 商品首頁
+
+GET {{baseUrl}}/api/products
+
+### 商品列表
+
+GET {{baseUrl}}/api/products/{{petType}}?category=supplies&keywords=1&search=PAW-SCRATCHER&min-value=1&max-value=2000&sort=price_asc&page=1
+
+### 商品明細
+
+GET {{baseUrl}}/api/products/{{petType}}/{{productId}}
+
+### 收藏商品
+
+PATCH {{baseUrl}}/api/products/updateFavorite/20
+Content-Type: application/json
+Authorization: Bearer {{mockLogin.response.body.$.accessToken}}
+
+{
+  "favorite": true
+}
+
+### 購物車列表
+
+GET {{baseUrl}}/api/products/getCart
+Authorization: Bearer {{mockLogin.response.body.$.accessToken}}
+
+### 新增或更新購物車品項
+
+POST {{baseUrl}}/api/products/updateCart/{{itemId}}
+Content-Type: application/json
+Authorization: Bearer {{mockLogin.response.body.$.accessToken}}
+
+{
+  "qty": 2
+}
+
+### 刪除購物車品項
+
+DELETE {{baseUrl}}/api/products/updatecart/{{itemId}}
+Authorization: Bearer {{mockLogin.response.body.$.accessToken}}
