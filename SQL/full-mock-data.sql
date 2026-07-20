@@ -310,13 +310,8 @@ VALUES (
     (192, '狗草', 'dog-grass'),
     (193, '栽培盒', 'grow-kit'),
     (194, '汪汪', 'doggy'),
-    (195, '生菜', 'greens');
-
--- AI 過敏排除使用的標準成分 keyword。
--- 現有 keyword 仍保留作搜尋與商品描述。
-INSERT INTO
-    `keywords` (`id`, `keyword`, `slug`)
-VALUES (196, '蛋成分', 'egg');
+    (195, '生菜', 'greens'),
+    (196, '蛋成分', 'egg');
 
 -- products
 INSERT INTO
@@ -1961,26 +1956,24 @@ VALUES
     (149, 55),
     (151, 55),
 
-    -- beef（既有 keyword id = 36）
-    (68, 36),
-    (104, 36),
-    (111, 36),
-    (120, 36),
-    (126, 36),
-    (148, 36),
-    (150, 36),
-    (154, 36),
+-- beef（既有 keyword id = 36）
+(68, 36),
+(104, 36),
+(111, 36),
+(120, 36),
+(126, 36),
+(148, 36),
+(150, 36),
+(154, 36),
 
-    -- fish（既有 keyword id = 24）
-    (100, 24),
+-- fish（既有 keyword id = 24）
+(100, 24),
 
-    -- lamb（既有 keyword id = 135）
-    (119, 135),
-    (137, 135),
-    (153, 135),
+-- lamb（既有 keyword id = 135）
+(119, 135), (137, 135), (153, 135),
 
-    -- egg（新增 keyword id = 196）
-    (146, 196);
+-- egg（新增 keyword id = 196）
+(146, 196);
 
 -- product_avatars
 INSERT INTO
@@ -1993,7 +1986,7 @@ INSERT INTO
 VALUES (
         1,
         1,
-        'images/products/vatars/cat/supplies/prod_0001_01_src.jpg',
+        'images/products/avatars/cat/supplies/prod_0001_01_src.jpg',
         'images/products/avatars/cat/supplies/prod_0001_01_thumbnail.jpg'
     ),
     (

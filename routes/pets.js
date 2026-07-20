@@ -6,6 +6,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import multer from "multer";
 import pool from "../utils/connect-mysql.js";
+import { requireAuth } from "../utils/auth-session.js";
 
 const router = Router();
 
@@ -18,21 +19,8 @@ const router = Router();
  * PET_DEMO_USER_ID 讀取「已經寫進 MySQL」的會員假資料 id。
  * 這不是在程式中另建一份假資料，只是指定要查哪一位假會員的資料。
  */
-const getCurrentUserId = (req) => {
-  const sessionUserId = Number(req.session?.user?.id);
 
-  if (Number.isInteger(sessionUserId) && sessionUserId > 0) {
-    return sessionUserId;
-  }
-
-  const demoUserId = Number(process.env.PET_DEMO_USER_ID);
-
-  if (Number.isInteger(demoUserId) && demoUserId > 0) {
-    return demoUserId;
-  }
-
-  return null;
-};
+router.use(requireAuth);
 
 // ===== 寵物照片上傳設定 =====
 const MAX_PET_AVATAR_SIZE = 5 * 1024 * 1024;
@@ -350,9 +338,7 @@ const normalizeOptionIds = (value) => {
     return [];
   }
 
-  return [
-    ...new Set(value.map(toPositiveInteger).filter((id) => id !== null)),
-  ];
+  return [...new Set(value.map(toPositiveInteger).filter((id) => id !== null))];
 };
 
 // 驗證 YYYY-MM-DD，並避免收到不存在或未來的日期。
@@ -569,8 +555,10 @@ const createPetData = async (userId, body) => {
   try {
     await connection.beginTransaction();
 
-    const { healthGroupId, allergyGroupId } =
-      await validatePetOptionGroups(connection, petData);
+    const { healthGroupId, allergyGroupId } = await validatePetOptionGroups(
+      connection,
+      petData,
+    );
 
     const insertPetSql = `
       INSERT INTO pets (
@@ -680,8 +668,10 @@ const updatePetData = async (userId, petId, body) => {
     }
 
     // 再次確認所有選項 ID 存在，且屬於正確群組。
-    const { healthGroupId, allergyGroupId } =
-      await validatePetOptionGroups(connection, petData);
+    const { healthGroupId, allergyGroupId } = await validatePetOptionGroups(
+      connection,
+      petData,
+    );
 
     /**
      * 更新 pets 表中的基本資料與單選資料。
@@ -807,7 +797,7 @@ const softDeletePetData = async (userId, petId) => {
 
 router.get("/", async (req, res, next) => {
   try {
-    const userId = getCurrentUserId(req);
+    const userId = req.currentUser.id;
 
     if (!userId) {
       return res.status(401).json({
@@ -832,14 +822,7 @@ router.get("/", async (req, res, next) => {
 router.post("/upload-avatar", (req, res, next) => {
   petAvatarUpload.single("avatar")(req, res, async (uploadError) => {
     try {
-      const userId = getCurrentUserId(req);
-
-      if (!userId) {
-        return res.status(401).json({
-          success: false,
-          message: "請先登入會員",
-        });
-      }
+      const userId = req.currentUser.id;
 
       if (uploadError instanceof multer.MulterError) {
         const message =
@@ -900,14 +883,7 @@ router.post("/upload-avatar", (req, res, next) => {
 
 router.post("/", async (req, res, next) => {
   try {
-    const userId = getCurrentUserId(req);
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "找不到目前登入會員",
-      });
-    }
+    const userId = req.currentUser.id;
 
     const petId = await createPetData(userId, req.body);
 
@@ -938,15 +914,8 @@ router.post("/", async (req, res, next) => {
  */
 router.put("/:petId", async (req, res, next) => {
   try {
+    const userId = req.currentUser.id;
     const petId = toPositiveInteger(req.params.petId);
-    const userId = getCurrentUserId(req);
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "找不到目前登入會員",
-      });
-    }
 
     if (!petId) {
       return res.status(400).json({
@@ -985,15 +954,8 @@ router.put("/:petId", async (req, res, next) => {
  */
 router.delete("/:petId", async (req, res, next) => {
   try {
+    const userId = req.currentUser.id;
     const petId = toPositiveInteger(req.params.petId);
-    const userId = getCurrentUserId(req);
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "找不到目前登入會員",
-      });
-    }
 
     if (!petId) {
       return res.status(400).json({
@@ -1040,15 +1002,8 @@ router.get("/options", async (req, res, next) => {
 
 router.get("/:petId", async (req, res, next) => {
   try {
+    const userId = req.currentUser.id;
     const petId = toPositiveInteger(req.params.petId);
-    const userId = getCurrentUserId(req);
-
-    if (!userId) {
-      return res.status(401).json({
-        success: false,
-        message: "找不到目前登入會員",
-      });
-    }
 
     if (!petId) {
       return res.status(400).json({
