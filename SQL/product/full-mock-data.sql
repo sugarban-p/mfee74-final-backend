@@ -1925,7 +1925,7 @@ INSERT INTO
 VALUES (
         1,
         1,
-        'images/products/vatars/cat/supplies/prod_0001_01_src.jpg',
+        'images/products/avatars/cat/supplies/prod_0001_01_src.jpg',
         'images/products/avatars/cat/supplies/prod_0001_01_thumbnail.jpg'
     ),
     (

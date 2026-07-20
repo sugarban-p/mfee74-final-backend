@@ -10,6 +10,8 @@ router.use((req, res, next) => {
   req.user = { id: 1 };
   next();
 });
+// router 加 requireAuth
+// userId = req.currentUser.id;
 
 // sql - 排序選項 對照
 const sortList = {
