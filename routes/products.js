@@ -2,14 +2,15 @@
 
 import { Router } from "express";
 import pool from "../utils/connect-mysql.js";
+import { requireAuth } from "../utils/auth-session.js";
 
 const router = Router();
 
 // 測試用：假登入
-router.use((req, res, next) => {
-  req.user = { id: 1 };
-  next();
-});
+// router.use((req, res, next) => {
+//   req.user = { id: 1 };
+//   next();
+// });
 // router 加 requireAuth
 // userId = req.currentUser.id;
 
@@ -449,14 +450,8 @@ const parseIdList = (value) => [
 ];
 
 // 新增/取消 收藏商品 `user_favorites`
-router.patch("/updateFavorite/:productId", async (req, res) => {
-  const userId = req.user?.id;
-  if (!userId) {
-    return res.status(401).json({
-      success: false,
-      message: "請先登入",
-    });
-  }
+router.patch("/updateFavorite/:productId", requireAuth, async (req, res) => {
+  const userId = req.currentUser.id;
   const productId = +req.params.productId;
   const isFavorite = req.body.favorite; // Boolean (true=收藏，false=取消收藏)
 
@@ -509,14 +504,8 @@ router.patch("/updateFavorite/:productId", async (req, res) => {
 });
 
 // 讀取收藏列表 `user_favorites`
-router.get("/getFavorite", async (req, res) => {
-  const userId = req.user?.id;
-  if (!userId) {
-    return res.status(401).json({
-      success: false,
-      message: "請先登入",
-    });
-  }
+router.get("/getFavorite", requireAuth, async (req, res) => {
+  const userId = req.currentUser.id;
 
   try {
     const [favorites] = await pool.query(
@@ -560,14 +549,8 @@ router.get("/getFavorite", async (req, res) => {
 });
 
 // 讀取購物車
-router.get("/getCart", async (req, res) => {
-  const userId = req.user?.id;
-  if (!userId) {
-    return res.status(401).json({
-      success: false,
-      message: "請先登入",
-    });
-  }
+router.get("/getCart", requireAuth, async (req, res) => {
+  const userId = req.currentUser.id;
 
   try {
     const [cartItems] = await pool.query(
@@ -619,14 +602,8 @@ router.get("/getCart", async (req, res) => {
 });
 
 // 新增/修改品項數量 到 購物車 `cart_items`
-router.post("/updateCart/:itemId", async (req, res) => {
-  const userId = req.user?.id;
-  if (!userId) {
-    return res.status(401).json({
-      success: false,
-      message: "請先登入",
-    });
-  }
+router.post("/updateCart/:itemId", requireAuth, async (req, res) => {
+  const userId = req.currentUser.id;
 
   const itemId = +req.params.itemId;
   const qty = +req.body.qty; // 修改後的數量（absolute quantity），不是變動量（delta）
@@ -671,14 +648,8 @@ router.post("/updateCart/:itemId", async (req, res) => {
 });
 
 // 移除 購物車品項 `cart_items`
-router.delete("/updatecart/:itemId", async (req, res) => {
-  const userId = req.user?.id;
-  if (!userId) {
-    return res.status(401).json({
-      success: false,
-      message: "請先登入",
-    });
-  }
+router.delete("/updatecart/:itemId", requireAuth, async (req, res) => {
+  const userId = req.currentUser.id;
 
   const itemId = +req.params.itemId;
 
