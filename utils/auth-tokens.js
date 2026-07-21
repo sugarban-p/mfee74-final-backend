@@ -13,6 +13,12 @@ const ACCESS_TOKEN_TTL_SEC = Number(
 const REFRESH_TOKEN_TTL_SEC = Number(
   process.env.REFRESH_TOKEN_TTL_SEC || 7 * 24 * 60 * 60,
 );
+const ACCESS_TOKEN_TTL_SEC_REMEMBER = Number(
+  process.env.ACCESS_TOKEN_TTL_SEC_REMEMBER || REFRESH_TOKEN_TTL_SEC,
+);
+const REFRESH_TOKEN_TTL_SEC_REMEMBER = Number(
+  process.env.REFRESH_TOKEN_TTL_SEC_REMEMBER || REFRESH_TOKEN_TTL_SEC,
+);
 
 const BASE_SECRET = process.env.SESSION_SECRET || "team3-secret-key";
 const ACCESS_TOKEN_SECRET =
@@ -62,7 +68,7 @@ function buildClientIp(req) {
   return String(req.headers["x-real-ip"] || "").trim() || req.ip || "unknown";
 }
 
-function signAccessToken(userId) {
+function signAccessToken(userId, accessTtlSec) {
   return jwt.sign(
     {
       sub: String(userId),
@@ -71,12 +77,12 @@ function signAccessToken(userId) {
     },
     ACCESS_TOKEN_SECRET,
     {
-      expiresIn: ACCESS_TOKEN_TTL_SEC,
+      expiresIn: accessTtlSec,
     },
   );
 }
 
-function signRefreshToken(userId) {
+function signRefreshToken(userId, refreshTtlSec) {
   return jwt.sign(
     {
       sub: String(userId),
@@ -85,22 +91,31 @@ function signRefreshToken(userId) {
     },
     REFRESH_TOKEN_SECRET,
     {
-      expiresIn: REFRESH_TOKEN_TTL_SEC,
+      expiresIn: refreshTtlSec,
     },
   );
 }
 
-function buildTokenResult(userId) {
-  const accessToken = signAccessToken(userId);
-  const refreshToken = signRefreshToken(userId);
-  const refreshExpiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_SEC * 1000);
+function buildTokenResult(userId, options = {}) {
+  const rememberMe = Boolean(options.rememberMe);
+  const accessTokenTtlSec = rememberMe
+    ? ACCESS_TOKEN_TTL_SEC_REMEMBER
+    : ACCESS_TOKEN_TTL_SEC;
+  const refreshTokenTtlSec = rememberMe
+    ? REFRESH_TOKEN_TTL_SEC_REMEMBER
+    : REFRESH_TOKEN_TTL_SEC;
+
+  const accessToken = signAccessToken(userId, accessTokenTtlSec);
+  const refreshToken = signRefreshToken(userId, refreshTokenTtlSec);
+  const refreshExpiresAt = new Date(Date.now() + refreshTokenTtlSec * 1000);
 
   return {
     accessToken,
     refreshToken,
     accessTokenHash: hashToken(accessToken),
     refreshTokenHash: hashToken(refreshToken),
-    accessTokenTtlSec: ACCESS_TOKEN_TTL_SEC,
+    accessTokenTtlSec,
+    refreshTokenTtlSec,
     refreshExpiresAt,
   };
 }
@@ -142,7 +157,7 @@ export function setAuthCookies(res, tokenResult) {
     httpOnly: true,
     sameSite: "lax",
     secure: isProduction,
-    maxAge: REFRESH_TOKEN_TTL_SEC * 1000,
+    maxAge: tokenResult.refreshTokenTtlSec * 1000,
   });
 }
 
@@ -171,8 +186,12 @@ export function verifyRefreshToken(token) {
   }
 }
 
-export async function issueAuthTokensAndSession({ userId, req }) {
-  const tokenResult = buildTokenResult(userId);
+export async function issueAuthTokensAndSession({
+  userId,
+  req,
+  rememberMe = false,
+}) {
+  const tokenResult = buildTokenResult(userId, { rememberMe });
   const userAgent = String(req.headers["user-agent"] || "").slice(0, 255);
   const ip = buildClientIp(req).slice(0, 64);
   const deviceName = buildDeviceName(userAgent).slice(0, 100);
@@ -231,8 +250,13 @@ export async function findActiveSessionByRefreshToken({ token, userId }) {
   return rows[0] || null;
 }
 
-export async function rotateSessionTokens({ sessionId, userId, req }) {
-  const tokenResult = buildTokenResult(userId);
+export async function rotateSessionTokens({
+  sessionId,
+  userId,
+  req,
+  rememberMe = false,
+}) {
+  const tokenResult = buildTokenResult(userId, { rememberMe });
   const userAgent = String(req.headers["user-agent"] || "").slice(0, 255);
   const ip = buildClientIp(req).slice(0, 64);
   const deviceName = buildDeviceName(userAgent).slice(0, 100);
