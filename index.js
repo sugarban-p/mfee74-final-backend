@@ -17,6 +17,7 @@ import chatRoutes from "./routes/chat.js";
 import oauthRoutes from "./routes/oauth.js";
 import productRoutes from "./routes/products.js";
 import petsRoutes from "./routes/pets.js";
+import petAiRoutes from "./routes/pet-ai.js";
 import orderRoutes from "./routes/orders.js";
 import couponRoutes from "./routes/coupons.js";
 import { initRealtimeChat } from "./utils/realtime-chat.js";
@@ -27,22 +28,22 @@ const app = express();
 /**
  * ===== 前後端跨來源請求（CORS） =====
  *
- * 前端開發網址是 http://localhost:3000，
- * 後端 API 網址是 http://localhost:3001。
- * 即使 hostname 相同，只要 port 不同，瀏覽器就會視為不同來源。
- *
- * 目前會員登入尚未整併，寵物 API 暫時使用 PET_DEMO_USER_ID；
- * 先保留 Allow-Credentials，之後整併登入 Session 時才能攜帶 Cookie。
+ * 前端預設使用 localhost:3000，後端使用 localhost:3001。
+ * 因為 port 不同，瀏覽器會將它們視為不同來源，
+ * 所以後端必須明確允許前端傳送請求與 Cookie。
  */
 app.use((req, res, next) => {
+  // 優先讀取 .env 的前端網址，沒有設定時才使用本機開發網址。
+  const allowOrigin = process.env.CORS_ORIGIN || "http://localhost:3000";
+
   // credentials 模式不能使用 "*"，必須指定允許的前端來源。
-  res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+  res.header("Access-Control-Allow-Origin", allowOrigin);
   res.header("Access-Control-Allow-Credentials", "true");
 
-  // 允許前端以 JSON 格式傳送資料。
+  // 允許 JSON 與登入驗證可能使用的 Authorization header。
   res.header(
     "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization",
   );
 
   // 允許目前 API 會使用的 HTTP 方法。
@@ -60,10 +61,22 @@ app.use((req, res, next) => {
 });
 
 /* ===== 設置全域 middleware ===== */
+// 解析前端傳送的 JSON 與一般 HTML form 資料。
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// 解析瀏覽器 Cookie，會員登入與 Session 驗證功能會使用。
 app.use(cookieParser());
+
+/**
+ * 會員頭像存放在根目錄 uploads；寵物照片存放在 public/uploads。
+ * 兩者共用 /uploads 網址，第一個目錄找不到檔案時會繼續查找第二個。
+ */
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+app.use(
+  "/uploads",
+  express.static(path.join(process.cwd(), "public", "uploads")),
+);
 
 app.use((req, res, next) => {
   const allowOrigin = process.env.CORS_ORIGIN || "http://localhost:3000";
@@ -115,6 +128,8 @@ app.use("/api/oauth", oauthRoutes);
 app.use("/api/products", productRoutes);
 // 寵物
 app.use("/api/pets", petsRoutes);
+// 寵物 AI 導購
+app.use("/api/pet-ai", petAiRoutes);
 // 訂單
 app.use("/api/orders", orderRoutes);
 // 優惠券

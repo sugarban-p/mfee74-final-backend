@@ -125,6 +125,7 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body || {};
+    const rememberMe = Boolean(req.body?.rememberMe);
     if (!email || !password) {
       return res.status(400).json({ error: "INVALID_INPUT" });
     }
@@ -200,6 +201,31 @@ router.post("/login", async (req, res) => {
       });
     }
 
+    if (!Boolean(user.emailVerified)) {
+      try {
+        const { code } = await createOTP(user.id, "EMAIL_VERIFY");
+        await sendEmailVerification(user.email, code);
+      } catch (error) {
+        console.error(
+          "[login] resend email verification failed:",
+          error.message,
+        );
+      }
+
+      await insertLoginLog({
+        userId: user.id,
+        email: user.email,
+        success: false,
+        reason: "EMAIL_NOT_VERIFIED",
+        req,
+      });
+
+      return res.status(403).json({
+        error: "EMAIL_NOT_VERIFIED",
+        message: "電子郵件尚未驗證，已重新發送驗證碼，請先完成驗證。",
+      });
+    }
+
     await pool.execute(
       "UPDATE users SET login_attempts = 0, locked_until = NULL, last_login_at = NOW(), updated_at = NOW() WHERE id = ?",
       [user.id],
@@ -214,6 +240,7 @@ router.post("/login", async (req, res) => {
     const tokenResult = await issueAuthTokensAndSession({
       userId: user.id,
       req,
+      rememberMe,
     });
     setAuthCookies(res, tokenResult);
 
@@ -258,6 +285,7 @@ router.post("/logout", async (req, res) => {
 
 router.post("/refresh", async (req, res) => {
   const refreshToken = getRefreshTokenFromRequest(req);
+  const rememberMe = Boolean(req.body?.rememberMe);
   if (!refreshToken) {
     return res.status(401).json({ error: "UNAUTHORIZED" });
   }
@@ -285,6 +313,7 @@ router.post("/refresh", async (req, res) => {
     sessionId: sessionRow.id,
     userId,
     req,
+    rememberMe,
   });
   setAuthCookies(res, tokenResult);
 

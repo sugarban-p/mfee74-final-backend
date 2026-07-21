@@ -54,3 +54,173 @@ Authorization: Bearer {{mockLogin.response.body.$.accessToken}}
 
 DELETE {{baseUrl}}/api/products/updatecart/{{itemId}}
 Authorization: Bearer {{mockLogin.response.body.$.accessToken}}
+
+
+# ============================================================
+# 寵物 CRUD 完整測試
+# 測試順序：
+# 假登入 → 列表 → 詳情 → 新增 → 查看新增結果
+# → 編輯 → 查看編輯結果 → 刪除 → 確認刪除
+# ============================================================
+
+### 1. 假登入：使用有寵物假資料的會員
+
+# @name petMockLogin
+POST {{baseUrl}}/api/auth/dev/mock-oauth-google
+Content-Type: application/json
+
+{
+  "email": "yuki.chen@gmail.com"
+}
+
+### 2. 取得目前會員的寵物列表
+# petMockLogin.response.body.$.accessToken：
+# 自動讀取上一步登入成功後回傳的 accessToken，不用手動複製。
+
+GET {{baseUrl}}/api/pets
+Authorization: Bearer {{petMockLogin.response.body.$.accessToken}}
+
+### 3. 取得既有寵物詳情
+# user id 1 擁有 pet id 1，也就是 Momo。
+
+GET {{baseUrl}}/api/pets/1
+Authorization: Bearer {{petMockLogin.response.body.$.accessToken}}
+
+### 4. 取得寵物表單選項
+# 新增與編輯時傳送的是選項 id。
+# 這支 API 可以確認每個 id 對應的顯示文字。
+
+GET {{baseUrl}}/api/pets/options
+Authorization: Bearer {{petMockLogin.response.body.$.accessToken}}
+
+### 5. 新增一隻測試寵物
+# @name 讓後面的 request 可以取得這次新增的 pet id。
+
+# @name createTestPet
+POST {{baseUrl}}/api/pets
+Content-Type: application/json
+Authorization: Bearer {{petMockLogin.response.body.$.accessToken}}
+
+{
+  "name": "Codex測試貓",
+  "avatarUrl": null,
+  "speciesOptionId": 2,
+  "breed": "米克斯",
+  "genderOptionId": 4,
+  "neuteredOptionId": 6,
+  "activityLevelOptionId": 10,
+  "birthday": "2023-05-20",
+  "weight": 4.6,
+  "specialNote": "這是 REST Client 建立的 CRUD 測試資料。",
+  "healthConditionOptionIds": [13, 18],
+  "allergyIngredientOptionIds": [23]
+}
+
+### 6. 查看剛新增的寵物
+# createTestPet 回傳格式是：
+# { "row": { "id": 新增後的寵物id } }
+# 所以可以從 response 自動取得 id。
+
+GET {{baseUrl}}/api/pets/{{createTestPet.response.body.$.row.id}}
+Authorization: Bearer {{petMockLogin.response.body.$.accessToken}}
+
+### 7. 編輯剛新增的寵物
+# PUT 是完整更新，所以要傳入完整表單內容。
+# 這裡會修改名稱、體重、健康情況、過敏食材等資料。
+
+PUT {{baseUrl}}/api/pets/{{createTestPet.response.body.$.row.id}}
+Content-Type: application/json
+Authorization: Bearer {{petMockLogin.response.body.$.accessToken}}
+
+{
+  "name": "Codex測試貓-已編輯",
+  "avatarUrl": null,
+  "speciesOptionId": 2,
+  "breed": "英國短毛貓",
+  "genderOptionId": 4,
+  "neuteredOptionId": 6,
+  "activityLevelOptionId": 9,
+  "birthday": "2023-05-20",
+  "weight": 4.9,
+  "specialNote": "名稱、品種、體重與多選資料都已更新。",
+  "healthConditionOptionIds": [12, 20],
+  "allergyIngredientOptionIds": [26, 34]
+}
+
+### 8. 再次取得詳情，確認編輯結果
+
+GET {{baseUrl}}/api/pets/{{createTestPet.response.body.$.row.id}}
+Authorization: Bearer {{petMockLogin.response.body.$.accessToken}}
+
+### 9. 刪除剛新增的寵物
+# 目前後端使用軟刪除：
+# 資料不會真的從 MySQL 消失，而是把 is_deleted 改成 1。
+
+DELETE {{baseUrl}}/api/pets/{{createTestPet.response.body.$.row.id}}
+Authorization: Bearer {{petMockLogin.response.body.$.accessToken}}
+
+### 10. 刪除後再次取得詳情
+# 預期結果：HTTP 404，表示一般 API 已經無法取得這隻寵物。
+
+GET {{baseUrl}}/api/pets/{{createTestPet.response.body.$.row.id}}
+Authorization: Bearer {{petMockLogin.response.body.$.accessToken}}
+
+### 11. 再次取得寵物列表
+# 預期結果：列表中不會出現剛才刪除的測試寵物。
+
+GET {{baseUrl}}/api/pets
+Authorization: Bearer {{petMockLogin.response.body.$.accessToken}}
+
+# ============================================================
+# AI 導購 API 測試
+# 執行順序：先執行 AI 1，再執行後面的推薦測試
+# ============================================================
+
+### AI 1. 建立 AI 測試用的假登入
+# @name petAiMockLogin
+POST {{baseUrl}}/api/auth/dev/mock-oauth-google
+Content-Type: application/json
+
+{
+  "email": "yuki.chen@gmail.com"
+}
+
+### AI 2. 依寵物健康情況推薦
+POST {{baseUrl}}/api/pet-ai/recommendations
+Content-Type: application/json
+Authorization: Bearer {{petAiMockLogin.response.body.$.accessToken}}
+
+{
+  "petId": 1,
+  "needCode": "health_based"
+}
+
+### AI 3. 推薦日常主食
+POST {{baseUrl}}/api/pet-ai/recommendations
+Content-Type: application/json
+Authorization: Bearer {{petAiMockLogin.response.body.$.accessToken}}
+
+{
+  "petId": 1,
+  "needCode": "main_food"
+}
+
+### AI 4. 推薦零食
+POST {{baseUrl}}/api/pet-ai/recommendations
+Content-Type: application/json
+Authorization: Bearer {{petAiMockLogin.response.body.$.accessToken}}
+
+{
+  "petId": 1,
+  "needCode": "treat"
+}
+
+### AI 5. 推薦保健商品
+POST {{baseUrl}}/api/pet-ai/recommendations
+Content-Type: application/json
+Authorization: Bearer {{petAiMockLogin.response.body.$.accessToken}}
+
+{
+  "petId": 1,
+  "needCode": "care"
+}
