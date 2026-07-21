@@ -17,6 +17,7 @@ import chatRoutes from "./routes/chat.js";
 import oauthRoutes from "./routes/oauth.js";
 import productRoutes from "./routes/products.js";
 import petsRoutes from "./routes/pets.js";
+import petAiRoutes from "./routes/pet-ai.js";
 import orderRoutes from "./routes/orders.js";
 import couponRoutes from "./routes/coupons.js";
 import { initRealtimeChat } from "./utils/realtime-chat.js";
@@ -114,6 +115,8 @@ app.use("/api/oauth", oauthRoutes);
 app.use("/api/products", productRoutes);
 // 寵物
 app.use("/api/pets", petsRoutes);
+// 寵物 AI 導購
+app.use("/api/pet-ai", petAiRoutes);
 // 訂單
 app.use("/api/orders", orderRoutes);
 // 優惠券
