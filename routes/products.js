@@ -3,18 +3,11 @@
 import { Router } from "express";
 import pool from "../utils/connect-mysql.js";
 import { requireAuth } from "../utils/auth-session.js";
+import { accumulateResponse } from "openai/lib/responses/ResponseAccumulator.js";
 
 const router = Router();
 
-// 測試用：假登入
-// router.use((req, res, next) => {
-//   req.user = { id: 1 };
-//   next();
-// });
-// router 加 requireAuth
-// userId = req.currentUser.id;
-
-// sql - 排序選項 對照
+// 排序選項 對照 sql
 const sortList = {
   default: "total_sold DESC",
   latest: "p.created_at ASC",
@@ -25,16 +18,16 @@ const sortList = {
 // sql - 寵物類別列表
 const getPetTypeData = async () => {
   const sql = "SELECT * FROM product_pet_tags;";
-  const rows = await pool.query(sql);
-  return rows[0];
+  const [rows] = await pool.query(sql);
+  return rows;
 };
 const petTypeList = await getPetTypeData();
 
 // sql - 商品類別列表
 const getCategoryData = async () => {
   const sql = "SELECT * FROM product_category_tags;";
-  const rows = await pool.query(sql);
-  return rows[0];
+  const [rows] = await pool.query(sql);
+  return rows;
 };
 const categoryList = await getCategoryData();
 
@@ -48,49 +41,65 @@ const countCategoryProduct = async (pet_tag_id) => {
     GROUP BY pct.id, pct.tag_code, pct.tag_ch, pct.tag_slug
     ORDER BY pct.id;
   `;
-  const rows = await pool.query(sql, [pet_tag_id]);
-  return rows[0];
+  const [rows] = await pool.query(sql, [pet_tag_id]);
+  return rows;
 };
 
-// sql - 商品說明
-const getProductIntroMap = async (productIds) => {
+// sql - 讀取指定商品說明文字
+const getProductIntroMap = async (productIds, sloganOnly = false) => {
+  const sql_filter = sloganOnly ? " AND intro_type = 'slogan'" : "";
+
   const sql = `
     SELECT prod_id_fk, intro_type, intro_text
     FROM product_intros
-    WHERE prod_id_fk IN (?)
-    ORDER BY prod_id_fk, id;
-  `;
+    WHERE prod_id_fk IN (?) ${sql_filter}
+    ORDER BY prod_id_fk;`;
   const [introRows] = await pool.query(sql, [productIds]);
-  const introMap = {};
-  for (const row of introRows) {
-    if (!introMap[row.prod_id_fk]) introMap[row.prod_id_fk] = {};
-    introMap[row.prod_id_fk][row.intro_type] = row.intro_text;
-  }
+  const introMap = introRows.reduce((obj, row) => {
+    if (!obj[row.prod_id_fk]) obj[row.prod_id_fk] = {};
+    obj[row.prod_id_fk][row.intro_type] = row.intro_text;
+    return obj;
+  }, {});
   return introMap;
 };
 
-// sql - 商品縮圖
-const getProductAvatarMap = async (productIds) => {
+// sql - 讀取指定商品縮圖
+const getProductAvatarMap = async (productIds, firstOnly = false) => {
+  const sql_filter = firstOnly ? " AND avatar_order = 1" : "";
   const sql = `
     SELECT prod_id_fk, src, thumbnail, avatar_order
     FROM product_avatars
-    WHERE prod_id_fk IN (?)
-    ORDER BY prod_id_fk, id;
+    WHERE prod_id_fk IN (?) ${sql_filter}
+    ORDER BY prod_id_fk;
   `;
   const [avatarRows] = await pool.query(sql, [productIds]);
-  const avatarMap = {};
-  for (const row of avatarRows) {
-    if (!avatarMap[row.prod_id_fk]) avatarMap[row.prod_id_fk] = [];
-    avatarMap[row.prod_id_fk].push({
-      src: row.src,
-      thumbnail: row.thumbnail,
-      avatar_order: row.avatar_order,
-    });
-  }
+  console.log(avatarRows);
+
+  const avatarMap = avatarRows.reduce((obj, row) => {
+    if (!obj[row.prod_id_fk]) obj[row.prod_id_fk] = {};
+    obj[row.prod_id_fk].src = row.src;
+    obj[row.prod_id_fk].thumbnail = row.thumbnail;
+    if (firstOnly) {
+      obj[row.prod_id_fk].avatar_order = row.avatar_order;
+    }
+    return obj;
+  }, {});
   return avatarMap;
 };
 
-// sql - 商品介紹圖
+// sql - 讀取商品介紹圖(詳細頁用)
+const getProductImage = async (productId) => {
+  const sql = `
+    SELECT src, image_order
+    FROM product_images
+    WHERE prod_id_fk = ?
+    ORDER BY image_order;
+  `;
+  const [imageRows] = await pool.query(sql, [productId]);
+  return imageRows;
+};
+
+// 舊
 const getProductImageMap = async (productIds) => {
   const sql = `
     SELECT prod_id_fk, src, image_order
