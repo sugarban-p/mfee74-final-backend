@@ -185,6 +185,31 @@ const getProductItemMap = async (productIds) => {
   return itemDataMap;
 };
 
+const getProductsWithDetails = async (products) => {
+  if (!products.length) return [];
+
+  const productIds = products.map((p) => p.id);
+  const [itemDataMap, introMap, avatarMap, imageMap] = await Promise.all([
+    getProductItemMap(productIds),
+    getProductIntroMap(productIds),
+    getProductAvatarMap(productIds),
+    getProductImageMap(productIds),
+  ]);
+
+  return products.map((product) => {
+    const itemData = itemDataMap[product.id] || {};
+    return {
+      ...product,
+      keywords_id: itemData.keywords_id || [],
+      tags_id: itemData.tags_id || [],
+      items: itemData.items || [],
+      intros: introMap[product.id] || {},
+      avatars: avatarMap[product.id] || [],
+      images: imageMap[product.id] || [],
+    };
+  });
+};
+
 // sql - 自由文字搜尋條件
 const searchFilters = [
   "p.prod_name LIKE ?",
@@ -367,28 +392,7 @@ const getProductListData = async (filterOptions) => {
       `;
   let [rows] = await pool.query(sql, [...sqlValues, perPage, offset]);
 
-  if (rows.length) {
-    const productIds = rows.map((p) => p.id);
-    const [itemDataMap, introMap, avatarMap, imageMap] = await Promise.all([
-      getProductItemMap(productIds),
-      getProductIntroMap(productIds),
-      getProductAvatarMap(productIds),
-      getProductImageMap(productIds),
-    ]);
-
-    rows = rows.map((product) => {
-      const itemData = itemDataMap[product.id] || {};
-      return {
-        ...product,
-        keywords_id: itemData.keywords_id || [],
-        tags_id: itemData.tags_id || [],
-        items: itemData.items || [],
-        intros: introMap[product.id] || {},
-        avatars: avatarMap[product.id] || [],
-        images: imageMap[product.id] || [],
-      };
-    });
-  }
+  rows = await getProductsWithDetails(rows);
 
   return {
     success: true,
@@ -504,39 +508,39 @@ router.patch("/updateFavorite/:productId", requireAuth, async (req, res) => {
 });
 
 // 讀取收藏列表 `user_favorites`
+const getFavoriteListData = async (userId) => {
+  const [rows] = await pool.query(
+    `
+      SELECT
+        uf.id AS favorite_id,
+        uf.created_at AS favorited_at,
+        p.*,
+        COALESCE(item_stats.total_sold, 0) AS total_sold,
+        COALESCE(item_stats.total_stock, 0) AS total_stock
+      FROM user_favorites uf
+      INNER JOIN products p ON p.id = uf.prod_id_fk
+      LEFT JOIN (
+        SELECT
+          prod_id_fk,
+          SUM(sold) AS total_sold,
+          SUM(stock) AS total_stock
+        FROM items
+        GROUP BY prod_id_fk
+      ) item_stats ON item_stats.prod_id_fk = p.id
+      WHERE uf.user_id_fk = ?
+      ORDER BY uf.created_at DESC, uf.id DESC;
+    `,
+    [userId],
+  );
+
+  return getProductsWithDetails(rows);
+};
+
 router.get("/getFavorite", requireAuth, async (req, res) => {
   const userId = req.currentUser.id;
 
   try {
-    const [favorites] = await pool.query(
-      `
-        SELECT
-          uf.id AS favorite_id,
-          uf.prod_id_fk AS product_id,
-          uf.created_at AS favorited_at,
-          p.prod_name,
-          p.slug,
-          p.price,
-          (
-            SELECT pi.intro_text
-            FROM product_intros pi
-            WHERE pi.prod_id_fk = p.id AND pi.intro_type = 'slogan'
-            LIMIT 1
-          ) AS slogan,
-          (
-            SELECT pa.src
-            FROM product_avatars pa
-            WHERE pa.prod_id_fk = p.id
-            ORDER BY pa.avatar_order, pa.id
-            LIMIT 1
-          ) AS avatar
-        FROM user_favorites uf
-        INNER JOIN products p ON p.id = uf.prod_id_fk
-        WHERE uf.user_id_fk = ?
-        ORDER BY uf.created_at DESC, uf.id DESC;
-      `,
-      [userId],
-    );
+    const favorites = await getFavoriteListData(userId);
 
     return res.json({ success: true, favorites });
   } catch (err) {
