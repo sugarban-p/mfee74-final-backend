@@ -418,6 +418,7 @@ router.post("/checkout", async (req, res) => {
         shipping_method,
         receiver_address
       ) VALUES (?, ?, ?, ?, ?)`,
+<<<<<<< HEAD
       [
         orderId,
         receiverName,
@@ -425,6 +426,9 @@ router.post("/checkout", async (req, res) => {
         shippingMethod,
         receiverAddress,
       ],
+=======
+      [orderId, receiverName, receiverPhone, shippingMethod, receiverAddress],
+>>>>>>> main
     );
 
     await connection.query(
