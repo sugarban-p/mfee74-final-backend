@@ -1,4 +1,6 @@
-// Functionality: provide FAQ-first support responses with a safe fallback. Purpose: keep chat replies deterministic without adding external AI dependencies.
+// Functionality: provide FAQ-first support responses with optional AI service layer and safe fallback behavior.
+
+import { askAI } from "../services/ai/index.js";
 
 const FAQ = {
   運費: "全館消費滿 $1,000 元即可享免運費！$1,000 元以下全台統一運費 $90 元。",
@@ -27,6 +29,12 @@ const SENSITIVE_REPLY =
 const FALLBACK_REPLY =
   "感謝您的提問，專員將儘快確認內容並回覆您。如有急事也歡迎致電客服專線。";
 
+function normalizeText(value) {
+  return String(value || "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
+    .trim();
+}
+
 function isSensitive(message) {
   const lower = String(message || "").toLowerCase();
   return SENSITIVE.some(
@@ -42,11 +50,78 @@ function matchFAQ(message) {
   return null;
 }
 
-export async function processMessage(content) {
+function buildAiInput(content, history) {
+  const normalizedContent = normalizeText(content);
+  const lines = [];
+  for (const item of history) {
+    const text = normalizeText(item.content);
+    if (!text) continue;
+    lines.push(`${item.sender === "USER" ? "使用者" : "客服"}：${text}`);
+  }
+
+  const lastHistory = history[history.length - 1];
+  const isDuplicatedLatestUserMessage =
+    lastHistory?.sender === "USER" &&
+    normalizeText(lastHistory.content) === normalizedContent;
+
+  if (!isDuplicatedLatestUserMessage) {
+    lines.push(`使用者：${normalizedContent}`);
+  }
+
+  return lines.join("\n");
+}
+
+export async function processMessage(content, options = {}) {
+  const history = Array.isArray(options.history) ? options.history : [];
+
   if (isSensitive(content)) return { reply: SENSITIVE_REPLY, type: "BLOCKED" };
 
   const faqReply = matchFAQ(content);
   if (faqReply) return { reply: faqReply, type: "FAQ" };
 
-  return { reply: FALLBACK_REPLY, type: "AI" };
+  if (process.env.AI_ENABLED !== "true") {
+    return {
+      reply: FALLBACK_REPLY,
+      type: "FALLBACK",
+      meta: {
+        provider: String(process.env.AI_PROVIDER || "gemini"),
+        model: String(process.env.AI_MODEL || "gemini-3.5-flash"),
+        reason: "AI_NOT_CONFIGURED",
+      },
+    };
+  }
+
+  try {
+    const startedAt = Date.now();
+    const reply = normalizeText(await askAI(buildAiInput(content, history)));
+
+    if (!reply) {
+      throw new Error("EMPTY_AI_REPLY");
+    }
+
+    return {
+      reply,
+      type: "AI",
+      meta: {
+        provider: String(process.env.AI_PROVIDER || "gemini"),
+        model: String(process.env.AI_MODEL || "gemini-3.5-flash"),
+        latencyMs: Date.now() - startedAt,
+      },
+    };
+  } catch (error) {
+    console.error(
+      "[chat/ai]",
+      error?.response?.data || error?.message || error,
+    );
+
+    return {
+      reply: FALLBACK_REPLY,
+      type: "FALLBACK",
+      meta: {
+        provider: String(process.env.AI_PROVIDER || "gemini"),
+        model: String(process.env.AI_MODEL || "gemini-3.5-flash"),
+        reason: "AI_FAILED",
+      },
+    };
+  }
 }
