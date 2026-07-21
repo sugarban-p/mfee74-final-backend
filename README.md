@@ -61,3 +61,25 @@ pnpm run dev
 ### 說明
 - `member/coupons`、`member/favorites`、`member/orders`、`member/pets` 相關獨立頁面功能未在此後端額外擴充。
 - `dashboard/stats` 會讀取 `orders/favorites/pets/user_coupons`，若資料表尚未建立會自動回傳 0，避免中斷頁面。
+
+### AI 客服回覆設定
+- `POST /api/chat/send` 已支援 LLM 串接，並保留既有 FAQ 與敏感詞防護。
+- 回覆流程：敏感詞攔截 -> FAQ 命中 -> 呼叫 AI -> AI 失敗時 fallback 固定訊息。
+
+請於 `.env` 設定以下參數：
+
+```bash
+AI_ENABLED=true
+AI_PROVIDER=gemini
+AI_TIMEOUT_MS=10000
+AI_MAX_TOKENS=300
+AI_TEMPERATURE=0.4
+AI_MODEL=gemini-2.5-flash
+
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_BASE_URL=https://generativelanguage.googleapis.com/v1beta
+```
+
+補充：
+- 若 `AI_ENABLED=false` 或 Gemini 必填參數未設定，系統會自動使用 fallback 回覆，不會中斷 API。
+- AI 相關資訊會寫入 `chat_messages.metadata`（模型、耗時、token usage、finish reason）供後續追蹤。
