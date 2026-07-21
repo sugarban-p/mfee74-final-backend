@@ -3,6 +3,7 @@
 import { Router } from "express";
 
 import { requireAuth } from "../utils/auth-session.js";
+import { askAI } from "../services/ai/index.js";
 import { processMessage } from "../utils/chat.js";
 import { newCaseId } from "../utils/chat-cases.js";
 import pool from "../utils/connect-mysql.js";
@@ -11,6 +12,30 @@ import { isTableMissingError } from "../utils/schema.js";
 import { isSupportUser } from "../utils/support-role.js";
 
 const router = Router();
+
+router.post("/", requireAuth, async (req, res) => {
+  try {
+    const message = String(req.body?.message || "").trim();
+    if (!message) {
+      return res.status(400).json({
+        success: false,
+        message: "Message required",
+      });
+    }
+
+    const answer = await askAI(message);
+    return res.json({
+      success: true,
+      reply: answer,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "AI 回覆失敗",
+    });
+  }
+});
 
 function requireSupport(req, res, next) {
   if (!isSupportUser(req.currentUser)) {
@@ -27,6 +52,39 @@ function normalizeMessage(row) {
     type: row.type,
     createdAt: new Date(row.created_at ?? row.createdAt).toISOString(),
   };
+}
+
+function parseMessageMeta(metadata) {
+  if (!metadata) return {};
+
+  try {
+    const parsed =
+      typeof metadata === "string" ? JSON.parse(metadata) : metadata;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return {};
+    }
+    return parsed;
+  } catch {
+    return {};
+  }
+}
+
+async function loadRecentHistory(consultationId) {
+  const [rows] = await pool.execute(
+    `
+      SELECT content, sender
+      FROM chat_messages
+      WHERE consultation_id = ?
+      ORDER BY created_at DESC, id DESC
+      LIMIT 4
+    `,
+    [consultationId],
+  );
+
+  return rows.reverse().map((item) => ({
+    content: String(item.content || ""),
+    sender: String(item.sender || ""),
+  }));
 }
 
 async function findConsultationByCaseNo(userId, caseNo) {
@@ -178,11 +236,18 @@ router.post("/send", requireAuth, async (req, res) => {
       [consultationId, user.id, content, userMeta],
     );
 
-    const { reply, type } = await processMessage(content);
+    const history = await loadRecentHistory(consultationId);
+    const { reply, type, meta } = await processMessage(content, { history });
+    const userMetaParsed = parseMessageMeta(userMeta);
     const aiMeta = JSON.stringify({
-      caseId,
-      event: "MESSAGE",
+      ...userMetaParsed,
       replyType: type,
+      aiProvider: meta?.provider || null,
+      aiModel: meta?.model || null,
+      aiLatencyMs: Number(meta?.latencyMs || 0) || null,
+      aiUsage: meta?.usage || null,
+      aiFinishReason: meta?.finishReason || null,
+      aiReason: meta?.reason || null,
     });
     const [aiInsert] = await pool.execute(
       `
