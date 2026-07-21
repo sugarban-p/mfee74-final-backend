@@ -6,7 +6,6 @@ import pool from "../utils/connect-mysql.js";
 import { requireAuth } from "../utils/auth-session.js";
 
 const router = Router();
-router.use(requireAuth);
 
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 const backendUrl = process.env.BACKEND_URL || "http://localhost:3001";
@@ -30,6 +29,16 @@ const linePay = {
 
 const linePayOrders = new Map();
 const productImages = ["/cat-category.png", "/events.png", "/dog-category.png"];
+const publicPaymentCallbackPaths = new Set([
+  "/payments/ecpay/notify",
+  "/payments/ecpay/return",
+  "/payments/linepay/confirm",
+]);
+
+router.use((req, res, next) => {
+  if (publicPaymentCallbackPaths.has(req.path)) return next();
+  return requireAuth(req, res, next);
+});
 
 const orderStatusMap = {
   1: { key: "processing", text: "處理中" },
@@ -62,12 +71,16 @@ const shippingStatusMap = {
 
 function getPaymentQuery(req) {
   const amount = Number(req.query.amount) || 0;
+  const orderNo =
+    typeof req.query.orderNo === "string" && req.query.orderNo.trim()
+      ? req.query.orderNo.trim()
+      : "";
   const items =
     typeof req.query.items === "string" && req.query.items.trim()
       ? req.query.items.trim()
       : "MOFU 線上商店商品";
 
-  return { amount, items };
+  return { amount, items, orderNo };
 }
 
 function getProductImage(index) {
@@ -90,6 +103,26 @@ function getOrderBadge(order) {
 
 function getPaymentBadge(status) {
   return paymentStatusMap[status] || paymentStatusMap[0];
+}
+
+async function markOrderPaid(orderNo) {
+  if (!orderNo) return;
+
+  await pool.query(
+    `UPDATE orders
+    SET payment_status = 2, paid_at = COALESCE(paid_at, NOW())
+    WHERE order_no = ?`,
+    [orderNo],
+  );
+}
+
+function calculateCouponDiscount(coupon, subtotal) {
+  if (!coupon || subtotal < Number(coupon.minAmount)) return 0;
+  if (coupon.discountType === "percent") {
+    return Math.round(subtotal * (1 - Number(coupon.discountValue) / 100));
+  }
+  if (coupon.code === "FREESHIP") return 0;
+  return Math.min(Number(coupon.discountValue) || 0, subtotal);
 }
 
 function createOrderNo(date = new Date()) {
@@ -258,6 +291,210 @@ router.get("/coupons", async (req, res) => {
   res.json({ success: true, coupons: rows });
 });
 
+router.post("/checkout", async (req, res) => {
+  const userId = req.currentUser.id;
+  const {
+    receiverName,
+    receiverPhone,
+    receiverAddress,
+    shippingMethod = "宅配",
+    paymentMethod = "credit",
+    couponCode = "",
+    invoiceType = "個人發票",
+    remark = "",
+    clearCart = true,
+  } = req.body;
+
+  if (!receiverName || !receiverPhone || !receiverAddress) {
+    return res.status(400).json({
+      success: false,
+      message: "請填寫完整收件資訊",
+    });
+  }
+
+  if (!["credit", "linepay"].includes(paymentMethod)) {
+    return res.status(400).json({
+      success: false,
+      message: "付款方式格式錯誤",
+    });
+  }
+
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const [cartItems] = await connection.query(
+      `SELECT
+        ci.id AS cartId,
+        ci.sku_id_fk AS skuId,
+        ci.quantity AS qty,
+        p.prod_name AS productName,
+        i.item_name AS skuName,
+        p.price
+      FROM cart_items ci
+      JOIN items i ON i.id = ci.sku_id_fk
+      JOIN products p ON p.id = i.prod_id_fk
+      WHERE ci.user_id_fk = ? AND ci.is_selected = 1
+      ORDER BY ci.id
+      FOR UPDATE`,
+      [userId],
+    );
+
+    if (cartItems.length === 0) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "購物車沒有可結帳商品",
+      });
+    }
+
+    const subtotal = cartItems.reduce(
+      (sum, item) => sum + Number(item.price) * Number(item.qty),
+      0,
+    );
+    let coupon = null;
+
+    if (couponCode) {
+      const [[couponRow]] = await connection.query(
+        `SELECT
+          id,
+          code,
+          discount_type AS discountType,
+          discount_value AS discountValue,
+          min_amount AS minAmount
+        FROM coupons
+        WHERE code = ? AND is_active = 1
+        LIMIT 1`,
+        [couponCode],
+      );
+      coupon = couponRow || null;
+    }
+
+    const shippingFee = 0;
+    const discount = calculateCouponDiscount(coupon, subtotal);
+    const finalAmount = Math.max(0, subtotal + shippingFee - discount);
+    const orderNo = createOrderNo();
+
+    const [orderResult] = await connection.query(
+      `INSERT INTO orders (
+        order_no,
+        user_id_fk,
+        order_status,
+        payment_status,
+        shipping_status,
+        items_amount,
+        shipping_fee,
+        coupon_id_fk,
+        coupon_code,
+        coupon_discount,
+        final_amount,
+        payment_method,
+        invoice_type,
+        remark
+      ) VALUES (?, ?, 1, 0, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        orderNo,
+        userId,
+        subtotal,
+        shippingFee,
+        coupon?.id || null,
+        coupon?.code || null,
+        discount,
+        finalAmount,
+        paymentMethod,
+        invoiceType,
+        remark || null,
+      ],
+    );
+
+    const orderId = orderResult.insertId;
+
+    await connection.query(
+      `INSERT INTO order_shipping_infos (
+        order_id_fk,
+        receiver_name,
+        receiver_phone,
+        shipping_method,
+        receiver_address
+      ) VALUES (?, ?, ?, ?, ?)`,
+      [
+        orderId,
+        receiverName,
+        receiverPhone,
+        shippingMethod,
+        receiverAddress,
+      ],
+    );
+
+    await connection.query(
+      `INSERT INTO order_items (
+        order_id_fk,
+        sku_id_fk,
+        product_name,
+        sku_name,
+        product_image,
+        price,
+        quantity,
+        subtotal
+      ) VALUES ?`,
+      [
+        cartItems.map((item) => [
+          orderId,
+          item.skuId,
+          item.productName,
+          item.skuName,
+          null,
+          item.price,
+          item.qty,
+          Number(item.price) * Number(item.qty),
+        ]),
+      ],
+    );
+
+    await connection.query(
+      `INSERT INTO order_status_logs (
+        order_id_fk,
+        status_type,
+        status_value,
+        note
+      ) VALUES
+        (?, 'order', 1, '訂單成立'),
+        (?, 'payment', 0, '等待付款'),
+        (?, 'shipping', 1, '待出貨')`,
+      [orderId, orderId, orderId],
+    );
+
+    if (clearCart) {
+      await connection.query(
+        `DELETE FROM cart_items WHERE user_id_fk = ? AND is_selected = 1`,
+        [userId],
+      );
+    }
+
+    await connection.commit();
+
+    return res.status(201).json({
+      success: true,
+      orderNo,
+      orderId,
+      subtotal,
+      shippingFee,
+      discount,
+      total: finalAmount,
+    });
+  } catch (error) {
+    await connection.rollback();
+    console.error("Create order error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "建立訂單失敗",
+    });
+  } finally {
+    connection.release();
+  }
+});
+
 router.get("/list", async (req, res) => {
   const demoUserId = req.currentUser.id;
   const [orders] = await pool.query(
@@ -383,7 +620,7 @@ router.get("/list/:orderNo", async (req, res) => {
 });
 
 router.get("/payments/ecpay", (req, res) => {
-  const { amount, items } = getPaymentQuery(req);
+  const { amount, items, orderNo } = getPaymentQuery(req);
 
   if (!amount) {
     return res.status(400).json({ success: false, message: "缺少總金額" });
@@ -391,7 +628,7 @@ router.get("/payments/ecpay", (req, res) => {
 
   const params = {
     MerchantID: ecpay.merchantId,
-    MerchantTradeNo: createOrderNo(),
+    MerchantTradeNo: orderNo || createOrderNo(),
     MerchantTradeDate: formatEcpayDate(),
     PaymentType: "aio",
     EncryptType: 1,
@@ -411,22 +648,24 @@ router.get("/payments/ecpay", (req, res) => {
   );
 });
 
-router.post("/payments/ecpay/notify", (req, res) => {
+router.post("/payments/ecpay/notify", async (req, res) => {
+  await markOrderPaid(req.body.MerchantTradeNo);
   res.send("1|OK");
 });
 
-router.post("/payments/ecpay/return", (req, res) => {
+router.post("/payments/ecpay/return", async (req, res) => {
+  await markOrderPaid(req.body.MerchantTradeNo);
   res.redirect(`${frontendUrl}/checkout/success`);
 });
 
 router.get("/payments/linepay", async (req, res) => {
-  const { amount, items } = getPaymentQuery(req);
+  const { amount, items, orderNo } = getPaymentQuery(req);
 
   if (!amount) {
     return res.status(400).json({ success: false, message: "缺少總金額" });
   }
 
-  const orderId = createOrderNo();
+  const orderId = orderNo || createOrderNo();
   linePayOrders.set(orderId, { amount });
 
   try {
@@ -496,6 +735,7 @@ router.get("/payments/linepay/confirm", async (req, res) => {
       return res.redirect(`${frontendUrl}/checkout/fail`);
     }
 
+    await markOrderPaid(orderId);
     return res.redirect(`${frontendUrl}/checkout/success`);
   } catch (error) {
     console.error("LINE Pay confirm error:", error);
