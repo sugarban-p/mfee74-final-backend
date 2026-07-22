@@ -502,15 +502,52 @@ router.get("/mega-menu", async (req, res) => {
 });
 
 // 讀取收藏列表 `user_favorites`
-const getFavoriteListData = async (userId) => {
+const getFavoriteListData = async (userId, tagMaps) => {
   const [rows] = await pool.query(
     `
       SELECT
         uf.id AS favorite_id,
         uf.created_at AS favorited_at,
-        p.*,
+        p.id AS id,
+        p.prod_name,
+        p.pet_tag_id_fk,
+        p.category_id_fk,
+        p.price,
+        p.slug,
+        p.created_at,
         COALESCE(item_stats.total_sold, 0) AS total_sold,
-        COALESCE(item_stats.total_stock, 0) AS total_stock
+        COALESCE(item_stats.total_stock, 0) AS total_stock,
+        COALESCE(
+          (
+            SELECT JSON_ARRAYAGG(
+              JSON_OBJECT(
+                'item_id', i.id,
+                'item_name', i.item_name,
+                'sku', i.sku,
+                'sold', i.sold,
+                'stock', i.stock,
+                'tags', COALESCE(
+                  (
+                    SELECT JSON_ARRAYAGG(
+                      JSON_OBJECT(
+                        'id', pst.id,
+                        'tag_ch', pst.tag_ch,
+                        'tag_slug', pst.tag_slug
+                      )
+                    )
+                    FROM item_tags it
+                    INNER JOIN product_special_tags pst ON pst.id = it.tag_id_fk
+                    WHERE it.item_id_fk = i.id
+                  ),
+                  JSON_ARRAY()
+                )
+              )
+            )
+            FROM items i
+            WHERE i.prod_id_fk = p.id
+          ),
+          JSON_ARRAY()
+        ) AS items
       FROM user_favorites uf
       INNER JOIN products p ON p.id = uf.prod_id_fk
       LEFT JOIN (
@@ -527,13 +564,33 @@ const getFavoriteListData = async (userId) => {
     [userId],
   );
 
-  return getProductsWithDetails(rows);
+  const productIds = rows.map((product) => product.id);
+  const [introMap, avatarMap] = productIds.length
+    ? await Promise.all([
+        getProductIntroMap(productIds, true),
+        getProductAvatarMap(productIds, true),
+      ])
+    : [{}, {}];
+
+  return rows.map((product) => {
+    const items = parseJsonArray(product.items);
+    const productData = formatProductTags(product, tagMaps);
+    return {
+      ...productData,
+      isFavorite: true,
+      intro: introMap[product.id] || {},
+      avatar: avatarMap[product.id]?.[0] || null,
+      tags: summarizeItemTags(items),
+      items,
+    };
+  });
 };
 router.get("/getFavorite", requireAuth, async (req, res) => {
   const userId = req.currentUser.id;
 
   try {
-    const favorites = await getFavoriteListData(userId);
+    const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
+    const favorites = await getFavoriteListData(userId, tagMaps);
 
     return res.json({ success: true, favorites });
   } catch (err) {
