@@ -729,6 +729,8 @@ router.get("/:petTypeId/:productId/buy", async (req, res) => {
   const { totalSold, totalStock } = sumItemDetail(items);
   const avatarResult = await getProductAvatarMap(productId);
   const [avatars] = Object.values(avatarResult);
+  const introResult = await getProductIntroMap(productId);
+  const [intros] = Object.values(introResult);
   const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
   res.json({
     params: { petTypeId, productId },
@@ -740,6 +742,7 @@ router.get("/:petTypeId/:productId/buy", async (req, res) => {
     },
     items,
     avatars,
+    intros,
   });
 });
 
@@ -753,6 +756,8 @@ router.get("/:petTypeId/:productId/detail", async (req, res) => {
   const { totalSold, totalStock } = sumItemDetail(items);
   const avatarResult = await getProductAvatarMap(productId);
   const [avatars] = Object.values(avatarResult);
+  const introResult = await getProductIntroMap(productId);
+  const [intros] = Object.values(introResult);
   const images = await getProductImage(productId);
   const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
   res.json({
@@ -766,6 +771,7 @@ router.get("/:petTypeId/:productId/detail", async (req, res) => {
     items,
     avatars,
     images,
+    intros,
   });
 });
 
