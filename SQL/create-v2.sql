@@ -217,6 +217,7 @@ CREATE TABLE `product_pet_tags` (
     `tag_code` VARCHAR(10) NOT NULL,
     `tag_ch` VARCHAR(50) NOT NULL,
     `tag_slug` VARCHAR(50) NOT NULL,
+    `tag_page` VARCHAR(10) NOT NULL,
     PRIMARY KEY (`id`)
 ) COMMENT = '商品寵物分類列表';
 
@@ -505,7 +506,8 @@ ADD CONSTRAINT `uq_special_tag_slug` UNIQUE (`tag_slug`);
 ALTER TABLE `product_pet_tags`
 ADD CONSTRAINT `uq_pet_tag_code` UNIQUE (`tag_code`),
 ADD CONSTRAINT `uq_pet_tag_ch` UNIQUE (`tag_ch`),
-ADD CONSTRAINT `uq_pet_tag_slug` UNIQUE (`tag_slug`);
+ADD CONSTRAINT `uq_pet_tag_slug` UNIQUE (`tag_slug`),
+ADD CONSTRAINT `uq_pet_tag_page` UNIQUE (`tag_page`);
 
 ALTER TABLE `product_category_tags`
 ADD CONSTRAINT `uq_category_tag_code` UNIQUE (`tag_code`),
