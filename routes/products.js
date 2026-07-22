@@ -3,16 +3,34 @@
 import { Router } from "express";
 import pool from "../utils/connect-mysql.js";
 import { requireAuth } from "../utils/auth-session.js";
-import { accumulateResponse } from "openai/lib/responses/ResponseAccumulator.js";
 
 const router = Router();
 
 // 排序選項 對照 sql
 const sortList = {
   default: "total_sold DESC",
-  latest: "p.created_at ASC",
+  latest: "p.created_at DESC",
   price_asc: "p.price ASC",
   price_desc: "p.price DESC",
+};
+
+const parseIdList = (value) => {
+  if (!value) return [];
+  return String(value)
+    .split(",")
+    .map((id) => Number(id))
+    .filter((id) => Number.isInteger(id) && id > 0);
+};
+
+const parseNumber = (value, defaultValue) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : defaultValue;
+};
+
+const parseJsonArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+  return JSON.parse(value);
 };
 
 // sql - 寵物類別列表
@@ -97,7 +115,215 @@ const getProductImage = async (productId) => {
   return imageRows;
 };
 
+// sql - 自由文字搜尋條件
+const searchFilters = [
+  "p.prod_name LIKE ?",
+  `
+    EXISTS (
+      SELECT 1
+      FROM items search_i
+      WHERE search_i.prod_id_fk = p.id AND search_i.item_name LIKE ?
+    )
+  `,
+  `
+    EXISTS (
+      SELECT 1
+      FROM items search_keyword_i
+      INNER JOIN item_keywords search_ik ON search_ik.item_id_fk = search_keyword_i.id
+      INNER JOIN keywords search_k ON search_k.id = search_ik.keyword_id_fk
+      WHERE search_keyword_i.prod_id_fk = p.id AND search_k.keyword LIKE ?
+    )
+  `,
+  `
+    EXISTS (
+      SELECT 1
+      FROM items search_tag_i
+      INNER JOIN item_tags search_it ON search_it.item_id_fk = search_tag_i.id
+      INNER JOIN product_special_tags search_pst ON search_pst.id = search_it.tag_id_fk
+      WHERE search_tag_i.prod_id_fk = p.id AND search_pst.tag_ch LIKE ?
+    )
+  `,
+];
+const buildSearchFilter = (search) => {
+  if (!search) return null;
+
+  const likeSearch = `%${search}%`;
+  return {
+    sql: `(${searchFilters.join(" OR ")})`,
+    values: searchFilters.map(() => likeSearch),
+  };
+};
+
+const buildProductFilters = (filterOptions) => {
+  const {
+    petTypeId,
+    categoryId = 0,
+    priceMin = -1,
+    priceMax = -1,
+    tagIds = [],
+    search,
+  } = filterOptions;
+
+  const filters = ["p.pet_tag_id_fk = ?"];
+  const sqlValues = [petTypeId];
+
+  if (categoryId) {
+    filters.push("p.category_id_fk = ?");
+    sqlValues.push(categoryId);
+  }
+  if (priceMin > 0) {
+    filters.push("p.price >= ?");
+    sqlValues.push(priceMin);
+  }
+  if (priceMax > 0) {
+    filters.push("p.price <= ?");
+    sqlValues.push(priceMax);
+  }
+  if (tagIds.length) {
+    filters.push(`
+      EXISTS (
+        SELECT 1
+        FROM items tag_i
+        INNER JOIN item_tags it ON it.item_id_fk = tag_i.id
+        WHERE tag_i.prod_id_fk = p.id AND it.tag_id_fk IN (?)
+      )
+    `);
+    sqlValues.push(tagIds);
+  }
+
+  const searchFilter = buildSearchFilter(search);
+  if (searchFilter) {
+    filters.push(searchFilter.sql);
+    sqlValues.push(...searchFilter.values);
+  }
+
+  return {
+    sql: `WHERE ${filters.join(" AND ")}`,
+    values: sqlValues,
+  };
+};
+
+// sql - 讀取篩選後商品的 tag facets
+const getTagFacets = async (sqlFilter, sqlValues) => {
+  const sql = `
+    SELECT DISTINCT
+      pst.id,
+      pst.tag_ch,
+      pst.tag_slug
+    FROM products p
+    INNER JOIN items i ON i.prod_id_fk = p.id
+    INNER JOIN item_tags it ON it.item_id_fk = i.id
+    INNER JOIN product_special_tags pst ON pst.id = it.tag_id_fk
+    ${sqlFilter}
+    ORDER BY pst.id;
+  `;
+  const [rows] = await pool.query(sql, sqlValues);
+  return rows;
+};
+
 // sql - 讀取 品項符合篩選條件 的商品 (列表頁)
+const getProductMap = async (filterOptions, sort = "default", page = 1) => {
+  const perPage = 16;
+  const currentPage = Math.max(1, Math.floor(Number(page) || 1));
+  const offset = (currentPage - 1) * perPage;
+
+  // 篩選條件
+  const { sql: sqlFilter, values: sqlValues } =
+    buildProductFilters(filterOptions);
+  const sqlSort = `ORDER BY ${sortList[sort] || sortList.default}, p.id ASC`;
+  const countSql = `
+      SELECT COUNT(DISTINCT p.id) AS totalRows
+      FROM products p
+      ${sqlFilter};
+    `;
+  const [[countData]] = await pool.query(countSql, sqlValues);
+  const tags = await getTagFacets(sqlFilter, sqlValues);
+  const totalRows = countData.totalRows;
+  const totalPages = Math.ceil(totalRows / perPage);
+  const pagination = {
+    currentPage,
+    perPage,
+    totalRows,
+    totalPages,
+  };
+
+  const productSql = `
+    SELECT
+      p.id AS product_id,
+      p.prod_name,
+      p.price,
+      p.slug,
+      p.created_at,
+      COALESCE(item_stats.total_sold, 0) AS total_sold,
+      COALESCE(item_stats.total_stock, 0) AS total_stock,
+      COALESCE(
+        (
+          SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+              'item_id', i.id,
+              'item_name', i.item_name,
+              'sku', i.sku,
+              'sold', i.sold,
+              'stock', i.stock,
+              'tags', COALESCE(
+                (
+                  SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                      'id', pst.id,
+                      'tag_ch', pst.tag_ch,
+                      'tag_slug', pst.tag_slug
+                    )
+                  )
+                  FROM item_tags it
+                  INNER JOIN product_special_tags pst ON pst.id = it.tag_id_fk
+                  WHERE it.item_id_fk = i.id
+                ),
+                JSON_ARRAY()
+              )
+            )
+          )
+          FROM items i
+          WHERE i.prod_id_fk = p.id
+        ),
+        JSON_ARRAY()
+      ) AS items
+    FROM products p
+    LEFT JOIN (
+      SELECT
+        prod_id_fk,
+        SUM(sold) AS total_sold,
+        SUM(stock) AS total_stock
+      FROM items
+      GROUP BY prod_id_fk
+    ) item_stats ON item_stats.prod_id_fk = p.id
+    ${sqlFilter}
+    ${sqlSort}
+    LIMIT ? OFFSET ?;
+  `;
+  const [productRows] = await pool.query(productSql, [
+    ...sqlValues,
+    perPage,
+    offset,
+  ]);
+  const productIds = productRows.map((product) => product.product_id);
+  const [introMap, avatarMap] = productIds.length
+    ? await Promise.all([
+        getProductIntroMap(productIds, true),
+        getProductAvatarMap(productIds, true),
+      ])
+    : [{}, {}];
+
+  return {
+    facets: { tags },
+    pagination,
+    products: productRows.map((product) => ({
+      ...product,
+      intro: introMap[product.product_id] || {},
+      avatar: avatarMap[product.product_id]?.[0] || null,
+      items: parseJsonArray(product.items),
+    })),
+  };
+};
 
 // sql - 讀取指定商品 (選購)
 const getProduct = async (productId) => {
@@ -153,328 +379,10 @@ const sumItemDetail = (items) => {
   return result;
 };
 
-// // sql - 品項關鍵字 + tags
-// const getItemDetails = async (itemList) => {
-//   if (!itemList.length) return [];
-
-//   const itemIds = itemList.map((item) => item.id);
-//   const sql_keyword = `
-//     SELECT DISTINCT item_id_fk, keyword_id_fk
-//     FROM item_keywords
-//     WHERE item_id_fk IN (?)
-//     ORDER BY item_id_fk, keyword_id_fk;
-//   `;
-//   const [keywordRows] = await pool.query(sql_keyword, [itemIds]);
-
-//   const keywordMap = {};
-//   for (const row of keywordRows) {
-//     if (!keywordMap[row.item_id_fk]) keywordMap[row.item_id_fk] = new Set();
-//     keywordMap[row.item_id_fk].add(row.keyword_id_fk);
-//   }
-
-//   const sql_tag = `
-//     SELECT DISTINCT item_id_fk, tag_id_fk
-//     FROM item_tags
-//     WHERE item_id_fk IN (?)
-//     ORDER BY item_id_fk, tag_id_fk;
-//   `;
-//   const [tagRows] = await pool.query(sql_tag, [itemIds]);
-
-//   const tagMap = {};
-//   for (const row of tagRows) {
-//     if (!tagMap[row.item_id_fk]) tagMap[row.item_id_fk] = new Set();
-//     tagMap[row.item_id_fk].add(row.tag_id_fk);
-//   }
-
-//   return itemList.map((item) => ({
-//     ...item,
-//     keywords_id: [...(keywordMap[item.id] || [])],
-//     tags_id: [...(tagMap[item.id] || [])],
-//   }));
-// };
-// // console.log(
-// //   await getItemDetails([{ id: 31 }, { id: 32 }, { id: 33 }, { id: 34 }]),
-// // );
-
-// // sql - 依商品(篩選後)讀取底下的所有品項
-// const getProductItemMap = async (productIds) => {
-//   const sql = `SELECT * FROM items WHERE prod_id_fk IN (?) ORDER BY prod_id_fk, id;`;
-//   let [itemRows] = await pool.query(sql, [productIds]);
-//   itemRows = await getItemDetails(itemRows);
-
-//   const itemDataMap = {};
-//   for (const item of itemRows) {
-//     if (!itemDataMap[item.prod_id_fk]) {
-//       itemDataMap[item.prod_id_fk] = {
-//         keywordSet: new Set(),
-//         tagSet: new Set(),
-//         items: [],
-//       };
-//     }
-//     const itemData = itemDataMap[item.prod_id_fk];
-//     itemData.items.push(item);
-//     for (const keywordId of item.keywords_id) {
-//       itemData.keywordSet.add(keywordId);
-//     }
-//     for (const tagId of item.tags_id) {
-//       itemData.tagSet.add(tagId);
-//     }
-//   }
-
-//   for (const itemData of Object.values(itemDataMap)) {
-//     itemData.keywords_id = [...itemData.keywordSet];
-//     itemData.tags_id = [...itemData.tagSet];
-//     delete itemData.keywordSet;
-//     delete itemData.tagSet;
-//   }
-
-//   return itemDataMap;
-// };
-
-// const getProductsWithDetails = async (products) => {
-//   if (!products.length) return [];
-
-//   const productIds = products.map((p) => p.id);
-//   const [itemDataMap, introMap, avatarMap, imageMap] = await Promise.all([
-//     getProductItemMap(productIds),
-//     getProductIntroMap(productIds),
-//     getProductAvatarMap(productIds),
-//     getProductImageMap(productIds),
-//   ]);
-
-//   return products.map((product) => {
-//     const itemData = itemDataMap[product.id] || {};
-//     return {
-//       ...product,
-//       keywords_id: itemData.keywords_id || [],
-//       tags_id: itemData.tags_id || [],
-//       items: itemData.items || [],
-//       intros: introMap[product.id] || {},
-//       avatars: avatarMap[product.id] || [],
-//       images: imageMap[product.id] || [],
-//     };
-//   });
-// };
-
-// // sql - 自由文字搜尋條件
-// const searchFilters = [
-//   "p.prod_name LIKE ?",
-//   `
-//     EXISTS (
-//       SELECT 1
-//       FROM items search_i
-//       WHERE search_i.prod_id_fk = p.id AND search_i.item_name LIKE ?
-//     )
-//   `,
-//   `
-//     EXISTS (
-//       SELECT 1
-//       FROM items search_keyword_i
-//       INNER JOIN item_keywords search_ik ON search_ik.item_id_fk = search_keyword_i.id
-//       INNER JOIN keywords search_k ON search_k.id = search_ik.keyword_id_fk
-//       WHERE search_keyword_i.prod_id_fk = p.id AND search_k.keyword LIKE ?
-//     )
-//   `,
-// ];
-
-// const buildSearchFilter = (search) => {
-//   if (!search) return null;
-
-//   const likeSearch = `%${search}%`;
-//   return {
-//     sql: `(${searchFilters.join(" OR ")})`,
-//     values: searchFilters.map(() => likeSearch),
-//   };
-// };
-
-// const buildProductFilters = (filterOptions) => {
-//   const {
-//     petTypeId,
-//     selectedCategoryId,
-//     selectedTags = [],
-//     selectedKeywords = [],
-//     priceMin,
-//     priceMax,
-//     search,
-//   } = filterOptions;
-
-//   const filters = ["p.pet_tag_id_fk = ?"];
-//   const sqlValues = [petTypeId];
-
-//   if (selectedCategoryId) {
-//     filters.push("p.category_id_fk = ?");
-//     sqlValues.push(selectedCategoryId);
-//   }
-//   if (priceMin > 0) {
-//     filters.push("p.price >= ?");
-//     sqlValues.push(priceMin);
-//   }
-//   if (priceMax > 0) {
-//     filters.push("p.price <= ?");
-//     sqlValues.push(priceMax);
-//   }
-//   if (selectedTags.length) {
-//     filters.push(`
-//       EXISTS (
-//         SELECT 1
-//         FROM items tag_i
-//         INNER JOIN item_tags it ON it.item_id_fk = tag_i.id
-//         WHERE tag_i.prod_id_fk = p.id AND it.tag_id_fk IN (?)
-//       )
-//     `);
-//     sqlValues.push(selectedTags);
-//   }
-//   for (const keywordId of selectedKeywords) {
-//     filters.push(`
-//       EXISTS (
-//         SELECT 1
-//         FROM items keyword_i
-//         INNER JOIN item_keywords ik ON ik.item_id_fk = keyword_i.id
-//         WHERE keyword_i.prod_id_fk = p.id AND ik.keyword_id_fk = ?
-//       )
-//     `);
-//     sqlValues.push(keywordId);
-//   }
-
-//   const searchFilter = buildSearchFilter(search);
-//   if (searchFilter) {
-//     filters.push(searchFilter.sql);
-//     sqlValues.push(...searchFilter.values);
-//   }
-
-//   return {
-//     sql: `WHERE ${filters.join(" AND ")}`,
-//     values: sqlValues,
-//   };
-// };
-
-// const getFacetKeywordData = async (sqlFilter, sqlValues) => {
-//   const sql = `
-//     SELECT DISTINCT k.*
-//     FROM keywords k
-//     INNER JOIN item_keywords ik ON ik.keyword_id_fk = k.id
-//     INNER JOIN items i ON i.id = ik.item_id_fk
-//     INNER JOIN products p ON p.id = i.prod_id_fk
-//     ${sqlFilter}
-//     ORDER BY k.id;
-//   `;
-//   const [rows] = await pool.query(sql, sqlValues);
-//   return rows;
-// };
-
-// const getFacetTagData = async (sqlFilter, sqlValues) => {
-//   const sql = `
-//     SELECT DISTINCT pst.*
-//     FROM product_special_tags pst
-//     INNER JOIN item_tags it ON it.tag_id_fk = pst.id
-//     INNER JOIN items i ON i.id = it.item_id_fk
-//     INNER JOIN products p ON p.id = i.prod_id_fk
-//     ${sqlFilter}
-//     ORDER BY pst.id;
-//   `;
-//   const [rows] = await pool.query(sql, sqlValues);
-//   return rows;
-// };
-
-// const getProductListData = async (filterOptions) => {
-//   const { sort, currentPage } = filterOptions;
-//   const perPage = 16;
-
-//   // 篩選條件
-//   const { sql: sqlFilter, values: sqlValues } =
-//     buildProductFilters(filterOptions);
-
-//   // 先計算總數與 facet，再只讀取目前頁面的商品明細
-//   const sqlSort = `ORDER BY ${sortList[sort]} , p.id ASC`;
-//   const countSql = `
-//     SELECT COUNT(*) AS totalRows
-//     FROM products p
-//     ${sqlFilter};
-//   `;
-//   const [[countData]] = await pool.query(countSql, sqlValues);
-//   const totalRows = countData.totalRows;
-//   const totalPages = Math.ceil(totalRows / perPage);
-//   const pagination = {
-//     currentPage,
-//     perPage,
-//     totalRows,
-//     totalPages,
-//   };
-//   const [keywordData, tagData] = await Promise.all([
-//     getFacetKeywordData(sqlFilter, sqlValues),
-//     getFacetTagData(sqlFilter, sqlValues),
-//   ]);
-
-//   if (totalRows && currentPage > totalPages) {
-//     return {
-//       success: false,
-//       facets: {
-//         keywords: keywordData,
-//         tags: tagData,
-//       },
-//       pagination,
-//       products: [],
-//     };
-//   }
-
-//   const offset = (currentPage - 1) * perPage;
-//   const sql = `
-//       SELECT
-//         p.*,
-//         COALESCE(item_stats.total_sold, 0) AS total_sold,
-//         COALESCE(item_stats.total_stock, 0) AS total_stock
-//       FROM products p
-//       LEFT JOIN (
-//         SELECT
-//           prod_id_fk,
-//           SUM(sold) AS total_sold,
-//           SUM(stock) AS total_stock
-//         FROM items
-//         GROUP BY prod_id_fk
-//       ) item_stats ON item_stats.prod_id_fk = p.id
-//       ${sqlFilter}
-//       ${sqlSort}
-//       LIMIT ? OFFSET ?
-//       `;
-//   let [rows] = await pool.query(sql, [...sqlValues, perPage, offset]);
-
-//   rows = await getProductsWithDetails(rows);
-
-//   return {
-//     success: true,
-//     facets: {
-//       keywords: keywordData,
-//       tags: tagData,
-//     },
-//     pagination,
-//     products: rows,
-//   };
-// };
-
 router.get("/", async (req, res) => {
-  const prodIds = [1, 10];
-  const prodId = 10;
-  const productIntroMap = await getProductIntroMap(prodIds);
-  const productAvatarMap = await getProductAvatarMap(prodIds, true);
-  const productImage = await getProductImage(prodId);
-  const itemMap = await getProductItemMap(prodIds);
   return res.json({
     success: true,
     page: "product",
-    productIntroMap,
-    productImage,
-    productAvatarMap,
-    itemMap,
-  });
-});
-
-// 商品列表頁
-router.get("/:petTypeId", async (req, res) => {
-  const petTypeId = req.params.petTypeId;
-  const categoriesCount = await countCategoryProduct(petTypeId);
-  res.json({
-    petTypeId,
-    facets: { categories: categoriesCount },
   });
 });
 
@@ -522,350 +430,262 @@ router.get("/:petTypeId/:productId/detail", async (req, res) => {
   });
 });
 
-// // 取得前端資訊
-// const getParams = (req) => {
-//   const petType = req.params.petType;
-//   const petTypeData = /^\d+$/.test(petType)
-//     ? petTypeList.find((elem) => elem.id === +petType)
-//     : petTypeList.find((elem) => elem["tag_slug"] === petType);
-//   if (!petTypeData) return null;
+// 商品列表頁
+router.get("/:petTypeId", async (req, res) => {
+  const petTypeId = req.params.petTypeId;
+  const categoriesCount = await countCategoryProduct(petTypeId);
+  const search =
+    typeof req.query.search === "string" ? req.query.search.trim() : "";
+  const { facets, pagination, products } = await getProductMap(
+    {
+      petTypeId: parseNumber(petTypeId, 0),
+      categoryId: parseNumber(req.query.categoryId ?? req.query.category, 0),
+      priceMin: parseNumber(req.query.priceMin ?? req.query["min-value"], -1),
+      priceMax: parseNumber(req.query.priceMax ?? req.query["max-value"], -1),
+      tagIds: parseIdList(req.query.tagIds ?? req.query.tags),
+      search,
+    },
+    req.query.sort,
+    req.query.page,
+  );
 
-//   const selectedCategory = req.query.category ?? "";
-//   const categoryData = /^\d+$/.test(selectedCategory)
-//     ? categoryList.find((elem) => elem.id === +selectedCategory)
-//     : categoryList.find((elem) => elem["tag_slug"] === selectedCategory);
-//   const priceMin = +req.query["min-value"] || -1;
-//   const priceMax = +req.query["max-value"] || -1;
-//   const sort = sortList[req.query.sort] ? req.query.sort : "default";
-//   const currentPage = parsePositiveInt(req.query.page, 1);
-//   const search = `${req.query.search ?? ""}`.trim();
-//   return {
-//     petTypeId: petTypeData.id,
-//     selectedCategoryId: categoryData?.id || 0,
-//     selectedTags: parseIdList(req.query.tags),
-//     selectedKeywords: parseIdList(req.query.keywords),
-//     priceMin,
-//     priceMax,
-//     sort,
-//     currentPage,
-//     search,
-//   };
-// };
+  res.json({
+    success: true,
+    petTypeId,
+    facets: { categories: categoriesCount, tags: facets.tags },
+    pagination,
+    products,
+  });
+});
 
-// const parsePositiveInt = (value, defaultValue) => {
-//   const number = +value;
-//   return Number.isInteger(number) && number > 0 ? number : defaultValue;
-// };
+// 新增/取消 收藏商品 `user_favorites`
+router.patch("/updateFavorite/:productId", requireAuth, async (req, res) => {
+  const userId = req.currentUser.id;
+  const productId = +req.params.productId;
+  const isFavorite = req.body.favorite; // Boolean (true=收藏，false=取消收藏)
 
-// const parseIdList = (value) => [
-//   ...new Set(
-//     (Array.isArray(value) ? value.join(",") : `${value ?? ""}`)
-//       .split(/[,\s]+/)
-//       .map((id) => +id)
-//       .filter((id) => Number.isInteger(id) && id > 0),
-//   ),
-// ];
+  if (
+    !Number.isInteger(productId) ||
+    productId <= 0 ||
+    typeof isFavorite !== "boolean"
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "商品或收藏狀態格式錯誤",
+    });
+  }
 
-// // 新增/取消 收藏商品 `user_favorites`
-// router.patch("/updateFavorite/:productId", requireAuth, async (req, res) => {
-//   const userId = req.currentUser.id;
-//   const productId = +req.params.productId;
-//   const isFavorite = req.body.favorite; // Boolean (true=收藏，false=取消收藏)
+  try {
+    if (isFavorite) {
+      await pool.query(
+        `
+          INSERT INTO user_favorites (user_id_fk, prod_id_fk)
+          VALUES (?, ?)
+          ON DUPLICATE KEY UPDATE prod_id_fk = prod_id_fk;
+        `,
+        [userId, productId],
+      );
+    } else {
+      await pool.query(
+        `
+          DELETE FROM user_favorites
+          WHERE user_id_fk = ? AND prod_id_fk = ?;
+        `,
+        [userId, productId],
+      );
+    }
 
-//   if (
-//     !Number.isInteger(productId) ||
-//     productId <= 0 ||
-//     typeof isFavorite !== "boolean"
-//   ) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "商品或收藏狀態格式錯誤",
-//     });
-//   }
+    return res.json({ success: true, favorite: isFavorite });
+  } catch (err) {
+    if (err.code === "ER_NO_REFERENCED_ROW_2") {
+      return res.status(404).json({
+        success: false,
+        message: "找不到商品",
+      });
+    }
 
-//   try {
-//     if (isFavorite) {
-//       await pool.query(
-//         `
-//           INSERT INTO user_favorites (user_id_fk, prod_id_fk)
-//           VALUES (?, ?)
-//           ON DUPLICATE KEY UPDATE prod_id_fk = prod_id_fk;
-//         `,
-//         [userId, productId],
-//       );
-//     } else {
-//       await pool.query(
-//         `
-//           DELETE FROM user_favorites
-//           WHERE user_id_fk = ? AND prod_id_fk = ?;
-//         `,
-//         [userId, productId],
-//       );
-//     }
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "更新收藏失敗",
+    });
+  }
+});
 
-//     return res.json({ success: true, favorite: isFavorite });
-//   } catch (err) {
-//     if (err.code === "ER_NO_REFERENCED_ROW_2") {
-//       return res.status(404).json({
-//         success: false,
-//         message: "找不到商品",
-//       });
-//     }
+// 讀取收藏列表 `user_favorites`
+const getFavoriteListData = async (userId) => {
+  const [rows] = await pool.query(
+    `
+      SELECT
+        uf.id AS favorite_id,
+        uf.created_at AS favorited_at,
+        p.*,
+        COALESCE(item_stats.total_sold, 0) AS total_sold,
+        COALESCE(item_stats.total_stock, 0) AS total_stock
+      FROM user_favorites uf
+      INNER JOIN products p ON p.id = uf.prod_id_fk
+      LEFT JOIN (
+        SELECT
+          prod_id_fk,
+          SUM(sold) AS total_sold,
+          SUM(stock) AS total_stock
+        FROM items
+        GROUP BY prod_id_fk
+      ) item_stats ON item_stats.prod_id_fk = p.id
+      WHERE uf.user_id_fk = ?
+      ORDER BY uf.created_at DESC, uf.id DESC;
+    `,
+    [userId],
+  );
 
-//     console.error(err);
-//     return res.status(500).json({
-//       success: false,
-//       message: "更新收藏失敗",
-//     });
-//   }
-// });
+  return getProductsWithDetails(rows);
+};
 
-// // 讀取收藏列表 `user_favorites`
-// const getFavoriteListData = async (userId) => {
-//   const [rows] = await pool.query(
-//     `
-//       SELECT
-//         uf.id AS favorite_id,
-//         uf.created_at AS favorited_at,
-//         p.*,
-//         COALESCE(item_stats.total_sold, 0) AS total_sold,
-//         COALESCE(item_stats.total_stock, 0) AS total_stock
-//       FROM user_favorites uf
-//       INNER JOIN products p ON p.id = uf.prod_id_fk
-//       LEFT JOIN (
-//         SELECT
-//           prod_id_fk,
-//           SUM(sold) AS total_sold,
-//           SUM(stock) AS total_stock
-//         FROM items
-//         GROUP BY prod_id_fk
-//       ) item_stats ON item_stats.prod_id_fk = p.id
-//       WHERE uf.user_id_fk = ?
-//       ORDER BY uf.created_at DESC, uf.id DESC;
-//     `,
-//     [userId],
-//   );
+router.get("/getFavorite", requireAuth, async (req, res) => {
+  const userId = req.currentUser.id;
 
-//   return getProductsWithDetails(rows);
-// };
+  try {
+    const favorites = await getFavoriteListData(userId);
 
-// router.get("/getFavorite", requireAuth, async (req, res) => {
-//   const userId = req.currentUser.id;
+    return res.json({ success: true, favorites });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "讀取收藏列表失敗",
+    });
+  }
+});
 
-//   try {
-//     const favorites = await getFavoriteListData(userId);
+// 讀取購物車
+router.get("/getCart", requireAuth, async (req, res) => {
+  const userId = req.currentUser.id;
 
-//     return res.json({ success: true, favorites });
-//   } catch (err) {
-//     console.error(err);
-//     return res.status(500).json({
-//       success: false,
-//       message: "讀取收藏列表失敗",
-//     });
-//   }
-// });
+  try {
+    const [cartItems] = await pool.query(
+      `
+        SELECT
+          ci.id AS cart_id,
+          ci.sku_id_fk AS item_id,
+          ci.quantity,
+          ci.is_selected,
+          i.sku,
+          i.item_name,
+          i.stock,
+          p.id AS product_id,
+          p.prod_name,
+          p.slug,
+          p.price,
+          p.price * ci.quantity AS subtotal,
+          (
+            SELECT pa.src
+            FROM product_avatars pa
+            WHERE pa.prod_id_fk = p.id
+            ORDER BY pa.avatar_order, pa.id
+            LIMIT 1
+          ) AS avatar
+        FROM cart_items ci
+        INNER JOIN items i ON i.id = ci.sku_id_fk
+        INNER JOIN products p ON p.id = i.prod_id_fk
+        WHERE ci.user_id_fk = ?
+        ORDER BY ci.updated_at DESC, ci.id DESC;
+      `,
+      [userId],
+    );
 
-// // 讀取購物車
-// router.get("/getCart", requireAuth, async (req, res) => {
-//   const userId = req.currentUser.id;
+    return res.json({
+      success: true,
+      cartItems,
+      totalAmount: cartItems.reduce(
+        (sum, item) => sum + Number(item.subtotal),
+        0,
+      ),
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "讀取購物車失敗",
+    });
+  }
+});
 
-//   try {
-//     const [cartItems] = await pool.query(
-//       `
-//         SELECT
-//           ci.id AS cart_id,
-//           ci.sku_id_fk AS item_id,
-//           ci.quantity,
-//           ci.is_selected,
-//           i.sku,
-//           i.item_name,
-//           i.stock,
-//           p.id AS product_id,
-//           p.prod_name,
-//           p.slug,
-//           p.price,
-//           p.price * ci.quantity AS subtotal,
-//           (
-//             SELECT pa.src
-//             FROM product_avatars pa
-//             WHERE pa.prod_id_fk = p.id
-//             ORDER BY pa.avatar_order, pa.id
-//             LIMIT 1
-//           ) AS avatar
-//         FROM cart_items ci
-//         INNER JOIN items i ON i.id = ci.sku_id_fk
-//         INNER JOIN products p ON p.id = i.prod_id_fk
-//         WHERE ci.user_id_fk = ?
-//         ORDER BY ci.updated_at DESC, ci.id DESC;
-//       `,
-//       [userId],
-//     );
+// 新增/修改品項數量 到 購物車 `cart_items`
+router.post("/updateCart/:itemId", requireAuth, async (req, res) => {
+  const userId = req.currentUser.id;
 
-//     return res.json({
-//       success: true,
-//       cartItems,
-//       totalAmount: cartItems.reduce(
-//         (sum, item) => sum + Number(item.subtotal),
-//         0,
-//       ),
-//     });
-//   } catch (err) {
-//     console.error(err);
-//     return res.status(500).json({
-//       success: false,
-//       message: "讀取購物車失敗",
-//     });
-//   }
-// });
+  const itemId = +req.params.itemId;
+  const qty = +req.body.qty; // 修改後的數量（absolute quantity），不是變動量（delta）
 
-// // 新增/修改品項數量 到 購物車 `cart_items`
-// router.post("/updateCart/:itemId", requireAuth, async (req, res) => {
-//   const userId = req.currentUser.id;
+  if (
+    !Number.isInteger(itemId) ||
+    itemId <= 0 ||
+    !Number.isInteger(qty) ||
+    qty <= 0
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "品項或數量格式錯誤",
+    });
+  }
 
-//   const itemId = +req.params.itemId;
-//   const qty = +req.body.qty; // 修改後的數量（absolute quantity），不是變動量（delta）
+  try {
+    await pool.query(
+      `
+        INSERT INTO cart_items (user_id_fk, sku_id_fk, quantity)
+        VALUES (?, ?, ?)
+        ON DUPLICATE KEY UPDATE quantity = ?;
+      `,
+      [userId, itemId, qty, qty],
+    );
 
-//   if (
-//     !Number.isInteger(itemId) ||
-//     itemId <= 0 ||
-//     !Number.isInteger(qty) ||
-//     qty <= 0
-//   ) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "品項或數量格式錯誤",
-//     });
-//   }
+    return res.json({ success: true });
+  } catch (err) {
+    if (err.code === "ER_NO_REFERENCED_ROW_2") {
+      return res.status(404).json({
+        success: false,
+        message: "找不到品項",
+      });
+    }
 
-//   try {
-//     await pool.query(
-//       `
-//         INSERT INTO cart_items (user_id_fk, sku_id_fk, quantity)
-//         VALUES (?, ?, ?)
-//         ON DUPLICATE KEY UPDATE quantity = ?;
-//       `,
-//       [userId, itemId, qty, qty],
-//     );
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "更新購物車失敗",
+    });
+  }
+});
 
-//     return res.json({ success: true });
-//   } catch (err) {
-//     if (err.code === "ER_NO_REFERENCED_ROW_2") {
-//       return res.status(404).json({
-//         success: false,
-//         message: "找不到品項",
-//       });
-//     }
+// 移除 購物車品項 `cart_items`
+router.delete("/updateCart/:itemId", requireAuth, async (req, res) => {
+  const userId = req.currentUser.id;
 
-//     console.error(err);
-//     return res.status(500).json({
-//       success: false,
-//       message: "更新購物車失敗",
-//     });
-//   }
-// });
+  const itemId = +req.params.itemId;
 
-// // 移除 購物車品項 `cart_items`
-// router.delete("/updatecart/:itemId", requireAuth, async (req, res) => {
-//   const userId = req.currentUser.id;
+  if (!Number.isInteger(itemId) || itemId <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "品項格式錯誤",
+    });
+  }
 
-//   const itemId = +req.params.itemId;
+  try {
+    await pool.query(
+      `
+        DELETE FROM cart_items
+        WHERE user_id_fk = ? AND sku_id_fk = ?;
+      `,
+      [userId, itemId],
+    );
 
-//   if (!Number.isInteger(itemId) || itemId <= 0) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "品項格式錯誤",
-//     });
-//   }
-
-//   try {
-//     await pool.query(
-//       `
-//         DELETE FROM cart_items
-//         WHERE user_id_fk = ? AND sku_id_fk = ?;
-//       `,
-//       [userId, itemId],
-//     );
-
-//     return res.json({ success: true });
-//   } catch (err) {
-//     console.error(err);
-//     return res.status(500).json({
-//       success: false,
-//       message: "移除購物車品項失敗",
-//     });
-//   }
-// });
-
-// router.get("/:petType/:productId", async (req, res) => {
-//   const params = getParams(req);
-//   if (!params) return res.status(400).json({ success: false });
-
-//   const productId = req.params.productId;
-//   const productFilter = /^\d+$/.test(productId) ? "p.id = ?" : "p.slug = ?";
-//   const [[product]] = await pool.query(
-//     `
-//       SELECT p.*
-//       FROM products p
-//       WHERE p.pet_tag_id_fk = ? AND ${productFilter}
-//       LIMIT 1;
-//     `,
-//     [params.petTypeId, /^\d+$/.test(productId) ? +productId : productId],
-//   );
-
-//   if (!product) return res.status(404).json({ success: false });
-
-//   const [itemDataMap, introMap, avatarMap, imageMap, [tags]] =
-//     await Promise.all([
-//       getProductItemMap([product.id]),
-//       getProductIntroMap([product.id]),
-//       getProductAvatarMap([product.id]),
-//       getProductImageMap([product.id]),
-//       pool.query(
-//         `
-//           SELECT DISTINCT pst.*
-//           FROM product_special_tags pst
-//           INNER JOIN item_tags it ON it.tag_id_fk = pst.id
-//           INNER JOIN items i ON i.id = it.item_id_fk
-//           WHERE i.prod_id_fk = ?
-//           ORDER BY pst.id;
-//         `,
-//         [product.id],
-//       ),
-//     ]);
-//   const itemData = itemDataMap[product.id] || {};
-
-//   res.json({
-//     success: true,
-//     productData: {
-//       id: product.id,
-//       productName: product.prod_name,
-//       tags,
-//       price: product.price,
-//       items: itemData.items || [],
-//       avatars: avatarMap[product.id] || [],
-//       images: imageMap[product.id] || [],
-//       intros: introMap[product.id] || {},
-//     },
-//   });
-// });
-
-// router.get("/:petType", async (req, res) => {
-//   const params = getParams(req);
-//   if (!params) return res.status(400).json({ success: false });
-
-//   const categoriesCount = await countCategoryProduct(params.petTypeId);
-//   const productData = await getProductListData(params);
-//   res.json({
-//     success: productData.success,
-//     params,
-//     facets: {
-//       categories: categoriesCount,
-//       keywords: productData.facets.keywords,
-//       tags: productData.facets.tags,
-//     },
-//     pagination: productData.pagination,
-//     products: productData.products,
-//   });
-// });
+    return res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "移除購物車品項失敗",
+    });
+  }
+});
 
 export default router;
