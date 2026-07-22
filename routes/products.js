@@ -386,76 +386,48 @@ router.get("/", async (req, res) => {
   });
 });
 
-// 商品快速選購頁
-router.get("/:petTypeId/:productId/buy", async (req, res) => {
-  const petTypeId = req.params.petTypeId;
-  const productId = req.params.productId;
-  const product = await getProduct(productId);
-  const items = await getProductItem(productId);
-  const { totalSold, totalStock } = sumItemDetail(items);
-  const avatarResult = await getProductAvatarMap(productId);
-  const [avatars] = Object.values(avatarResult);
-  res.json({
-    params: { petTypeId, productId },
-    product: {
-      ...product,
-      totalSold: totalSold,
-      totalStock: totalStock,
-    },
-    items,
-    avatars,
-  });
-});
-
-// 商品詳細頁
-router.get("/:petTypeId/:productId/detail", async (req, res) => {
-  const petTypeId = req.params.petTypeId;
-  const productId = req.params.productId;
-  const product = await getProduct(productId);
-  const items = await getProductItem(productId);
-  const { totalSold, totalStock } = sumItemDetail(items);
-  const avatarResult = await getProductAvatarMap(productId);
-  const [avatars] = Object.values(avatarResult);
-  const images = await getProductImage(productId);
-  res.json({
-    params: { petTypeId, productId },
-    product: {
-      ...product,
-      totalSold: totalSold,
-      totalStock: totalStock,
-    },
-    items,
-    avatars,
-    images,
-  });
-});
-
-// 商品列表頁
-router.get("/:petTypeId", async (req, res) => {
-  const petTypeId = req.params.petTypeId;
-  const categoriesCount = await countCategoryProduct(petTypeId);
-  const search =
-    typeof req.query.search === "string" ? req.query.search.trim() : "";
-  const { facets, pagination, products } = await getProductMap(
-    {
-      petTypeId: parseNumber(petTypeId, 0),
-      categoryId: parseNumber(req.query.categoryId ?? req.query.category, 0),
-      priceMin: parseNumber(req.query.priceMin ?? req.query["min-value"], -1),
-      priceMax: parseNumber(req.query.priceMax ?? req.query["max-value"], -1),
-      tagIds: parseIdList(req.query.tagIds ?? req.query.tags),
-      search,
-    },
-    req.query.sort,
-    req.query.page,
+// 讀取收藏列表 `user_favorites`
+const getFavoriteListData = async (userId) => {
+  const [rows] = await pool.query(
+    `
+      SELECT
+        uf.id AS favorite_id,
+        uf.created_at AS favorited_at,
+        p.*,
+        COALESCE(item_stats.total_sold, 0) AS total_sold,
+        COALESCE(item_stats.total_stock, 0) AS total_stock
+      FROM user_favorites uf
+      INNER JOIN products p ON p.id = uf.prod_id_fk
+      LEFT JOIN (
+        SELECT
+          prod_id_fk,
+          SUM(sold) AS total_sold,
+          SUM(stock) AS total_stock
+        FROM items
+        GROUP BY prod_id_fk
+      ) item_stats ON item_stats.prod_id_fk = p.id
+      WHERE uf.user_id_fk = ?
+      ORDER BY uf.created_at DESC, uf.id DESC;
+    `,
+    [userId],
   );
 
-  res.json({
-    success: true,
-    petTypeId,
-    facets: { categories: categoriesCount, tags: facets.tags },
-    pagination,
-    products,
-  });
+  return getProductsWithDetails(rows);
+};
+router.get("/getFavorite", requireAuth, async (req, res) => {
+  const userId = req.currentUser.id;
+
+  try {
+    const favorites = await getFavoriteListData(userId);
+
+    return res.json({ success: true, favorites });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "讀取收藏列表失敗",
+    });
+  }
 });
 
 // 新增/取消 收藏商品 `user_favorites`
@@ -508,51 +480,6 @@ router.patch("/updateFavorite/:productId", requireAuth, async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "更新收藏失敗",
-    });
-  }
-});
-
-// 讀取收藏列表 `user_favorites`
-const getFavoriteListData = async (userId) => {
-  const [rows] = await pool.query(
-    `
-      SELECT
-        uf.id AS favorite_id,
-        uf.created_at AS favorited_at,
-        p.*,
-        COALESCE(item_stats.total_sold, 0) AS total_sold,
-        COALESCE(item_stats.total_stock, 0) AS total_stock
-      FROM user_favorites uf
-      INNER JOIN products p ON p.id = uf.prod_id_fk
-      LEFT JOIN (
-        SELECT
-          prod_id_fk,
-          SUM(sold) AS total_sold,
-          SUM(stock) AS total_stock
-        FROM items
-        GROUP BY prod_id_fk
-      ) item_stats ON item_stats.prod_id_fk = p.id
-      WHERE uf.user_id_fk = ?
-      ORDER BY uf.created_at DESC, uf.id DESC;
-    `,
-    [userId],
-  );
-
-  return getProductsWithDetails(rows);
-};
-
-router.get("/getFavorite", requireAuth, async (req, res) => {
-  const userId = req.currentUser.id;
-
-  try {
-    const favorites = await getFavoriteListData(userId);
-
-    return res.json({ success: true, favorites });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({
-      success: false,
-      message: "讀取收藏列表失敗",
     });
   }
 });
@@ -686,6 +613,78 @@ router.delete("/updateCart/:itemId", requireAuth, async (req, res) => {
       message: "移除購物車品項失敗",
     });
   }
+});
+
+// 商品快速選購頁
+router.get("/:petTypeId/:productId/buy", async (req, res) => {
+  const petTypeId = req.params.petTypeId;
+  const productId = req.params.productId;
+  const product = await getProduct(productId);
+  const items = await getProductItem(productId);
+  const { totalSold, totalStock } = sumItemDetail(items);
+  const avatarResult = await getProductAvatarMap(productId);
+  const [avatars] = Object.values(avatarResult);
+  res.json({
+    params: { petTypeId, productId },
+    product: {
+      ...product,
+      totalSold: totalSold,
+      totalStock: totalStock,
+    },
+    items,
+    avatars,
+  });
+});
+
+// 商品詳細頁
+router.get("/:petTypeId/:productId/detail", async (req, res) => {
+  const petTypeId = req.params.petTypeId;
+  const productId = req.params.productId;
+  const product = await getProduct(productId);
+  const items = await getProductItem(productId);
+  const { totalSold, totalStock } = sumItemDetail(items);
+  const avatarResult = await getProductAvatarMap(productId);
+  const [avatars] = Object.values(avatarResult);
+  const images = await getProductImage(productId);
+  res.json({
+    params: { petTypeId, productId },
+    product: {
+      ...product,
+      totalSold: totalSold,
+      totalStock: totalStock,
+    },
+    items,
+    avatars,
+    images,
+  });
+});
+
+// 商品列表頁
+router.get("/:petTypeId", async (req, res) => {
+  const petTypeId = req.params.petTypeId;
+  const categoriesCount = await countCategoryProduct(petTypeId);
+  const search =
+    typeof req.query.search === "string" ? req.query.search.trim() : "";
+  const { facets, pagination, products } = await getProductMap(
+    {
+      petTypeId: parseNumber(petTypeId, 0),
+      categoryId: parseNumber(req.query.categoryId ?? req.query.category, 0),
+      priceMin: parseNumber(req.query.priceMin ?? req.query["min-value"], -1),
+      priceMax: parseNumber(req.query.priceMax ?? req.query["max-value"], -1),
+      tagIds: parseIdList(req.query.tagIds ?? req.query.tags),
+      search,
+    },
+    req.query.sort,
+    req.query.page,
+  );
+
+  res.json({
+    success: true,
+    petTypeId,
+    facets: { categories: categoriesCount, tags: facets.tags },
+    pagination,
+    products,
+  });
 });
 
 export default router;
