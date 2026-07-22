@@ -409,6 +409,17 @@ const getProduct = async (productId, userId = null) => {
   return productRow;
 };
 
+const getProductIdBySlug = async (petTypeId, productSlug) => {
+  const sql = `
+    SELECT id
+    FROM products
+    WHERE pet_tag_id_fk = ? AND slug = ?
+    LIMIT 1;
+  `;
+  const [[productRow]] = await pool.query(sql, [petTypeId, productSlug]);
+  return productRow?.id || null;
+};
+
 // sql - 讀取商品底下品項 (選購)
 const getProductItem = async (productId) => {
   const sql = `
@@ -715,6 +726,45 @@ router.delete("/updateCart/:itemId", requireAuth, async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "移除購物車品項失敗",
+    });
+  }
+});
+
+router.get("/resolve/:petTypeSlug/:productSlug", async (req, res) => {
+  const petType = req.petTypeList.find(
+    (item) => item.tag_slug === req.params.petTypeSlug,
+  );
+
+  if (!petType) {
+    return res.status(404).json({
+      success: false,
+      message: "找不到商品分類",
+    });
+  }
+
+  try {
+    const productId = await getProductIdBySlug(
+      petType.id,
+      req.params.productSlug,
+    );
+
+    if (!productId) {
+      return res.status(404).json({
+        success: false,
+        message: "找不到商品",
+      });
+    }
+
+    return res.json({
+      success: true,
+      petTypeId: petType.id,
+      productId,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "商品資料載入失敗",
     });
   }
 });
