@@ -46,6 +46,32 @@ const summarizeItemTags = (items) => {
   return [...tags.values()];
 };
 
+const buildProductTagMaps = (petTypeList, categoryList) => ({
+  petTypes: new Map(
+    petTypeList.map(({ id, tag_page, tag_slug }) => [
+      id,
+      { id, tag_page, tag_slug },
+    ]),
+  ),
+  categories: new Map(
+    categoryList.map(({ id, tag_ch, tag_slug }) => [
+      id,
+      { id, tag_ch, tag_slug },
+    ]),
+  ),
+});
+
+const formatProductTags = (product, tagMaps) => {
+  if (!product) return product;
+
+  const { pet_tag_id_fk, category_id_fk, ...productData } = product;
+  return {
+    ...productData,
+    petType: tagMaps.petTypes.get(pet_tag_id_fk) || null,
+    category: tagMaps.categories.get(category_id_fk) || null,
+  };
+};
+
 // sql - 寵物類別列表
 const getPetTypeData = async () => {
   const sql = "SELECT * FROM product_pet_tags;";
@@ -235,7 +261,12 @@ const getTagFacets = async (sqlFilter, sqlValues) => {
 };
 
 // sql - 讀取 品項符合篩選條件 的商品 (列表頁)
-const getProductMap = async (filterOptions, sort = "default", page = 1) => {
+const getProductMap = async (
+  filterOptions,
+  sort = "default",
+  page = 1,
+  tagMaps,
+) => {
   const perPage = 16;
   const currentPage = Math.max(1, Math.floor(Number(page) || 1));
   const offset = (currentPage - 1) * perPage;
@@ -264,6 +295,8 @@ const getProductMap = async (filterOptions, sort = "default", page = 1) => {
     SELECT
       p.id AS id,
       p.prod_name,
+      p.pet_tag_id_fk,
+      p.category_id_fk,
       p.price,
       p.slug,
       p.created_at,
@@ -331,8 +364,9 @@ const getProductMap = async (filterOptions, sort = "default", page = 1) => {
     pagination,
     products: productRows.map((product) => {
       const items = parseJsonArray(product.items);
+      const productData = formatProductTags(product, tagMaps);
       return {
-        ...product,
+        ...productData,
         intro: introMap[product.id] || {},
         avatar: avatarMap[product.id]?.[0] || null,
         tags: summarizeItemTags(items),
@@ -673,10 +707,11 @@ router.get("/:petTypeId/:productId/buy", async (req, res) => {
   const { totalSold, totalStock } = sumItemDetail(items);
   const avatarResult = await getProductAvatarMap(productId);
   const [avatars] = Object.values(avatarResult);
+  const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
   res.json({
     params: { petTypeId, productId },
     product: {
-      ...product,
+      ...formatProductTags(product, tagMaps),
       totalSold: totalSold,
       totalStock: totalStock,
       tags: summarizeItemTags(items),
@@ -696,10 +731,11 @@ router.get("/:petTypeId/:productId/detail", async (req, res) => {
   const avatarResult = await getProductAvatarMap(productId);
   const [avatars] = Object.values(avatarResult);
   const images = await getProductImage(productId);
+  const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
   res.json({
     params: { petTypeId, productId },
     product: {
-      ...product,
+      ...formatProductTags(product, tagMaps),
       totalSold: totalSold,
       totalStock: totalStock,
       tags: summarizeItemTags(items),
@@ -716,6 +752,7 @@ router.get("/:petTypeId", async (req, res) => {
   const categoriesCount = await countCategoryProduct(petTypeId);
   const search =
     typeof req.query.search === "string" ? req.query.search.trim() : "";
+  const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
   const { facets, pagination, products } = await getProductMap(
     {
       petTypeId: parseNumber(petTypeId, 0),
@@ -727,6 +764,7 @@ router.get("/:petTypeId", async (req, res) => {
     },
     req.query.sort,
     req.query.page,
+    tagMaps,
   );
 
   res.json({
