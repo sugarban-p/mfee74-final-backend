@@ -386,6 +386,38 @@ router.get("/", async (req, res) => {
   });
 });
 
+router.get("/mega-menu", async (req, res) => {
+  try {
+    const cards = await Promise.all(
+      req.petTypeList.map(async (petType) => {
+        const categories = await countCategoryProduct(petType.id);
+        const title = petType.tag_page || `${petType.tag_ch}專區`;
+
+        return {
+          id: petType.id,
+          petType: petType.tag_slug,
+          imageAlt: title,
+          title,
+          href: `/product/${petType.tag_slug}`,
+          items: categories.map((category) => ({
+            id: category.id,
+            title: category.tag_ch,
+            href: `/product/${petType.tag_slug}?category=${category.tag_slug}`,
+          })),
+        };
+      }),
+    );
+
+    return res.json({ success: true, cards });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "讀取商品選單失敗",
+    });
+  }
+});
+
 // 讀取收藏列表 `user_favorites`
 const getFavoriteListData = async (userId) => {
   const [rows] = await pool.query(
