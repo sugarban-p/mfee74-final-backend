@@ -33,6 +33,19 @@ const parseJsonArray = (value) => {
   return JSON.parse(value);
 };
 
+const summarizeItemTags = (items) => {
+  const tags = new Map();
+  for (const item of items) {
+    for (const tag of parseJsonArray(item.tags)) {
+      const id = tag.id ?? tag.tag_id;
+      if (id && !tags.has(id)) {
+        tags.set(id, { id, tag_ch: tag.tag_ch, tag_slug: tag.tag_slug });
+      }
+    }
+  }
+  return [...tags.values()];
+};
+
 // sql - 寵物類別列表
 const getPetTypeData = async () => {
   const sql = "SELECT * FROM product_pet_tags;";
@@ -249,7 +262,7 @@ const getProductMap = async (filterOptions, sort = "default", page = 1) => {
 
   const productSql = `
     SELECT
-      p.id AS product_id,
+      p.id AS id,
       p.prod_name,
       p.price,
       p.slug,
@@ -305,7 +318,7 @@ const getProductMap = async (filterOptions, sort = "default", page = 1) => {
     perPage,
     offset,
   ]);
-  const productIds = productRows.map((product) => product.product_id);
+  const productIds = productRows.map((product) => product.id);
   const [introMap, avatarMap] = productIds.length
     ? await Promise.all([
         getProductIntroMap(productIds, true),
@@ -316,12 +329,16 @@ const getProductMap = async (filterOptions, sort = "default", page = 1) => {
   return {
     facets: { tags },
     pagination,
-    products: productRows.map((product) => ({
-      ...product,
-      intro: introMap[product.product_id] || {},
-      avatar: avatarMap[product.product_id]?.[0] || null,
-      items: parseJsonArray(product.items),
-    })),
+    products: productRows.map((product) => {
+      const items = parseJsonArray(product.items);
+      return {
+        ...product,
+        intro: introMap[product.id] || {},
+        avatar: avatarMap[product.id]?.[0] || null,
+        tags: summarizeItemTags(items),
+        items,
+      };
+    }),
   };
 };
 
@@ -662,6 +679,7 @@ router.get("/:petTypeId/:productId/buy", async (req, res) => {
       ...product,
       totalSold: totalSold,
       totalStock: totalStock,
+      tags: summarizeItemTags(items),
     },
     items,
     avatars,
@@ -684,6 +702,7 @@ router.get("/:petTypeId/:productId/detail", async (req, res) => {
       ...product,
       totalSold: totalSold,
       totalStock: totalStock,
+      tags: summarizeItemTags(items),
     },
     items,
     avatars,
