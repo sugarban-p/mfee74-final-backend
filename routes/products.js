@@ -97,12 +97,25 @@ const getProductImage = async (productId) => {
   return imageRows;
 };
 
-// sql - 讀取商品底下品項
-const getProductItemMap = async (productIds, tagIds = []) => {
-  const tagFilter = tagIds.length ? " AND it.tag_id_fk IN (?) " : "";
+// sql - 讀取 品項符合篩選條件 的商品 (列表頁)
+
+// sql - 讀取指定商品 (選購)
+const getProduct = async (productId) => {
+  const sql = `
+    SELECT * 
+    FROM products
+    WHERE id = ?
+    ;
+  `;
+  const [[productRow]] = await pool.query(sql, [productId]);
+  return productRow;
+};
+
+// sql - 讀取商品底下品項 (選購)
+const getProductItem = async (productId) => {
   const sql = `
     SELECT 
-      i.id, i.sku, i.prod_id_fk, i.item_name, i.sold, i.stock,
+      i.id, i.sku, i.item_name, i.sold, i.stock,
       IF(
         COUNT(pst.id) = 0,
         JSON_ARRAY(),
@@ -116,45 +129,16 @@ const getProductItemMap = async (productIds, tagIds = []) => {
       ) AS tags
     FROM items i
     LEFT JOIN item_tags it 
-      ON it.item_id_fk = i.id ${tagFilter}
+      ON it.item_id_fk = i.id
     LEFT JOIN product_special_tags pst 
       ON pst.id = it.tag_id_fk
-    WHERE i.prod_id_fk IN (?)
+    WHERE i.prod_id_fk = ?
     GROUP BY i.id, i.sku, i.prod_id_fk, i.item_name, i.sold, i.stock
     ORDER BY i.prod_id_fk, i.id;
   `;
-  const params = tagIds.length ? [tagIds, productIds] : [productIds];
-  const [itemRows] = await pool.query(sql, params);
-  const itemMap = itemRows.reduce((obj, row) => {
-    if (!obj[row.prod_id_fk]) obj[row.prod_id_fk] = [];
-    const { prod_id_fk, ...item } = row;
-    obj[prod_id_fk].push({
-      ...item,
-    });
-    return obj;
-  }, {});
-  return itemMap;
+  const [itemRows] = await pool.query(sql, [productId]);
+  return itemRows;
 };
-
-// 舊
-// const getProductImageMap = async (productIds) => {
-//   const sql = `
-//     SELECT prod_id_fk, src, image_order
-//     FROM product_images
-//     WHERE prod_id_fk IN (?)
-//     ORDER BY prod_id_fk, id;
-//   `;
-//   const [imageRows] = await pool.query(sql, [productIds]);
-//   const imageMap = {};
-//   for (const row of imageRows) {
-//     if (!imageMap[row.prod_id_fk]) imageMap[row.prod_id_fk] = [];
-//     imageMap[row.prod_id_fk].push({
-//       src: row.src,
-//       image_order: row.image_order,
-//     });
-//   }
-//   return imageMap;
-// };
 
 // // sql - 品項關鍵字 + tags
 // const getItemDetails = async (itemList) => {
@@ -455,18 +439,63 @@ const getProductItemMap = async (productIds, tagIds = []) => {
 // };
 
 router.get("/", async (req, res) => {
-  const { petTypeList, categoryList } = req;
   const prodIds = [1, 10];
   const prodId = 10;
+  const productIntroMap = await getProductIntroMap(prodIds);
   const productAvatarMap = await getProductAvatarMap(prodIds, true);
   const productImage = await getProductImage(prodId);
   const itemMap = await getProductItemMap(prodIds);
   return res.json({
     success: true,
     page: "product",
+    productIntroMap,
     productImage,
     productAvatarMap,
     itemMap,
+  });
+});
+
+// 商品列表頁
+router.get("/:petTypeId", async (req, res) => {
+  const petTypeId = req.params.petTypeId;
+  const categoriesCount = await countCategoryProduct(petTypeId);
+  res.json({
+    petTypeId,
+    facets: { categories: categoriesCount },
+  });
+});
+
+// 商品快速選購頁
+router.get("/:petTypeId/:productId/buy", async (req, res) => {
+  const petTypeId = req.params.petTypeId;
+  const productId = req.params.productId;
+  const product = await getProduct(productId);
+  const items = await getProductItem(productId);
+  const avatarResult = await getProductAvatarMap(productId);
+  const [avatars] = Object.values(avatarResult);
+  res.json({
+    params: { petTypeId, productId },
+    product,
+    items,
+    avatars,
+  });
+});
+
+// 商品詳細頁
+router.get("/:petTypeId/:productId/detail", async (req, res) => {
+  const petTypeId = req.params.petTypeId;
+  const productId = req.params.productId;
+  const product = await getProduct(productId);
+  const items = await getProductItem(productId);
+  const avatarResult = await getProductAvatarMap(productId);
+  const [avatars] = Object.values(avatarResult);
+  const images = await getProductImage(productId);
+  res.json({
+    params: { petTypeId, productId },
+    product,
+    items,
+    avatars,
+    images,
   });
 });
 
