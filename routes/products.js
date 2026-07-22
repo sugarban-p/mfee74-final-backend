@@ -107,7 +107,7 @@ const getProduct = async (productId) => {
     WHERE id = ?
     ;
   `;
-  const [[productRow]] = await pool.query(sql, [productId]);
+  const [[productRow]] = await pool.query(sql, productId);
   return productRow;
 };
 
@@ -136,8 +136,21 @@ const getProductItem = async (productId) => {
     GROUP BY i.id, i.sku, i.prod_id_fk, i.item_name, i.sold, i.stock
     ORDER BY i.prod_id_fk, i.id;
   `;
-  const [itemRows] = await pool.query(sql, [productId]);
+  const [itemRows] = await pool.query(sql, productId);
   return itemRows;
+};
+
+// 統計 銷量 & 存貨
+const sumItemDetail = (items) => {
+  const result = {
+    totalSold: 0,
+    totalStock: 0,
+  };
+  for (const item of items) {
+    result.totalSold += item.sold;
+    result.totalStock += item.stock;
+  }
+  return result;
 };
 
 // // sql - 品項關鍵字 + tags
@@ -471,11 +484,16 @@ router.get("/:petTypeId/:productId/buy", async (req, res) => {
   const productId = req.params.productId;
   const product = await getProduct(productId);
   const items = await getProductItem(productId);
+  const { totalSold, totalStock } = sumItemDetail(items);
   const avatarResult = await getProductAvatarMap(productId);
   const [avatars] = Object.values(avatarResult);
   res.json({
     params: { petTypeId, productId },
-    product,
+    product: {
+      ...product,
+      totalSold: totalSold,
+      totalStock: totalStock,
+    },
     items,
     avatars,
   });
@@ -487,12 +505,17 @@ router.get("/:petTypeId/:productId/detail", async (req, res) => {
   const productId = req.params.productId;
   const product = await getProduct(productId);
   const items = await getProductItem(productId);
+  const { totalSold, totalStock } = sumItemDetail(items);
   const avatarResult = await getProductAvatarMap(productId);
   const [avatars] = Object.values(avatarResult);
   const images = await getProductImage(productId);
   res.json({
     params: { petTypeId, productId },
-    product,
+    product: {
+      ...product,
+      totalSold: totalSold,
+      totalStock: totalStock,
+    },
     items,
     avatars,
     images,
