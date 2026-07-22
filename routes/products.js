@@ -77,12 +77,9 @@ const getProductAvatarMap = async (productIds, firstOnly = false) => {
   `;
   const [avatarRows] = await pool.query(sql, [productIds]);
   const avatarMap = avatarRows.reduce((obj, row) => {
-    if (!obj[row.prod_id_fk]) obj[row.prod_id_fk] = {};
-    obj[row.prod_id_fk].src = row.src;
-    obj[row.prod_id_fk].thumbnail = row.thumbnail;
-    if (firstOnly) {
-      obj[row.prod_id_fk].avatar_order = row.avatar_order;
-    }
+    if (!obj[row.prod_id_fk]) obj[row.prod_id_fk] = [];
+    const { prod_id_fk, ...newRow } = row;
+    obj[row.prod_id_fk].push(newRow);
     return obj;
   }, {});
   return avatarMap;
@@ -111,6 +108,7 @@ const getProductItemMap = async (productIds, tagIds = []) => {
         JSON_ARRAY(),
         JSON_ARRAYAGG(
           JSON_OBJECT(
+            'tag_id', pst.id,
             'tag_ch', pst.tag_ch,
             'tag_slug', pst.tag_slug
           )
@@ -456,13 +454,19 @@ const getProductItemMap = async (productIds, tagIds = []) => {
 //   };
 // };
 
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
   const { petTypeList, categoryList } = req;
+  const prodIds = [1, 10];
+  const prodId = 10;
+  const productAvatarMap = await getProductAvatarMap(prodIds, true);
+  const productImage = await getProductImage(prodId);
+  const itemMap = await getProductItemMap(prodIds);
   return res.json({
     success: true,
     page: "product",
-    petTypeList,
-    categoryList,
+    productImage,
+    productAvatarMap,
+    itemMap,
   });
 });
 
