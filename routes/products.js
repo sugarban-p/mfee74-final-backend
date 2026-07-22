@@ -2,7 +2,7 @@
 
 import { Router } from "express";
 import pool from "../utils/connect-mysql.js";
-import { requireAuth } from "../utils/auth-session.js";
+import { getSessionUser, requireAuth } from "../utils/auth-session.js";
 
 const router = Router();
 
@@ -70,6 +70,11 @@ const formatProductTags = (product, tagMaps) => {
     petType: tagMaps.petTypes.get(pet_tag_id_fk) || null,
     category: tagMaps.categories.get(category_id_fk) || null,
   };
+};
+
+const getOptionalUserId = async (req) => {
+  const user = await getSessionUser(req);
+  return user?.id || null;
 };
 
 // sql - 寵物類別列表
@@ -266,6 +271,7 @@ const getProductMap = async (
   sort = "default",
   page = 1,
   tagMaps,
+  userId = null,
 ) => {
   const perPage = 16;
   const currentPage = Math.max(1, Math.floor(Number(page) || 1));
@@ -302,6 +308,11 @@ const getProductMap = async (
       p.created_at,
       COALESCE(item_stats.total_sold, 0) AS total_sold,
       COALESCE(item_stats.total_stock, 0) AS total_stock,
+      EXISTS (
+        SELECT 1
+        FROM user_favorites uf
+        WHERE uf.user_id_fk = ? AND uf.prod_id_fk = p.id
+      ) AS isFavorite,
       COALESCE(
         (
           SELECT JSON_ARRAYAGG(
@@ -347,6 +358,7 @@ const getProductMap = async (
     LIMIT ? OFFSET ?;
   `;
   const [productRows] = await pool.query(productSql, [
+    userId,
     ...sqlValues,
     perPage,
     offset,
@@ -364,9 +376,11 @@ const getProductMap = async (
     pagination,
     products: productRows.map((product) => {
       const items = parseJsonArray(product.items);
-      const productData = formatProductTags(product, tagMaps);
+      const { isFavorite, ...productFields } = product;
+      const productData = formatProductTags(productFields, tagMaps);
       return {
         ...productData,
+        isFavorite: Boolean(isFavorite),
         intro: introMap[product.id] || {},
         avatar: avatarMap[product.id]?.[0] || null,
         tags: summarizeItemTags(items),
@@ -377,14 +391,21 @@ const getProductMap = async (
 };
 
 // sql - 讀取指定商品 (選購)
-const getProduct = async (productId) => {
+const getProduct = async (productId, userId = null) => {
   const sql = `
-    SELECT * 
-    FROM products
-    WHERE id = ?
+    SELECT
+      p.*,
+      EXISTS (
+        SELECT 1
+        FROM user_favorites uf
+        WHERE uf.user_id_fk = ? AND uf.prod_id_fk = p.id
+      ) AS isFavorite
+    FROM products p
+    WHERE p.id = ?
     ;
   `;
-  const [[productRow]] = await pool.query(sql, productId);
+  const [[productRow]] = await pool.query(sql, [userId, productId]);
+  if (productRow) productRow.isFavorite = Boolean(productRow.isFavorite);
   return productRow;
 };
 
@@ -702,7 +723,8 @@ router.delete("/updateCart/:itemId", requireAuth, async (req, res) => {
 router.get("/:petTypeId/:productId/buy", async (req, res) => {
   const petTypeId = req.params.petTypeId;
   const productId = req.params.productId;
-  const product = await getProduct(productId);
+  const userId = await getOptionalUserId(req);
+  const product = await getProduct(productId, userId);
   const items = await getProductItem(productId);
   const { totalSold, totalStock } = sumItemDetail(items);
   const avatarResult = await getProductAvatarMap(productId);
@@ -725,7 +747,8 @@ router.get("/:petTypeId/:productId/buy", async (req, res) => {
 router.get("/:petTypeId/:productId/detail", async (req, res) => {
   const petTypeId = req.params.petTypeId;
   const productId = req.params.productId;
-  const product = await getProduct(productId);
+  const userId = await getOptionalUserId(req);
+  const product = await getProduct(productId, userId);
   const items = await getProductItem(productId);
   const { totalSold, totalStock } = sumItemDetail(items);
   const avatarResult = await getProductAvatarMap(productId);
@@ -749,6 +772,7 @@ router.get("/:petTypeId/:productId/detail", async (req, res) => {
 // 商品列表頁
 router.get("/:petTypeId", async (req, res) => {
   const petTypeId = req.params.petTypeId;
+  const userId = await getOptionalUserId(req);
   const categoriesCount = await countCategoryProduct(petTypeId);
   const search =
     typeof req.query.search === "string" ? req.query.search.trim() : "";
@@ -765,6 +789,7 @@ router.get("/:petTypeId", async (req, res) => {
     req.query.sort,
     req.query.page,
     tagMaps,
+    userId,
   );
 
   res.json({
