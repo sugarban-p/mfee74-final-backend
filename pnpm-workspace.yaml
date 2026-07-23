@@ -1,3 +1,4 @@
 allowBuilds:
   '@google/genai': true
+  bcrypt: true
   protobufjs: true
