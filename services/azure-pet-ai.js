@@ -210,14 +210,21 @@ export async function generatePetRecommendationReasons({
          * 限制 AI 回覆使用的 token 數量，
          * 避免產生過長內容與不必要的費用。
          */
-        max_completion_tokens: 1200,
+        max_completion_tokens: 600,
 
         /**
          * 導購理由不需要很深入的推理。
          *
-         * low 可以降低等待時間與 token 使用量。
+         * minimal 適合目前這種依既有資料撰寫短文案的工作，
+         * 可以減少不必要的推理時間與 token 使用量。
          */
-        reasoning_effort: "low",
+        reasoning_effort: "minimal",
+
+        /**
+         * 推薦理由只需要簡短、明確的文字，
+         * 降低輸出詳細程度可減少不必要的內容。
+         */
+        verbosity: "low",
 
         /**
          * response_format 使用 JSON Schema，
