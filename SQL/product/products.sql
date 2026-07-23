@@ -6,7 +6,8 @@ INSERT INTO
         `price`,
         `pet_tag_id_fk`,
         `category_id_fk`,
-        `slug`
+        `slug`,
+        `created_at`
     )
 VALUES (
         1,
@@ -14,7 +15,8 @@ VALUES (
         540,
         1,
         5,
-        'paw-scratcher-classic-scratcher'
+        'paw-scratcher-classic-scratcher',
+        '2026-07-20 00:00:00'
     ),
     (
         2,
@@ -22,7 +24,8 @@ VALUES (
         1280,
         1,
         5,
-        'paw-scratcher-infinity-scratcher'
+        'paw-scratcher-infinity-scratcher',
+        '2026-04-22 00:00:00'
     ),
     (
         3,
@@ -30,7 +33,8 @@ VALUES (
         750,
         1,
         5,
-        'catlittermat'
+        'catlittermat',
+        '2026-05-16 00:00:00'
     ),
     (
         4,
@@ -38,7 +42,8 @@ VALUES (
         52,
         1,
         1,
-        'chickenfishessence'
+        'chickenfishessence',
+        '2026-02-03 00:00:00'
     ),
     (
         5,
@@ -46,7 +51,8 @@ VALUES (
         498,
         1,
         5,
-        'mixcassava'
+        'mixcassava',
+        '2026-07-20 00:00:00'
     ),
     (
         6,
@@ -54,7 +60,8 @@ VALUES (
         498,
         1,
         5,
-        'cassava'
+        'cassava',
+        '2026-05-16 00:00:00'
     ),
     (
         7,
@@ -62,7 +69,8 @@ VALUES (
         1239,
         1,
         5,
-        'largecatlitterbox'
+        'largecatlitterbox',
+        '2026-04-22 00:00:00'
     ),
     (
         8,
@@ -70,7 +78,8 @@ VALUES (
         42,
         1,
         1,
-        'morningminican'
+        'morningminican',
+        '2026-02-03 00:00:00'
     ),
     (
         9,
@@ -78,7 +87,8 @@ VALUES (
         650,
         1,
         5,
-        'petblanlet'
+        'petblanlet',
+        '2026-05-16 00:00:00'
     ),
     (
         10,
@@ -86,7 +96,8 @@ VALUES (
         52,
         1,
         1,
-        'creamypureecat'
+        'creamypureecat',
+        '2026-07-20 00:00:00'
     ),
     (
         11,
@@ -94,7 +105,8 @@ VALUES (
         10,
         1,
         1,
-        'catfreezedriedrawfoodmini-cubes'
+        'catfreezedriedrawfoodmini-cubes',
+        '2026-04-22 00:00:00'
     ),
     (
         12,
@@ -102,7 +114,8 @@ VALUES (
         518,
         1,
         5,
-        'bloodcatlitter'
+        'bloodcatlitter',
+        '2026-02-03 00:00:00'
     ),
     (
         13,
@@ -110,7 +123,8 @@ VALUES (
         980,
         1,
         5,
-        'mini-scratcher'
+        'mini-scratcher',
+        '2026-07-20 00:00:00'
     ),
     (
         14,
@@ -118,7 +132,8 @@ VALUES (
         498,
         1,
         5,
-        'tofucatlitterflower'
+        'tofucatlitterflower',
+        '2026-05-16 00:00:00'
     ),
     (
         15,
@@ -126,7 +141,8 @@ VALUES (
         49,
         1,
         4,
-        'kidneyhealth'
+        'kidneyhealth',
+        '2026-04-22 00:00:00'
     ),
     (
         16,
@@ -134,7 +150,8 @@ VALUES (
         498,
         1,
         5,
-        'shortcatlitter'
+        'shortcatlitter',
+        '2026-02-03 00:00:00'
     ),
     (
         17,
@@ -142,7 +159,8 @@ VALUES (
         1880,
         1,
         5,
-        'beluga-litterbox'
+        'beluga-litterbox',
+        '2026-04-22 00:00:00'
     ),
     (
         18,
@@ -150,7 +168,8 @@ VALUES (
         960,
         1,
         5,
-        'littermat'
+        'littermat',
+        '2026-07-20 00:00:00'
     ),
     (
         19,
@@ -158,7 +177,8 @@ VALUES (
         190,
         1,
         5,
-        'jw_nailclipper'
+        'jw_nailclipper',
+        '2026-05-16 00:00:00'
     ),
     (
         20,
@@ -166,7 +186,8 @@ VALUES (
         230,
         1,
         5,
-        'litterscoop'
+        'litterscoop',
+        '2026-02-03 00:00:00'
     ),
     (
         21,
@@ -174,7 +195,8 @@ VALUES (
         490,
         1,
         5,
-        'cat_tunnel'
+        'cat_tunnel',
+        '2026-07-20 00:00:00'
     ),
     (
         22,
@@ -182,7 +204,8 @@ VALUES (
         498,
         1,
         5,
-        'tofucatlitter'
+        'tofucatlitter',
+        '2026-04-22 00:00:00'
     ),
     (
         23,
@@ -190,7 +213,8 @@ VALUES (
         129,
         1,
         5,
-        'box-scratcher'
+        'box-scratcher',
+        '2026-05-16 00:00:00'
     ),
     (
         24,
@@ -198,7 +222,8 @@ VALUES (
         49,
         1,
         1,
-        'lowfatcatc'
+        'lowfatcatc',
+        '2026-02-03 00:00:00'
     ),
     (
         25,
@@ -206,7 +231,8 @@ VALUES (
         880,
         1,
         5,
-        'feliway'
+        'feliway',
+        '2026-07-20 00:00:00'
     ),
     (
         27,
@@ -214,7 +240,8 @@ VALUES (
         46,
         1,
         1,
-        'pickycat'
+        'pickycat',
+        '2026-05-16 00:00:00'
     ),
     (
         28,
@@ -222,7 +249,8 @@ VALUES (
         95,
         1,
         1,
-        'catfreshfood'
+        'catfreshfood',
+        '2026-04-22 00:00:00'
     ),
     (
         29,
@@ -230,7 +258,8 @@ VALUES (
         48,
         1,
         1,
-        'catcans-ground-meat'
+        'catcans-ground-meat',
+        '2026-02-03 00:00:00'
     ),
     (
         30,
@@ -238,7 +267,8 @@ VALUES (
         48,
         1,
         1,
-        'oldcatcan'
+        'oldcatcan',
+        '2026-05-16 00:00:00'
     ),
     (
         31,
@@ -246,7 +276,8 @@ VALUES (
         99,
         1,
         2,
-        'catsprayseeds'
+        'catsprayseeds',
+        '2026-07-20 00:00:00'
     ),
     (
         32,
@@ -254,7 +285,8 @@ VALUES (
         48,
         1,
         1,
-        'momkittycat'
+        'momkittycat',
+        '2026-04-22 00:00:00'
     ),
     (
         33,
@@ -262,7 +294,8 @@ VALUES (
         320,
         1,
         4,
-        'l-lysine'
+        'l-lysine',
+        '2026-02-03 00:00:00'
     ),
     (
         34,
@@ -270,7 +303,8 @@ VALUES (
         46,
         1,
         1,
-        'fantasticcat'
+        'fantasticcat',
+        '2026-07-20 00:00:00'
     ),
     (
         35,
@@ -278,7 +312,8 @@ VALUES (
         10,
         1,
         1,
-        'catfreezedriedrawfood'
+        'catfreezedriedrawfood',
+        '2026-04-22 00:00:00'
     ),
     (
         36,
@@ -286,7 +321,8 @@ VALUES (
         60,
         1,
         1,
-        'cathpprawfood'
+        'cathpprawfood',
+        '2026-05-16 00:00:00'
     ),
     (
         37,
@@ -294,7 +330,8 @@ VALUES (
         99,
         1,
         2,
-        'catnip'
+        'catnip',
+        '2026-02-03 00:00:00'
     ),
     (
         38,
@@ -302,7 +339,8 @@ VALUES (
         450,
         1,
         2,
-        'catgrass'
+        'catgrass',
+        '2026-07-20 00:00:00'
     ),
     (
         41,
@@ -310,7 +348,8 @@ VALUES (
         229,
         2,
         1,
-        'dog_freshfood'
+        'dog_freshfood',
+        '2026-05-16 00:00:00'
     ),
     (
         42,
@@ -318,7 +357,8 @@ VALUES (
         327,
         2,
         5,
-        'spoonset'
+        'spoonset',
+        '2026-04-22 00:00:00'
     ),
     (
         43,
@@ -326,7 +366,8 @@ VALUES (
         1380,
         2,
         3,
-        'dogharness'
+        'dogharness',
+        '2026-02-03 00:00:00'
     ),
     (
         44,
@@ -334,7 +375,8 @@ VALUES (
         1020,
         2,
         3,
-        'dogleash'
+        'dogleash',
+        '2026-07-20 00:00:00'
     ),
     (
         48,
@@ -342,7 +384,8 @@ VALUES (
         85,
         2,
         1,
-        'dogfreshfood'
+        'dogfreshfood',
+        '2026-04-22 00:00:00'
     ),
     (
         49,
@@ -350,7 +393,8 @@ VALUES (
         48,
         2,
         1,
-        'seniordogcan'
+        'seniordogcan',
+        '2026-05-16 00:00:00'
     ),
     (
         50,
@@ -358,7 +402,8 @@ VALUES (
         48,
         2,
         1,
-        'puppycan'
+        'puppycan',
+        '2026-02-03 00:00:00'
     ),
     (
         52,
@@ -366,7 +411,8 @@ VALUES (
         46,
         2,
         1,
-        'fantasticdog'
+        'fantasticdog',
+        '2026-07-20 00:00:00'
     ),
     (
         53,
@@ -374,7 +420,8 @@ VALUES (
         10,
         2,
         1,
-        'dogfreezedriedrawfood'
+        'dogfreezedriedrawfood',
+        '2026-05-16 00:00:00'
     ),
     (
         54,
@@ -382,7 +429,8 @@ VALUES (
         120,
         2,
         1,
-        'doghpprawfood'
+        'doghpprawfood',
+        '2026-04-22 00:00:00'
     ),
     (
         55,
@@ -390,5 +438,6 @@ VALUES (
         450,
         2,
         2,
-        'doggrass'
+        'doggrass',
+        '2026-02-03 00:00:00'
     );

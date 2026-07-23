@@ -9,6 +9,7 @@ const router = Router();
 
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 const backendUrl = process.env.BACKEND_URL || "http://localhost:3001";
+const SHIPPING_FEE = 60;
 
 const ecpay = {
   merchantId: process.env.ECPAY_MERCHANT_ID || "3002607",
@@ -95,6 +96,8 @@ function getPaymentText(method) {
 function getOrderBadge(order) {
   if (order.order_status === 3) return orderStatusMap[3];
   if (order.order_status === 2) return orderStatusMap[2];
+  if (order.payment_status !== 2) return { key: "pending", text: "待付款" };
+  if (order.shipping_status === 1) return orderStatusMap[1];
   return (
     shippingStatusMap[order.shipping_status] ||
     orderStatusMap[order.order_status]
@@ -281,11 +284,28 @@ router.delete("/cart/:id", async (req, res) => {
 });
 
 router.get("/coupons", async (req, res) => {
+  const userId = req.currentUser.id;
   const [rows] = await pool.query(
-    `SELECT code, title, discount_type AS discountType, discount_value AS discountValue, min_amount AS minAmount
-    FROM coupons
-    WHERE is_active = 1
-    ORDER BY id`,
+    `SELECT
+      c.code,
+      c.title,
+      c.discount_type AS discountType,
+      c.discount_value AS discountValue,
+      c.min_amount AS minAmount
+    FROM coupons c
+    LEFT JOIN (
+      SELECT coupon_code, COUNT(*) AS usedCount
+      FROM orders
+      WHERE user_id_fk = ? AND payment_status = 2 AND coupon_code IS NOT NULL
+      GROUP BY coupon_code
+    ) usedCoupons ON usedCoupons.coupon_code = c.code
+    WHERE c.is_active = 1
+      AND (
+        c.usage_limit_per_user IS NULL
+        OR COALESCE(usedCoupons.usedCount, 0) < c.usage_limit_per_user
+      )
+    ORDER BY c.id`,
+    [userId],
   );
 
   res.json({ success: true, coupons: rows });
@@ -362,16 +382,42 @@ router.post("/checkout", async (req, res) => {
           code,
           discount_type AS discountType,
           discount_value AS discountValue,
-          min_amount AS minAmount
+          min_amount AS minAmount,
+          usage_limit_per_user AS usageLimitPerUser
         FROM coupons
         WHERE code = ? AND is_active = 1
         LIMIT 1`,
         [couponCode],
       );
       coupon = couponRow || null;
+
+      if (!coupon) {
+        await connection.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "找不到可用優惠券",
+        });
+      }
+
+      if (coupon.usageLimitPerUser !== null) {
+        const [[usageRow]] = await connection.query(
+          `SELECT COUNT(*) AS usedCount
+          FROM orders
+          WHERE user_id_fk = ? AND coupon_code = ? AND payment_status = 2`,
+          [userId, coupon.code],
+        );
+
+        if (Number(usageRow.usedCount) >= Number(coupon.usageLimitPerUser)) {
+          await connection.rollback();
+          return res.status(400).json({
+            success: false,
+            message: "此優惠券已達使用次數限制",
+          });
+        }
+      }
     }
 
-    const shippingFee = 0;
+    const shippingFee = SHIPPING_FEE;
     const discount = calculateCouponDiscount(coupon, subtotal);
     const finalAmount = Math.max(0, subtotal + shippingFee - discount);
     const orderNo = createOrderNo();
@@ -524,6 +570,7 @@ router.get("/list", async (req, res) => {
         paymentStatus: paymentStatus.key,
         paymentText: paymentStatus.text,
         createdAt: order.createdAt,
+        paymentMethod: order.paymentMethod,
         title:
           Number(order.itemCount) > 1
             ? `${order.firstProduct} 等 ${order.itemCount} 件商品`
@@ -537,6 +584,32 @@ router.get("/list", async (req, res) => {
       };
     }),
   });
+});
+
+router.post("/rebuy/:orderNo", async (req, res) => {
+  const userId = req.currentUser.id;
+
+  const [result] = await pool.query(
+    `INSERT INTO cart_items (user_id_fk, sku_id_fk, quantity, is_selected)
+    SELECT ?, orderedItems.skuId, orderedItems.qty, 1
+    FROM (
+      SELECT oi.sku_id_fk AS skuId, SUM(oi.quantity) AS qty
+      FROM orders o
+      JOIN order_items oi ON oi.order_id_fk = o.id
+      WHERE o.order_no = ? AND o.user_id_fk = ?
+      GROUP BY oi.sku_id_fk
+    ) orderedItems
+    ON DUPLICATE KEY UPDATE
+      quantity = cart_items.quantity + VALUES(quantity),
+      is_selected = 1`,
+    [userId, req.params.orderNo, userId],
+  );
+
+  if (result.affectedRows === 0) {
+    return res.status(404).json({ success: false, message: "找不到訂單商品" });
+  }
+
+  return res.json({ success: true });
 });
 
 router.get("/list/:orderNo", async (req, res) => {
@@ -620,9 +693,10 @@ router.get("/payments/ecpay", (req, res) => {
     return res.status(400).json({ success: false, message: "缺少總金額" });
   }
 
+  const merchantTradeNo = createOrderNo();
   const params = {
     MerchantID: ecpay.merchantId,
-    MerchantTradeNo: orderNo || createOrderNo(),
+    MerchantTradeNo: merchantTradeNo,
     MerchantTradeDate: formatEcpayDate(),
     PaymentType: "aio",
     EncryptType: 1,
@@ -632,6 +706,7 @@ router.get("/payments/ecpay", (req, res) => {
     ReturnURL: `${backendUrl}/api/orders/payments/ecpay/notify`,
     OrderResultURL: `${backendUrl}/api/orders/payments/ecpay/return`,
     ChoosePayment: "Credit",
+    CustomField1: orderNo || merchantTradeNo,
   };
 
   res.send(
@@ -643,12 +718,12 @@ router.get("/payments/ecpay", (req, res) => {
 });
 
 router.post("/payments/ecpay/notify", async (req, res) => {
-  await markOrderPaid(req.body.MerchantTradeNo);
+  await markOrderPaid(req.body.CustomField1 || req.body.MerchantTradeNo);
   res.send("1|OK");
 });
 
 router.post("/payments/ecpay/return", async (req, res) => {
-  await markOrderPaid(req.body.MerchantTradeNo);
+  await markOrderPaid(req.body.CustomField1 || req.body.MerchantTradeNo);
   res.redirect(`${frontendUrl}/checkout/success`);
 });
 

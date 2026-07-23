@@ -1,3 +1,4 @@
+-- Active: 1782194421861@@127.0.0.1@3306@final_team3
 -- final_team3 完整建表檔 v2
 -- 會刪除並重建整個 final_team3 資料庫。
 -- 寵物欄位已採用：活動量單選、健康情況多選、過敏食材多選；不使用 body_size。
@@ -217,6 +218,7 @@ CREATE TABLE `product_pet_tags` (
     `tag_code` VARCHAR(10) NOT NULL,
     `tag_ch` VARCHAR(50) NOT NULL,
     `tag_slug` VARCHAR(50) NOT NULL,
+    `tag_page` VARCHAR(10) NOT NULL,
     PRIMARY KEY (`id`)
 ) COMMENT = '商品寵物分類列表';
 
@@ -365,6 +367,7 @@ CREATE TABLE `coupons` (
     `start_at` DATETIME NULL,
     `end_at` DATETIME NULL,
     `is_active` TINYINT NOT NULL DEFAULT 1,
+    `usage_limit_per_user` INT NULL DEFAULT NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
@@ -378,7 +381,7 @@ CREATE TABLE `orders` (
     `payment_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0=未付款,1=付款中,2=已付款,3=付款失敗,4=付款逾期,5=退款中,6=已退款',
     `shipping_status` TINYINT NOT NULL DEFAULT 1 COMMENT '0=無需配送,1=待出貨,2=備貨中,3=已出貨,4=運送中,5=已送達,6=已取貨,7=退貨中,8=已退回',
     `items_amount` INT NOT NULL DEFAULT 0,
-    `shipping_fee` INT NOT NULL DEFAULT 0,
+    `shipping_fee` INT NOT NULL DEFAULT 60,
     `coupon_id_fk` INT NULL,
     `coupon_code` VARCHAR(30) NULL,
     `coupon_discount` INT NOT NULL DEFAULT 0,
@@ -505,7 +508,8 @@ ADD CONSTRAINT `uq_special_tag_slug` UNIQUE (`tag_slug`);
 ALTER TABLE `product_pet_tags`
 ADD CONSTRAINT `uq_pet_tag_code` UNIQUE (`tag_code`),
 ADD CONSTRAINT `uq_pet_tag_ch` UNIQUE (`tag_ch`),
-ADD CONSTRAINT `uq_pet_tag_slug` UNIQUE (`tag_slug`);
+ADD CONSTRAINT `uq_pet_tag_slug` UNIQUE (`tag_slug`),
+ADD CONSTRAINT `uq_pet_tag_page` UNIQUE (`tag_page`);
 
 ALTER TABLE `product_category_tags`
 ADD CONSTRAINT `uq_category_tag_code` UNIQUE (`tag_code`),

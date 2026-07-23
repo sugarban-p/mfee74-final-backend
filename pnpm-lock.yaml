@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@google/genai':
         specifier: ^2.12.0
-        version: 2.12.0
+        version: 2.13.0
       axios:
         specifier: ^1.18.1
         version: 1.18.1
@@ -62,8 +62,8 @@ importers:
 
 packages:
 
-  '@google/genai@2.12.0':
-    resolution: {integrity: sha512-LUr972DZosqPUhf9Mb3CIVu/B99woD3QW6ZJV1T9aNgxaoimAZARmo+IyyDsxIL+zouFiYSdA4hzfEWXc9oNIQ==}
+  '@google/genai@2.13.0':
+    resolution: {integrity: sha512-GM7C8Kaomvjz05x5JEO6+l3d/pciL9LxAG9dUjJLD7nTPZ9X0Cfsf2Z7eET6UjgWyUmxXCHtYnQoQ77F9+ZIOQ==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       '@modelcontextprotocol/sdk': ^1.25.2
@@ -799,7 +799,7 @@ packages:
 
 snapshots:
 
-  '@google/genai@2.12.0':
+  '@google/genai@2.13.0':
     dependencies:
       google-auth-library: 10.9.0
       p-retry: 4.6.2
