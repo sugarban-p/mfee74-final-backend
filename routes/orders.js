@@ -119,6 +119,15 @@ async function markOrderPaid(orderNo) {
   );
 }
 
+function buildSuccessUrl(params) {
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) searchParams.set(key, value);
+  });
+
+  return `${frontendUrl}/checkout/success?${searchParams.toString()}`;
+}
+
 function calculateCouponDiscount(coupon, subtotal) {
   if (!coupon || subtotal < Number(coupon.minAmount)) return 0;
   if (coupon.discountType === "percent") {
@@ -618,6 +627,7 @@ router.get("/list/:orderNo", async (req, res) => {
     `SELECT
       o.*,
       DATE_FORMAT(o.created_at, '%Y-%m-%d %H:%i') AS createdAt,
+      DATE_FORMAT(o.paid_at, '%Y-%m-%d %H:%i') AS paidAt,
       s.receiver_name,
       s.receiver_phone,
       s.receiver_address,
@@ -660,6 +670,7 @@ router.get("/list/:orderNo", async (req, res) => {
       paymentStatus: paymentStatus.key,
       paymentText: paymentStatus.text,
       createdAt: order.createdAt,
+      paidAt: order.paidAt,
       payment: getPaymentText(order.payment_method),
       subtotal: order.items_amount,
       shippingFee: order.shipping_fee,
@@ -723,8 +734,14 @@ router.post("/payments/ecpay/notify", async (req, res) => {
 });
 
 router.post("/payments/ecpay/return", async (req, res) => {
-  await markOrderPaid(req.body.CustomField1 || req.body.MerchantTradeNo);
-  res.redirect(`${frontendUrl}/checkout/success`);
+  const orderNo = req.body.CustomField1 || req.body.MerchantTradeNo;
+  await markOrderPaid(orderNo);
+  res.redirect(
+    buildSuccessUrl({
+      orderNo,
+      transactionNo: req.body.TradeNo || req.body.MerchantTradeNo,
+    }),
+  );
 });
 
 router.get("/payments/linepay", async (req, res) => {
@@ -805,7 +822,12 @@ router.get("/payments/linepay/confirm", async (req, res) => {
     }
 
     await markOrderPaid(orderId);
-    return res.redirect(`${frontendUrl}/checkout/success`);
+    return res.redirect(
+      buildSuccessUrl({
+        orderNo: orderId,
+        transactionNo: transactionId,
+      }),
+    );
   } catch (error) {
     console.error("LINE Pay confirm error:", error);
     linePayOrders.delete(orderId);
