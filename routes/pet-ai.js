@@ -144,11 +144,14 @@ router.post("/recommendations", async (req, res) => {
      * - 使用者選擇的導購需求
      * - 寵物健康情況
      * - 過敏食材排除
-     * - 商品與品項庫存
      *
      * Azure 不會參與這個篩選過程。
      */
-    const products = await getPetCandidateProducts(petContext, needCode);
+    const products = await getPetCandidateProducts(
+      petContext,
+      needCode,
+      userId,
+    );
 
     /**
      * 將後端篩選好的候選商品交給 Azure。
