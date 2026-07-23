@@ -64,8 +64,12 @@ export async function getOwnedPetRecommendationContext(userId, petId) {
     SELECT
       p.id AS petId,
       p.pet_name AS petName,
+
+      -- 寵物照片路徑，提供 AI 導購頁左側摘要卡使用。
+      p.avatar_url AS avatarUrl,
+
       p.breed_text AS breed,
-      p.birthday,
+      DATE_FORMAT(p.birthday, '%Y-%m-%d') AS birthday,
       p.weight,
       p.special_note AS specialNote,
 
