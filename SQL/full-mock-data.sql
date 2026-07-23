@@ -33,8 +33,8 @@ INSERT INTO
         `tag_slug`,
         `tag_ch`
     )
-VALUES (1, "CT", "cat", "貓"),
-    (2, "DG", "dog", "狗");
+VALUES (1, "CT", "cat", "貓", "貓咪專區"),
+    (2, "DG", "dog", "狗", "狗勾專區");
 
 -- product_category_tags
 INSERT INTO
