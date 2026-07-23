@@ -365,6 +365,7 @@ CREATE TABLE `coupons` (
     `start_at` DATETIME NULL,
     `end_at` DATETIME NULL,
     `is_active` TINYINT NOT NULL DEFAULT 1,
+    `usage_limit_per_user` INT NULL DEFAULT NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
@@ -378,7 +379,7 @@ CREATE TABLE `orders` (
     `payment_status` TINYINT NOT NULL DEFAULT 0 COMMENT '0=未付款,1=付款中,2=已付款,3=付款失敗,4=付款逾期,5=退款中,6=已退款',
     `shipping_status` TINYINT NOT NULL DEFAULT 1 COMMENT '0=無需配送,1=待出貨,2=備貨中,3=已出貨,4=運送中,5=已送達,6=已取貨,7=退貨中,8=已退回',
     `items_amount` INT NOT NULL DEFAULT 0,
-    `shipping_fee` INT NOT NULL DEFAULT 0,
+    `shipping_fee` INT NOT NULL DEFAULT 60,
     `coupon_id_fk` INT NULL,
     `coupon_code` VARCHAR(30) NULL,
     `coupon_discount` INT NOT NULL DEFAULT 0,
