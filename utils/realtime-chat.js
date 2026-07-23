@@ -179,7 +179,7 @@ export function initRealtimeChat(server) {
 
     emitSupportPagePresenceToSocket(socket);
 
-    if (isSupport) {
+    if (isSupportUser(user)) {
       socket.join("support");
 
       const wasTracked = supportPageSocketIds.has(socket.id);
@@ -209,7 +209,7 @@ export function initRealtimeChat(server) {
     });
 
     socket.on("presence:support-page:enter", () => {
-      if (!isSupport) return;
+      if (!isSupportUser(user)) return;
 
       const wasTracked = supportPageSocketIds.has(socket.id);
       supportPageSocketIds.add(socket.id);
@@ -220,7 +220,7 @@ export function initRealtimeChat(server) {
     });
 
     socket.on("presence:support-page:leave", () => {
-      if (!isSupport) return;
+      if (!isSupportUser(user)) return;
 
       const wasTracked = supportPageSocketIds.delete(socket.id);
       if (wasTracked) {
