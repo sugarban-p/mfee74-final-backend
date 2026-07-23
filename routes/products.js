@@ -2,41 +2,100 @@
 
 import { Router } from "express";
 import pool from "../utils/connect-mysql.js";
-import { requireAuth } from "../utils/auth-session.js";
+import { getSessionUser, requireAuth } from "../utils/auth-session.js";
 
 const router = Router();
 
-// 測試用：假登入
-// router.use((req, res, next) => {
-//   req.user = { id: 1 };
-//   next();
-// });
-// router 加 requireAuth
-// userId = req.currentUser.id;
-
-// sql - 排序選項 對照
+// 排序選項 對照 sql
 const sortList = {
   default: "total_sold DESC",
-  latest: "p.created_at ASC",
+  latest: "p.created_at DESC",
   price_asc: "p.price ASC",
   price_desc: "p.price DESC",
+};
+
+const parseIdList = (value) => {
+  if (!value) return [];
+  return String(value)
+    .split(",")
+    .map((id) => Number(id))
+    .filter((id) => Number.isInteger(id) && id > 0);
+};
+
+const parseNumber = (value, defaultValue) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : defaultValue;
+};
+
+const parseJsonArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (!value) return [];
+  return JSON.parse(value);
+};
+
+const summarizeItemTags = (items) => {
+  const tags = new Map();
+  for (const item of items) {
+    for (const tag of parseJsonArray(item.tags)) {
+      const id = tag.id ?? tag.tag_id;
+      if (id && !tags.has(id)) {
+        tags.set(id, { id, tag_ch: tag.tag_ch, tag_slug: tag.tag_slug });
+      }
+    }
+  }
+  return [...tags.values()];
+};
+
+const buildProductTagMaps = (petTypeList, categoryList) => ({
+  petTypes: new Map(
+    petTypeList.map(({ id, tag_page, tag_slug }) => [
+      id,
+      { id, tag_page, tag_slug },
+    ]),
+  ),
+  categories: new Map(
+    categoryList.map(({ id, tag_ch, tag_slug }) => [
+      id,
+      { id, tag_ch, tag_slug },
+    ]),
+  ),
+});
+
+const formatProductTags = (product, tagMaps) => {
+  if (!product) return product;
+
+  const { pet_tag_id_fk, category_id_fk, ...productData } = product;
+  return {
+    ...productData,
+    petType: tagMaps.petTypes.get(pet_tag_id_fk) || null,
+    category: tagMaps.categories.get(category_id_fk) || null,
+  };
+};
+
+const getOptionalUserId = async (req) => {
+  const user = await getSessionUser(req);
+  return user?.id || null;
 };
 
 // sql - 寵物類別列表
 const getPetTypeData = async () => {
   const sql = "SELECT * FROM product_pet_tags;";
-  const rows = await pool.query(sql);
-  return rows[0];
+  const [rows] = await pool.query(sql);
+  return rows;
 };
-const petTypeList = await getPetTypeData();
 
 // sql - 商品類別列表
 const getCategoryData = async () => {
   const sql = "SELECT * FROM product_category_tags;";
-  const rows = await pool.query(sql);
-  return rows[0];
+  const [rows] = await pool.query(sql);
+  return rows;
 };
-const categoryList = await getCategoryData();
+
+router.use(async (req, res, next) => {
+  req.petTypeList = await getPetTypeData();
+  req.categoryList = await getCategoryData();
+  next();
+});
 
 // sql - 貓/狗 各類別商品數量
 const countCategoryProduct = async (pet_tag_id) => {
@@ -48,166 +107,56 @@ const countCategoryProduct = async (pet_tag_id) => {
     GROUP BY pct.id, pct.tag_code, pct.tag_ch, pct.tag_slug
     ORDER BY pct.id;
   `;
-  const rows = await pool.query(sql, [pet_tag_id]);
-  return rows[0];
+  const [rows] = await pool.query(sql, [pet_tag_id]);
+  return rows;
 };
 
-// sql - 商品說明
-const getProductIntroMap = async (productIds) => {
+// sql - 讀取指定商品說明文字
+const getProductIntroMap = async (productIds, sloganOnly = false) => {
+  const filter = sloganOnly ? " AND intro_type = 'slogan' " : "";
   const sql = `
     SELECT prod_id_fk, intro_type, intro_text
     FROM product_intros
-    WHERE prod_id_fk IN (?)
-    ORDER BY prod_id_fk, id;
-  `;
+    WHERE prod_id_fk IN (?) ${filter}
+    ORDER BY prod_id_fk;`;
   const [introRows] = await pool.query(sql, [productIds]);
-  const introMap = {};
-  for (const row of introRows) {
-    if (!introMap[row.prod_id_fk]) introMap[row.prod_id_fk] = {};
-    introMap[row.prod_id_fk][row.intro_type] = row.intro_text;
-  }
+  const introMap = introRows.reduce((obj, row) => {
+    if (!obj[row.prod_id_fk]) obj[row.prod_id_fk] = {};
+    obj[row.prod_id_fk][row.intro_type] = row.intro_text;
+    return obj;
+  }, {});
   return introMap;
 };
 
-// sql - 商品縮圖
-const getProductAvatarMap = async (productIds) => {
+// sql - 讀取指定商品縮圖
+const getProductAvatarMap = async (productIds, firstOnly = false) => {
+  const filter = firstOnly ? " AND avatar_order = 1 " : "";
   const sql = `
     SELECT prod_id_fk, src, thumbnail, avatar_order
     FROM product_avatars
-    WHERE prod_id_fk IN (?)
-    ORDER BY prod_id_fk, id;
+    WHERE prod_id_fk IN (?) ${filter}
+    ORDER BY prod_id_fk;
   `;
   const [avatarRows] = await pool.query(sql, [productIds]);
-  const avatarMap = {};
-  for (const row of avatarRows) {
-    if (!avatarMap[row.prod_id_fk]) avatarMap[row.prod_id_fk] = [];
-    avatarMap[row.prod_id_fk].push({
-      src: row.src,
-      thumbnail: row.thumbnail,
-      avatar_order: row.avatar_order,
-    });
-  }
+  const avatarMap = avatarRows.reduce((obj, row) => {
+    if (!obj[row.prod_id_fk]) obj[row.prod_id_fk] = [];
+    const { prod_id_fk, ...newRow } = row;
+    obj[row.prod_id_fk].push(newRow);
+    return obj;
+  }, {});
   return avatarMap;
 };
 
-// sql - 商品介紹圖
-const getProductImageMap = async (productIds) => {
+// sql - 讀取商品介紹圖(詳細頁用)
+const getProductImage = async (productId) => {
   const sql = `
-    SELECT prod_id_fk, src, image_order
+    SELECT src, image_order
     FROM product_images
-    WHERE prod_id_fk IN (?)
-    ORDER BY prod_id_fk, id;
+    WHERE prod_id_fk = ?
+    ORDER BY image_order;
   `;
-  const [imageRows] = await pool.query(sql, [productIds]);
-  const imageMap = {};
-  for (const row of imageRows) {
-    if (!imageMap[row.prod_id_fk]) imageMap[row.prod_id_fk] = [];
-    imageMap[row.prod_id_fk].push({
-      src: row.src,
-      image_order: row.image_order,
-    });
-  }
-  return imageMap;
-};
-
-// sql - 品項關鍵字 + tags
-const getItemDetails = async (itemList) => {
-  if (!itemList.length) return [];
-
-  const itemIds = itemList.map((item) => item.id);
-  const sql_keyword = `
-    SELECT DISTINCT item_id_fk, keyword_id_fk
-    FROM item_keywords
-    WHERE item_id_fk IN (?)
-    ORDER BY item_id_fk, keyword_id_fk;
-  `;
-  const [keywordRows] = await pool.query(sql_keyword, [itemIds]);
-
-  const keywordMap = {};
-  for (const row of keywordRows) {
-    if (!keywordMap[row.item_id_fk]) keywordMap[row.item_id_fk] = new Set();
-    keywordMap[row.item_id_fk].add(row.keyword_id_fk);
-  }
-
-  const sql_tag = `
-    SELECT DISTINCT item_id_fk, tag_id_fk
-    FROM item_tags
-    WHERE item_id_fk IN (?)
-    ORDER BY item_id_fk, tag_id_fk;
-  `;
-  const [tagRows] = await pool.query(sql_tag, [itemIds]);
-
-  const tagMap = {};
-  for (const row of tagRows) {
-    if (!tagMap[row.item_id_fk]) tagMap[row.item_id_fk] = new Set();
-    tagMap[row.item_id_fk].add(row.tag_id_fk);
-  }
-
-  return itemList.map((item) => ({
-    ...item,
-    keywords_id: [...(keywordMap[item.id] || [])],
-    tags_id: [...(tagMap[item.id] || [])],
-  }));
-};
-
-// sql - 依商品(篩選後)讀取底下的所有品項
-const getProductItemMap = async (productIds) => {
-  const sql = `SELECT * FROM items WHERE prod_id_fk IN (?) ORDER BY prod_id_fk, id;`;
-  let [itemRows] = await pool.query(sql, [productIds]);
-  itemRows = await getItemDetails(itemRows);
-
-  const itemDataMap = {};
-  for (const item of itemRows) {
-    if (!itemDataMap[item.prod_id_fk]) {
-      itemDataMap[item.prod_id_fk] = {
-        keywordSet: new Set(),
-        tagSet: new Set(),
-        items: [],
-      };
-    }
-    const itemData = itemDataMap[item.prod_id_fk];
-    itemData.items.push(item);
-    for (const keywordId of item.keywords_id) {
-      itemData.keywordSet.add(keywordId);
-    }
-    for (const tagId of item.tags_id) {
-      itemData.tagSet.add(tagId);
-    }
-  }
-
-  for (const itemData of Object.values(itemDataMap)) {
-    itemData.keywords_id = [...itemData.keywordSet];
-    itemData.tags_id = [...itemData.tagSet];
-    delete itemData.keywordSet;
-    delete itemData.tagSet;
-  }
-
-  return itemDataMap;
-};
-
-const getProductsWithDetails = async (products) => {
-  if (!products.length) return [];
-
-  const productIds = products.map((p) => p.id);
-  const [itemDataMap, introMap, avatarMap, imageMap] = await Promise.all([
-    getProductItemMap(productIds),
-    getProductIntroMap(productIds),
-    getProductAvatarMap(productIds),
-    getProductImageMap(productIds),
-  ]);
-
-  return products.map((product) => {
-    const itemData = itemDataMap[product.id] || {};
-    return {
-      ...product,
-      keywords_id: itemData.keywords_id || [],
-      tags_id: itemData.tags_id || [],
-      items: itemData.items || [],
-      intros: introMap[product.id] || {},
-      avatars: avatarMap[product.id] || [],
-      images: imageMap[product.id] || [],
-    };
-  });
+  const [imageRows] = await pool.query(sql, [productId]);
+  return imageRows;
 };
 
 // sql - 自由文字搜尋條件
@@ -229,8 +178,16 @@ const searchFilters = [
       WHERE search_keyword_i.prod_id_fk = p.id AND search_k.keyword LIKE ?
     )
   `,
+  `
+    EXISTS (
+      SELECT 1
+      FROM items search_tag_i
+      INNER JOIN item_tags search_it ON search_it.item_id_fk = search_tag_i.id
+      INNER JOIN product_special_tags search_pst ON search_pst.id = search_it.tag_id_fk
+      WHERE search_tag_i.prod_id_fk = p.id AND search_pst.tag_ch LIKE ?
+    )
+  `,
 ];
-
 const buildSearchFilter = (search) => {
   if (!search) return null;
 
@@ -244,20 +201,19 @@ const buildSearchFilter = (search) => {
 const buildProductFilters = (filterOptions) => {
   const {
     petTypeId,
-    selectedCategoryId,
-    selectedTags = [],
-    selectedKeywords = [],
-    priceMin,
-    priceMax,
+    categoryId = 0,
+    priceMin = -1,
+    priceMax = -1,
+    tagIds = [],
     search,
   } = filterOptions;
 
   const filters = ["p.pet_tag_id_fk = ?"];
   const sqlValues = [petTypeId];
 
-  if (selectedCategoryId) {
+  if (categoryId) {
     filters.push("p.category_id_fk = ?");
-    sqlValues.push(selectedCategoryId);
+    sqlValues.push(categoryId);
   }
   if (priceMin > 0) {
     filters.push("p.price >= ?");
@@ -267,7 +223,7 @@ const buildProductFilters = (filterOptions) => {
     filters.push("p.price <= ?");
     sqlValues.push(priceMax);
   }
-  if (selectedTags.length) {
+  if (tagIds.length) {
     filters.push(`
       EXISTS (
         SELECT 1
@@ -276,18 +232,7 @@ const buildProductFilters = (filterOptions) => {
         WHERE tag_i.prod_id_fk = p.id AND it.tag_id_fk IN (?)
       )
     `);
-    sqlValues.push(selectedTags);
-  }
-  for (const keywordId of selectedKeywords) {
-    filters.push(`
-      EXISTS (
-        SELECT 1
-        FROM items keyword_i
-        INNER JOIN item_keywords ik ON ik.item_id_fk = keyword_i.id
-        WHERE keyword_i.prod_id_fk = p.id AND ik.keyword_id_fk = ?
-      )
-    `);
-    sqlValues.push(keywordId);
+    sqlValues.push(tagIds);
   }
 
   const searchFilter = buildSearchFilter(search);
@@ -302,27 +247,17 @@ const buildProductFilters = (filterOptions) => {
   };
 };
 
-const getFacetKeywordData = async (sqlFilter, sqlValues) => {
+// sql - 讀取篩選後商品的 tag facets
+const getTagFacets = async (sqlFilter, sqlValues) => {
   const sql = `
-    SELECT DISTINCT k.*
-    FROM keywords k
-    INNER JOIN item_keywords ik ON ik.keyword_id_fk = k.id
-    INNER JOIN items i ON i.id = ik.item_id_fk
-    INNER JOIN products p ON p.id = i.prod_id_fk
-    ${sqlFilter}
-    ORDER BY k.id;
-  `;
-  const [rows] = await pool.query(sql, sqlValues);
-  return rows;
-};
-
-const getFacetTagData = async (sqlFilter, sqlValues) => {
-  const sql = `
-    SELECT DISTINCT pst.*
-    FROM product_special_tags pst
-    INNER JOIN item_tags it ON it.tag_id_fk = pst.id
-    INNER JOIN items i ON i.id = it.item_id_fk
-    INNER JOIN products p ON p.id = i.prod_id_fk
+    SELECT DISTINCT
+      pst.id,
+      pst.tag_ch,
+      pst.tag_slug
+    FROM products p
+    INNER JOIN items i ON i.prod_id_fk = p.id
+    INNER JOIN item_tags it ON it.item_id_fk = i.id
+    INNER JOIN product_special_tags pst ON pst.id = it.tag_id_fk
     ${sqlFilter}
     ORDER BY pst.id;
   `;
@@ -330,22 +265,29 @@ const getFacetTagData = async (sqlFilter, sqlValues) => {
   return rows;
 };
 
-const getProductListData = async (filterOptions) => {
-  const { sort, currentPage } = filterOptions;
+// sql - 讀取 品項符合篩選條件 的商品 (列表頁)
+const getProductMap = async (
+  filterOptions,
+  sort = "default",
+  page = 1,
+  tagMaps,
+  userId = null,
+) => {
   const perPage = 16;
+  const currentPage = Math.max(1, Math.floor(Number(page) || 1));
+  const offset = (currentPage - 1) * perPage;
 
   // 篩選條件
   const { sql: sqlFilter, values: sqlValues } =
     buildProductFilters(filterOptions);
-
-  // 先計算總數與 facet，再只讀取目前頁面的商品明細
-  const sqlSort = `ORDER BY ${sortList[sort]} , p.id ASC`;
+  const sqlSort = `ORDER BY ${sortList[sort] || sortList.default}, p.id ASC`;
   const countSql = `
-    SELECT COUNT(*) AS totalRows
-    FROM products p
-    ${sqlFilter};
-  `;
+      SELECT COUNT(DISTINCT p.id) AS totalRows
+      FROM products p
+      ${sqlFilter};
+    `;
   const [[countData]] = await pool.query(countSql, sqlValues);
+  const tags = await getTagFacets(sqlFilter, sqlValues);
   const totalRows = countData.totalRows;
   const totalPages = Math.ceil(totalRows / perPage);
   const pagination = {
@@ -354,30 +296,260 @@ const getProductListData = async (filterOptions) => {
     totalRows,
     totalPages,
   };
-  const [keywordData, tagData] = await Promise.all([
-    getFacetKeywordData(sqlFilter, sqlValues),
-    getFacetTagData(sqlFilter, sqlValues),
-  ]);
 
-  if (totalRows && currentPage > totalPages) {
-    return {
-      success: false,
-      facets: {
-        keywords: keywordData,
-        tags: tagData,
-      },
-      pagination,
-      products: [],
-    };
-  }
-
-  const offset = (currentPage - 1) * perPage;
-  const sql = `
+  const productSql = `
+    SELECT
+      p.id AS id,
+      p.prod_name,
+      p.pet_tag_id_fk,
+      p.category_id_fk,
+      p.price,
+      p.slug,
+      p.created_at,
+      COALESCE(item_stats.total_sold, 0) AS total_sold,
+      COALESCE(item_stats.total_stock, 0) AS total_stock,
+      EXISTS (
+        SELECT 1
+        FROM user_favorites uf
+        WHERE uf.user_id_fk = ? AND uf.prod_id_fk = p.id
+      ) AS isFavorite,
+      COALESCE(
+        (
+          SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+              'item_id', i.id,
+              'item_name', i.item_name,
+              'sku', i.sku,
+              'sold', i.sold,
+              'stock', i.stock,
+              'tags', COALESCE(
+                (
+                  SELECT JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                      'id', pst.id,
+                      'tag_ch', pst.tag_ch,
+                      'tag_slug', pst.tag_slug
+                    )
+                  )
+                  FROM item_tags it
+                  INNER JOIN product_special_tags pst ON pst.id = it.tag_id_fk
+                  WHERE it.item_id_fk = i.id
+                ),
+                JSON_ARRAY()
+              )
+            )
+          )
+          FROM items i
+          WHERE i.prod_id_fk = p.id
+        ),
+        JSON_ARRAY()
+      ) AS items
+    FROM products p
+    LEFT JOIN (
       SELECT
-        p.*,
+        prod_id_fk,
+        SUM(sold) AS total_sold,
+        SUM(stock) AS total_stock
+      FROM items
+      GROUP BY prod_id_fk
+    ) item_stats ON item_stats.prod_id_fk = p.id
+    ${sqlFilter}
+    ${sqlSort}
+    LIMIT ? OFFSET ?;
+  `;
+  const [productRows] = await pool.query(productSql, [
+    userId,
+    ...sqlValues,
+    perPage,
+    offset,
+  ]);
+  const productIds = productRows.map((product) => product.id);
+  const [introMap, avatarMap] = productIds.length
+    ? await Promise.all([
+        getProductIntroMap(productIds, true),
+        getProductAvatarMap(productIds, true),
+      ])
+    : [{}, {}];
+
+  return {
+    facets: { tags },
+    pagination,
+    products: productRows.map((product) => {
+      const items = parseJsonArray(product.items);
+      const { isFavorite, ...productFields } = product;
+      const productData = formatProductTags(productFields, tagMaps);
+      return {
+        ...productData,
+        isFavorite: Boolean(isFavorite),
+        intro: introMap[product.id] || {},
+        avatar: avatarMap[product.id]?.[0] || null,
+        tags: summarizeItemTags(items),
+        items,
+      };
+    }),
+  };
+};
+
+// sql - 讀取指定商品 (選購)
+const getProduct = async (productId, userId = null) => {
+  const sql = `
+    SELECT
+      p.*,
+      EXISTS (
+        SELECT 1
+        FROM user_favorites uf
+        WHERE uf.user_id_fk = ? AND uf.prod_id_fk = p.id
+      ) AS isFavorite
+    FROM products p
+    WHERE p.id = ?
+    ;
+  `;
+  const [[productRow]] = await pool.query(sql, [userId, productId]);
+  if (productRow) productRow.isFavorite = Boolean(productRow.isFavorite);
+  return productRow;
+};
+
+const getProductIdBySlug = async (petTypeId, productSlug) => {
+  const sql = `
+    SELECT id
+    FROM products
+    WHERE pet_tag_id_fk = ? AND slug = ?
+    LIMIT 1;
+  `;
+  const [[productRow]] = await pool.query(sql, [petTypeId, productSlug]);
+  return productRow?.id || null;
+};
+
+// sql - 讀取商品底下品項 (選購)
+const getProductItem = async (productId) => {
+  const sql = `
+    SELECT 
+      i.id, i.sku, i.item_name, i.sold, i.stock,
+      IF(
+        COUNT(pst.id) = 0,
+        JSON_ARRAY(),
+        JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'tag_id', pst.id,
+            'tag_ch', pst.tag_ch,
+            'tag_slug', pst.tag_slug
+          )
+        )
+      ) AS tags
+    FROM items i
+    LEFT JOIN item_tags it 
+      ON it.item_id_fk = i.id
+    LEFT JOIN product_special_tags pst 
+      ON pst.id = it.tag_id_fk
+    WHERE i.prod_id_fk = ?
+    GROUP BY i.id, i.sku, i.prod_id_fk, i.item_name, i.sold, i.stock
+    ORDER BY i.prod_id_fk, i.id;
+  `;
+  const [itemRows] = await pool.query(sql, productId);
+  return itemRows;
+};
+
+// 統計 銷量 & 存貨
+const sumItemDetail = (items) => {
+  const result = {
+    totalSold: 0,
+    totalStock: 0,
+  };
+  for (const item of items) {
+    result.totalSold += item.sold;
+    result.totalStock += item.stock;
+  }
+  return result;
+};
+
+router.get("/", async (req, res) => {
+  return res.json({
+    success: true,
+    page: "product",
+  });
+});
+
+router.get("/mega-menu", async (req, res) => {
+  try {
+    const cards = await Promise.all(
+      req.petTypeList.map(async (petType) => {
+        const categories = await countCategoryProduct(petType.id);
+        const title = petType.tag_page || `${petType.tag_ch}專區`;
+
+        return {
+          id: petType.id,
+          petType: petType.tag_slug,
+          imageAlt: title,
+          title,
+          href: `/product/${petType.tag_slug}`,
+          items: categories.map((category) => ({
+            id: category.id,
+            title: category.tag_ch,
+            href: `/product/${petType.tag_slug}?category=${category.tag_slug}`,
+          })),
+        };
+      }),
+    );
+
+    return res.json({ success: true, cards });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "讀取商品選單失敗",
+    });
+  }
+});
+
+// 讀取收藏列表 `user_favorites`
+const getFavoriteListData = async (userId, tagMaps) => {
+  const [rows] = await pool.query(
+    `
+      SELECT
+        uf.id AS favorite_id,
+        uf.created_at AS favorited_at,
+        p.id AS id,
+        p.prod_name,
+        p.pet_tag_id_fk,
+        p.category_id_fk,
+        p.price,
+        p.slug,
+        p.created_at,
         COALESCE(item_stats.total_sold, 0) AS total_sold,
-        COALESCE(item_stats.total_stock, 0) AS total_stock
-      FROM products p
+        COALESCE(item_stats.total_stock, 0) AS total_stock,
+        COALESCE(
+          (
+            SELECT JSON_ARRAYAGG(
+              JSON_OBJECT(
+                'item_id', i.id,
+                'item_name', i.item_name,
+                'sku', i.sku,
+                'sold', i.sold,
+                'stock', i.stock,
+                'tags', COALESCE(
+                  (
+                    SELECT JSON_ARRAYAGG(
+                      JSON_OBJECT(
+                        'id', pst.id,
+                        'tag_ch', pst.tag_ch,
+                        'tag_slug', pst.tag_slug
+                      )
+                    )
+                    FROM item_tags it
+                    INNER JOIN product_special_tags pst ON pst.id = it.tag_id_fk
+                    WHERE it.item_id_fk = i.id
+                  ),
+                  JSON_ARRAY()
+                )
+              )
+            )
+            FROM items i
+            WHERE i.prod_id_fk = p.id
+          ),
+          JSON_ARRAY()
+        ) AS items
+      FROM user_favorites uf
+      INNER JOIN products p ON p.id = uf.prod_id_fk
       LEFT JOIN (
         SELECT
           prod_id_fk,
@@ -386,72 +558,49 @@ const getProductListData = async (filterOptions) => {
         FROM items
         GROUP BY prod_id_fk
       ) item_stats ON item_stats.prod_id_fk = p.id
-      ${sqlFilter}
-      ${sqlSort}
-      LIMIT ? OFFSET ?
-      `;
-  let [rows] = await pool.query(sql, [...sqlValues, perPage, offset]);
+      WHERE uf.user_id_fk = ?
+      ORDER BY uf.created_at DESC, uf.id DESC;
+    `,
+    [userId],
+  );
 
-  rows = await getProductsWithDetails(rows);
+  const productIds = rows.map((product) => product.id);
+  const [introMap, avatarMap] = productIds.length
+    ? await Promise.all([
+        getProductIntroMap(productIds, true),
+        getProductAvatarMap(productIds, true),
+      ])
+    : [{}, {}];
 
-  return {
-    success: true,
-    facets: {
-      keywords: keywordData,
-      tags: tagData,
-    },
-    pagination,
-    products: rows,
-  };
+  return rows.map((product) => {
+    const items = parseJsonArray(product.items);
+    const productData = formatProductTags(product, tagMaps);
+    return {
+      ...productData,
+      isFavorite: true,
+      intro: introMap[product.id] || {},
+      avatar: avatarMap[product.id]?.[0] || null,
+      tags: summarizeItemTags(items),
+      items,
+    };
+  });
 };
+router.get("/getFavorite", requireAuth, async (req, res) => {
+  const userId = req.currentUser.id;
 
-router.get("/", (req, res) => {
-  return res.json({ success: true, page: "product" });
+  try {
+    const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
+    const favorites = await getFavoriteListData(userId, tagMaps);
+
+    return res.json({ success: true, favorites });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "讀取收藏列表失敗",
+    });
+  }
 });
-
-// 取得前端資訊
-const getParams = (req) => {
-  const petType = req.params.petType;
-  const petTypeData = /^\d+$/.test(petType)
-    ? petTypeList.find((elem) => elem.id === +petType)
-    : petTypeList.find((elem) => elem["tag_slug"] === petType);
-  if (!petTypeData) return null;
-
-  const selectedCategory = req.query.category ?? "";
-  const categoryData = /^\d+$/.test(selectedCategory)
-    ? categoryList.find((elem) => elem.id === +selectedCategory)
-    : categoryList.find((elem) => elem["tag_slug"] === selectedCategory);
-  const priceMin = +req.query["min-value"] || -1;
-  const priceMax = +req.query["max-value"] || -1;
-  const sort = sortList[req.query.sort] ? req.query.sort : "default";
-  const currentPage = parsePositiveInt(req.query.page, 1);
-  const search = `${req.query.search ?? ""}`.trim();
-  return {
-    petTypeId: petTypeData.id,
-    selectedCategoryId: categoryData?.id || 0,
-    selectedTags: parseIdList(req.query.tags),
-    selectedKeywords: parseIdList(req.query.keywords),
-    priceMin,
-    priceMax,
-    sort,
-    currentPage,
-    search,
-  };
-};
-
-const parsePositiveInt = (value, defaultValue) => {
-  const number = +value;
-  return Number.isInteger(number) && number > 0 ? number : defaultValue;
-};
-
-const parseIdList = (value) => [
-  ...new Set(
-    (Array.isArray(value) ? value.join(",") : `${value ?? ""}`)
-      .split(/[,\s]+/)
-      .map((id) => +id)
-      .filter((id) => Number.isInteger(id) && id > 0),
-  ),
-];
 
 // 新增/取消 收藏商品 `user_favorites`
 router.patch("/updateFavorite/:productId", requireAuth, async (req, res) => {
@@ -503,51 +652,6 @@ router.patch("/updateFavorite/:productId", requireAuth, async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "更新收藏失敗",
-    });
-  }
-});
-
-// 讀取收藏列表 `user_favorites`
-const getFavoriteListData = async (userId) => {
-  const [rows] = await pool.query(
-    `
-      SELECT
-        uf.id AS favorite_id,
-        uf.created_at AS favorited_at,
-        p.*,
-        COALESCE(item_stats.total_sold, 0) AS total_sold,
-        COALESCE(item_stats.total_stock, 0) AS total_stock
-      FROM user_favorites uf
-      INNER JOIN products p ON p.id = uf.prod_id_fk
-      LEFT JOIN (
-        SELECT
-          prod_id_fk,
-          SUM(sold) AS total_sold,
-          SUM(stock) AS total_stock
-        FROM items
-        GROUP BY prod_id_fk
-      ) item_stats ON item_stats.prod_id_fk = p.id
-      WHERE uf.user_id_fk = ?
-      ORDER BY uf.created_at DESC, uf.id DESC;
-    `,
-    [userId],
-  );
-
-  return getProductsWithDetails(rows);
-};
-
-router.get("/getFavorite", requireAuth, async (req, res) => {
-  const userId = req.currentUser.id;
-
-  try {
-    const favorites = await getFavoriteListData(userId);
-
-    return res.json({ success: true, favorites });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({
-      success: false,
-      message: "讀取收藏列表失敗",
     });
   }
 });
@@ -652,7 +756,7 @@ router.post("/updateCart/:itemId", requireAuth, async (req, res) => {
 });
 
 // 移除 購物車品項 `cart_items`
-router.delete("/updatecart/:itemId", requireAuth, async (req, res) => {
+router.delete("/updateCart/:itemId", requireAuth, async (req, res) => {
   const userId = req.currentUser.id;
 
   const itemId = +req.params.itemId;
@@ -683,75 +787,130 @@ router.delete("/updatecart/:itemId", requireAuth, async (req, res) => {
   }
 });
 
-router.get("/:petType/:productId", async (req, res) => {
-  const params = getParams(req);
-  if (!params) return res.status(400).json({ success: false });
-
-  const productId = req.params.productId;
-  const productFilter = /^\d+$/.test(productId) ? "p.id = ?" : "p.slug = ?";
-  const [[product]] = await pool.query(
-    `
-      SELECT p.*
-      FROM products p
-      WHERE p.pet_tag_id_fk = ? AND ${productFilter}
-      LIMIT 1;
-    `,
-    [params.petTypeId, /^\d+$/.test(productId) ? +productId : productId],
+router.get("/resolve/:petTypeSlug/:productSlug", async (req, res) => {
+  const petType = req.petTypeList.find(
+    (item) => item.tag_slug === req.params.petTypeSlug,
   );
 
-  if (!product) return res.status(404).json({ success: false });
+  if (!petType) {
+    return res.status(404).json({
+      success: false,
+      message: "找不到商品分類",
+    });
+  }
 
-  const [itemDataMap, introMap, avatarMap, imageMap, [tags]] =
-    await Promise.all([
-      getProductItemMap([product.id]),
-      getProductIntroMap([product.id]),
-      getProductAvatarMap([product.id]),
-      getProductImageMap([product.id]),
-      pool.query(
-        `
-          SELECT DISTINCT pst.*
-          FROM product_special_tags pst
-          INNER JOIN item_tags it ON it.tag_id_fk = pst.id
-          INNER JOIN items i ON i.id = it.item_id_fk
-          WHERE i.prod_id_fk = ?
-          ORDER BY pst.id;
-        `,
-        [product.id],
-      ),
-    ]);
-  const itemData = itemDataMap[product.id] || {};
+  try {
+    const productId = await getProductIdBySlug(
+      petType.id,
+      req.params.productSlug,
+    );
 
+    if (!productId) {
+      return res.status(404).json({
+        success: false,
+        message: "找不到商品",
+      });
+    }
+
+    return res.json({
+      success: true,
+      petTypeId: petType.id,
+      productId,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "商品資料載入失敗",
+    });
+  }
+});
+
+// 商品快速選購頁
+router.get("/:petTypeId/:productId/buy", async (req, res) => {
+  const petTypeId = req.params.petTypeId;
+  const productId = req.params.productId;
+  const userId = await getOptionalUserId(req);
+  const product = await getProduct(productId, userId);
+  const items = await getProductItem(productId);
+  const { totalSold, totalStock } = sumItemDetail(items);
+  const avatarResult = await getProductAvatarMap(productId);
+  const [avatars] = Object.values(avatarResult);
+  const introResult = await getProductIntroMap(productId);
+  const [intros] = Object.values(introResult);
+  const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
   res.json({
-    success: true,
-    productData: {
-      id: product.id,
-      productName: product.prod_name,
-      tags,
-      price: product.price,
-      items: itemData.items || [],
-      avatars: avatarMap[product.id] || [],
-      images: imageMap[product.id] || [],
-      intros: introMap[product.id] || {},
+    params: { petTypeId, productId },
+    product: {
+      ...formatProductTags(product, tagMaps),
+      totalSold: totalSold,
+      totalStock: totalStock,
+      tags: summarizeItemTags(items),
     },
+    items,
+    avatars,
+    intros,
   });
 });
 
-router.get("/:petType", async (req, res) => {
-  const params = getParams(req);
-  if (!params) return res.status(400).json({ success: false });
-
-  const categoriesCount = await countCategoryProduct(params.petTypeId);
-  const productData = await getProductListData(params);
+// 商品詳細頁
+router.get("/:petTypeId/:productId/detail", async (req, res) => {
+  const petTypeId = req.params.petTypeId;
+  const productId = req.params.productId;
+  const userId = await getOptionalUserId(req);
+  const product = await getProduct(productId, userId);
+  const items = await getProductItem(productId);
+  const { totalSold, totalStock } = sumItemDetail(items);
+  const avatarResult = await getProductAvatarMap(productId);
+  const [avatars] = Object.values(avatarResult);
+  const introResult = await getProductIntroMap(productId);
+  const [intros] = Object.values(introResult);
+  const images = await getProductImage(productId);
+  const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
   res.json({
-    success: productData.success,
-    params,
-    facets: {
-      categories: categoriesCount,
-      keywords: productData.facets.keywords,
-      tags: productData.facets.tags,
+    params: { petTypeId, productId },
+    product: {
+      ...formatProductTags(product, tagMaps),
+      totalSold: totalSold,
+      totalStock: totalStock,
+      tags: summarizeItemTags(items),
     },
-    pagination: productData.pagination,
-    products: productData.products,
+    items,
+    avatars,
+    images,
+    intros,
+  });
+});
+
+// 商品列表頁
+router.get("/:petTypeId", async (req, res) => {
+  const petTypeId = req.params.petTypeId;
+  const userId = await getOptionalUserId(req);
+  const categoriesCount = await countCategoryProduct(petTypeId);
+  const search =
+    typeof req.query.search === "string" ? req.query.search.trim() : "";
+  const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
+  const { facets, pagination, products } = await getProductMap(
+    {
+      petTypeId: parseNumber(petTypeId, 0),
+      categoryId: parseNumber(req.query.categoryId ?? req.query.category, 0),
+      priceMin: parseNumber(req.query.priceMin ?? req.query["min-value"], -1),
+      priceMax: parseNumber(req.query.priceMax ?? req.query["max-value"], -1),
+      tagIds: parseIdList(req.query.tagIds ?? req.query.tags),
+      search,
+    },
+    req.query.sort,
+    req.query.page,
+    tagMaps,
+    userId,
+  );
+
+  res.json({
+    success: true,
+    petTypeId,
+    facets: { categories: categoriesCount, tags: facets.tags },
+    pagination,
+    products,
   });
 });
 

@@ -11,6 +11,7 @@ import pool from "./connect-mysql.js";
 import { isSupportUser } from "./support-role.js";
 
 let ioInstance = null;
+const supportPageSocketIds = new Set();
 
 function parseAccessTokenFromCookie(cookieHeader) {
   const source = String(cookieHeader || "");
@@ -88,6 +89,20 @@ async function markSocketOffline(socketId) {
   );
 }
 
+async function hasOnlineSocket(userId) {
+  const [rows] = await pool.execute(
+    `
+      SELECT 1
+      FROM socket_connections
+      WHERE user_id = ? AND is_online = 1
+      LIMIT 1
+    `,
+    [userId],
+  );
+
+  return rows.length > 0;
+}
+
 function emitPresence(user) {
   if (!ioInstance) return;
   ioInstance.to("support").emit("chat:presence", {
@@ -104,6 +119,32 @@ function emitPresenceOffline(user) {
   });
 }
 
+function emitSupportPagePresence() {
+  if (!ioInstance) return;
+
+  const onlineCount = supportPageSocketIds.size;
+  ioInstance.emit("chat:support-presence", {
+    onlineCount,
+    isOnline: onlineCount > 0,
+  });
+}
+
+function emitSupportPagePresenceToSocket(socket) {
+  const onlineCount = supportPageSocketIds.size;
+  socket.emit("chat:support-presence", {
+    onlineCount,
+    isOnline: onlineCount > 0,
+  });
+}
+
+export function isSupportOnlineNow() {
+  return supportPageSocketIds.size > 0;
+}
+
+export function getSupportOnlineCountNow() {
+  return supportPageSocketIds.size;
+}
+
 export function initRealtimeChat(server) {
   if (ioInstance) return ioInstance;
 
@@ -112,6 +153,9 @@ export function initRealtimeChat(server) {
       origin: process.env.CORS_ORIGIN || "http://localhost:3000",
       credentials: true,
     },
+    // Detect dead sockets sooner so presence transitions are closer to real time.
+    pingInterval: 5000,
+    pingTimeout: 5000,
   });
 
   ioInstance.use(async (socket, next) => {
@@ -132,6 +176,8 @@ export function initRealtimeChat(server) {
     const userRoom = `user:${user.id}`;
     socket.join(userRoom);
 
+    emitSupportPagePresenceToSocket(socket);
+
     if (isSupportUser(user)) {
       socket.join("support");
     }
@@ -148,12 +194,47 @@ export function initRealtimeChat(server) {
       if (!caseId) return;
 
       socket.join(`case:${caseId}`);
+      emitSupportPagePresenceToSocket(socket);
+    });
+
+    socket.on("chat:support-presence:request", () => {
+      emitSupportPagePresenceToSocket(socket);
+    });
+
+    socket.on("presence:support-page:enter", () => {
+      if (!isSupportUser(user)) return;
+
+      const wasTracked = supportPageSocketIds.has(socket.id);
+      supportPageSocketIds.add(socket.id);
+
+      if (!wasTracked) {
+        emitSupportPagePresence();
+      }
+    });
+
+    socket.on("presence:support-page:leave", () => {
+      if (!isSupportUser(user)) return;
+
+      const wasTracked = supportPageSocketIds.delete(socket.id);
+      if (wasTracked) {
+        emitSupportPagePresence();
+      }
     });
 
     socket.on("disconnect", async () => {
+      const wasTracked = supportPageSocketIds.delete(socket.id);
+      if (wasTracked) {
+        emitSupportPagePresence();
+      }
+
       try {
         await markSocketOffline(socket.id);
-        emitPresenceOffline(user);
+        const stillOnline = await hasOnlineSocket(user.id);
+        if (stillOnline) {
+          emitPresence(user);
+        } else {
+          emitPresenceOffline(user);
+        }
       } catch (error) {
         console.error("[socket/disconnect]", error);
       }
