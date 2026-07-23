@@ -10,26 +10,26 @@ const pool = mysql.createPool({
   port: +DB_PORT || 3306,
   database: DB_NAME,
   waitForConnections: true,
-  connectionLimit: 5,
+  connectionLimit: 20,
   queueLimit: 0,
-  // multipleStatements: true
+  multipleStatements: true,
 });
 
 const createdThreadIds = new Set(); // 紀錄 在本次伺服器執行期間 建立的 threadId
 const activeThreadIds = new Set(); // 紀錄 當下使用中的 threadId
 
 /* 連線池紀錄 */
-  // 建立新連線
+// 建立新連線
 pool.on("connection", (connection) => {
   createdThreadIds.add(connection.threadId);
   console.log(`【建立新的資料庫連線 識別碼: ${connection.threadId}】`);
 });
-  // 使用連線
+// 使用連線
 pool.on("acquire", (connection) => {
   activeThreadIds.add(connection.threadId);
   logPoolStatus(`取得 SQL 連線 (識別碼：${connection.threadId})`);
 });
-  // 釋放連線
+// 釋放連線
 pool.on("release", (connection) => {
   activeThreadIds.delete(connection.threadId);
   logPoolStatus(`釋放 SQL (識別碼：${connection.threadId})`);
@@ -45,7 +45,7 @@ function logPoolStatus(label = "SQL 狀態") {
   console.log(
     `-- ${label}\n-- 現在 SQL 連線數量: ${activeThreadIds.size} [${[
       ...activeThreadIds,
-    ].join(", ")}]\n`
+    ].join(", ")}]\n`,
   );
 }
 // 包裝 pool.query
@@ -89,7 +89,7 @@ export async function closeMysqlPool() {
 
   if (activeThreadIds.size > 0) {
     console.warn(
-      `-- 關閉前仍有使用中的 SQL threadId: [${[...activeThreadIds].join(", ")}]`
+      `-- 關閉前仍有使用中的 SQL threadId: [${[...activeThreadIds].join(", ")}]`,
     );
   }
 
@@ -113,7 +113,7 @@ pool.on("error", (err) => {
 /* 測試連線 */
 try {
   const connection = await pool.getConnection();
-  console.log("【測試連線中】\n",{ DB_USER, DB_NAME, DB_PORT },"\n");
+  console.log("【測試連線中】\n", { DB_USER, DB_NAME, DB_PORT }, "\n");
   console.log("🎯 資料庫連線測試成功");
   // 檢查資料庫版本
   const [rows] = await connection.execute("SELECT VERSION() as version");
