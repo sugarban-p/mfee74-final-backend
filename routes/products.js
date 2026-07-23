@@ -230,9 +230,11 @@ const buildProductFilters = (filterOptions) => {
         FROM items tag_i
         INNER JOIN item_tags it ON it.item_id_fk = tag_i.id
         WHERE tag_i.prod_id_fk = p.id AND it.tag_id_fk IN (?)
+        GROUP BY tag_i.prod_id_fk
+        HAVING COUNT(DISTINCT it.tag_id_fk) = ?
       )
     `);
-    sqlValues.push(tagIds);
+    sqlValues.push(tagIds, tagIds.length);
   }
 
   const searchFilter = buildSearchFilter(search);
