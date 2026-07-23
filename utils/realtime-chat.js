@@ -174,12 +174,19 @@ export function initRealtimeChat(server) {
   ioInstance.on("connection", async (socket) => {
     const user = socket.currentUser;
     const userRoom = `user:${user.id}`;
+    const isSupport = isSupportUser(user);
     socket.join(userRoom);
 
     emitSupportPagePresenceToSocket(socket);
 
-    if (isSupportUser(user)) {
+    if (isSupport) {
       socket.join("support");
+
+      const wasTracked = supportPageSocketIds.has(socket.id);
+      supportPageSocketIds.add(socket.id);
+      if (!wasTracked) {
+        emitSupportPagePresence();
+      }
     }
 
     try {
@@ -202,7 +209,7 @@ export function initRealtimeChat(server) {
     });
 
     socket.on("presence:support-page:enter", () => {
-      if (!isSupportUser(user)) return;
+      if (!isSupport) return;
 
       const wasTracked = supportPageSocketIds.has(socket.id);
       supportPageSocketIds.add(socket.id);
@@ -213,7 +220,7 @@ export function initRealtimeChat(server) {
     });
 
     socket.on("presence:support-page:leave", () => {
-      if (!isSupportUser(user)) return;
+      if (!isSupport) return;
 
       const wasTracked = supportPageSocketIds.delete(socket.id);
       if (wasTracked) {
