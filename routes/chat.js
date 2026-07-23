@@ -12,7 +12,12 @@ import { askAI } from "../services/ai/index.js";
 import { processMessage } from "../utils/chat.js";
 import { newCaseId } from "../utils/chat-cases.js";
 import pool from "../utils/connect-mysql.js";
-import { emitCaseMessage, emitCaseUpdated } from "../utils/realtime-chat.js";
+import {
+  emitCaseMessage,
+  emitCaseUpdated,
+  getSupportOnlineCountNow,
+  isSupportOnlineNow,
+} from "../utils/realtime-chat.js";
 import { isTableMissingError } from "../utils/schema.js";
 import { isSupportUser } from "../utils/support-role.js";
 
@@ -122,6 +127,14 @@ function requireSupport(req, res, next) {
   }
   return next();
 }
+
+router.get("/support/presence", requireAuth, (req, res) => {
+  const onlineCount = getSupportOnlineCountNow();
+  return res.json({
+    onlineCount,
+    isOnline: onlineCount > 0,
+  });
+});
 
 function normalizeMessage(row) {
   return {
@@ -328,6 +341,30 @@ router.post("/send", requireAuth, async (req, res) => {
       `,
       [consultationId, user.id, content, userMeta],
     );
+
+    if (isSupportOnlineNow()) {
+      await pool.execute(
+        "UPDATE chat_consultations SET last_message_at = NOW(), updated_at = NOW() WHERE id = ?",
+        [consultationId],
+      );
+
+      const [createdRows] = await pool.execute(
+        "SELECT id, content, sender, type, created_at FROM chat_messages WHERE id = ? LIMIT 1",
+        [userInsert.insertId],
+      );
+
+      const userMessage = normalizeMessage(createdRows[0]);
+
+      emitCaseMessage({ userId: user.id, caseId, message: userMessage });
+      emitCaseUpdated({ userId: user.id, caseId, status: "OPEN" });
+
+      return res.json({
+        userMessage,
+        caseId,
+        caseStatus: "OPEN",
+        aiDeferred: true,
+      });
+    }
 
     const history = await loadRecentHistory(consultationId);
     const { reply, type, meta } = await processMessage(content, { history });
