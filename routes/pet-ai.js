@@ -77,9 +77,7 @@ router.post("/recommendations", async (req, res) => {
      * 因此先轉換成後端需要的格式。
      */
     const petId = Number(req.body?.petId);
-    const needCode = String(
-      req.body?.needCode || "",
-    ).trim();
+    const needCode = String(req.body?.needCode || "").trim();
 
     /**
      * 驗證 petId。
@@ -115,11 +113,7 @@ router.post("/recommendations", async (req, res) => {
      * 2. 寵物屬於目前登入會員
      * 3. 寵物沒有被軟刪除
      */
-    const petContext =
-      await getOwnedPetRecommendationContext(
-        userId,
-        petId,
-      );
+    const petContext = await getOwnedPetRecommendationContext(userId, petId);
 
     /**
      * 找不到時統一回傳 404。
@@ -154,10 +148,7 @@ router.post("/recommendations", async (req, res) => {
      *
      * Azure 不會參與這個篩選過程。
      */
-    const products = await getPetCandidateProducts(
-      petContext,
-      needCode,
-    );
+    const products = await getPetCandidateProducts(petContext, needCode);
 
     /**
      * 將後端篩選好的候選商品交給 Azure。
@@ -165,12 +156,11 @@ router.post("/recommendations", async (req, res) => {
      * Azure 只會替每項商品新增 reason，
      * 不可以新增、刪除或替換 productId。
      */
-    const aiRecommendation =
-      await generatePetRecommendationReasons({
-        petContext,
-        guidedNeed,
-        products,
-      });
+    const aiRecommendation = await generatePetRecommendationReasons({
+      petContext,
+      guidedNeed,
+      products,
+    });
 
     /**
      * 回傳前端需要的完整 AI 導購資料。
@@ -188,23 +178,24 @@ router.post("/recommendations", async (req, res) => {
         pet: {
           id: petContext.petId,
           name: petContext.petName,
+
+          /**
+           * 毛孩照片提供前端導購摘要卡使用。
+           * 資料庫沒有照片時會回傳 null。
+           */
+          avatarUrl: petContext.avatarUrl,
+
           speciesCode: petContext.speciesCode,
           speciesLabel: petContext.speciesLabel,
           breed: petContext.breed,
           birthday: petContext.birthday,
           weight: petContext.weight,
 
-          activityLevelCode:
-            petContext.activityLevelCode,
+          activityLevelCode: petContext.activityLevelCode,
+          activityLevelLabel: petContext.activityLevelLabel,
 
-          activityLevelLabel:
-            petContext.activityLevelLabel,
-
-          healthConditions:
-            petContext.healthConditions,
-
-          allergyIngredients:
-            petContext.allergyIngredients,
+          healthConditions: petContext.healthConditions,
+          allergyIngredients: petContext.allergyIngredients,
         },
 
         /**
@@ -227,8 +218,7 @@ router.post("/recommendations", async (req, res) => {
          * rules：
          * 沒有候選商品，所以沒有呼叫 Azure。
          */
-        recommendationSource:
-          aiRecommendation.source,
+        recommendationSource: aiRecommendation.source,
 
         /**
          * 回傳商品卡資料。
@@ -246,10 +236,7 @@ router.post("/recommendations", async (req, res) => {
      * 詳細錯誤只顯示在後端 Terminal，
      * 不把資料庫資訊回傳給前端。
      */
-    console.error(
-      "[POST /api/pet-ai/recommendations]",
-      error,
-    );
+    console.error("[POST /api/pet-ai/recommendations]", error);
 
     return res.status(500).json({
       success: false,

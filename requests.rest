@@ -1,6 +1,6 @@
 @baseUrl = http://localhost:3001
-@petType = cat
-@productId = 1
+@petTypeId = 1
+@productId = 10
 @itemId = 1
 
 ### 登入 - 取得測試 token
@@ -19,11 +19,15 @@ GET {{baseUrl}}/api/products
 
 ### 商品列表
 
-GET {{baseUrl}}/api/products/{{petType}}?category=supplies&keywords=1&search=PAW-SCRATCHER&min-value=1&max-value=2000&sort=price_asc&page=1
+GET {{baseUrl}}/api/products/{{petTypeId}}
 
-### 商品明細
+### 商品快速選購
 
-GET {{baseUrl}}/api/products/{{petType}}/{{productId}}
+GET {{baseUrl}}/api/products/{{petTypeId}}/{{productId}}/buy
+
+### 商品詳細頁
+
+GET {{baseUrl}}/api/products/{{petTypeId}}/{{productId}}/detail
 
 ### 收藏商品
 
