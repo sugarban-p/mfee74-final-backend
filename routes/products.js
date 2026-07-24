@@ -147,6 +147,35 @@ const getProductAvatarMap = async (productIds, firstOnly = false) => {
   return avatarMap;
 };
 
+const formatProductCardRows = async (
+  productRows,
+  tagMaps,
+  defaultFavorite = null,
+) => {
+  const productIds = productRows.map((product) => product.id);
+  const [introMap, avatarMap] = productIds.length
+    ? await Promise.all([
+        getProductIntroMap(productIds, true),
+        getProductAvatarMap(productIds, true),
+      ])
+    : [{}, {}];
+
+  return productRows.map((product) => {
+    const items = parseJsonArray(product.items);
+    const { isFavorite, ...productFields } = product;
+    const productData = formatProductTags(productFields, tagMaps);
+    return {
+      ...productData,
+      isFavorite:
+        defaultFavorite === null ? Boolean(isFavorite) : defaultFavorite,
+      intro: introMap[product.id] || {},
+      avatar: avatarMap[product.id]?.[0] || null,
+      tags: summarizeItemTags(items),
+      items,
+    };
+  });
+};
+
 // sql - 讀取商品介紹圖(詳細頁用)
 const getProductImage = async (productId) => {
   const sql = `
@@ -365,30 +394,11 @@ const getProductMap = async (
     perPage,
     offset,
   ]);
-  const productIds = productRows.map((product) => product.id);
-  const [introMap, avatarMap] = productIds.length
-    ? await Promise.all([
-        getProductIntroMap(productIds, true),
-        getProductAvatarMap(productIds, true),
-      ])
-    : [{}, {}];
 
   return {
     facets: { tags },
     pagination,
-    products: productRows.map((product) => {
-      const items = parseJsonArray(product.items);
-      const { isFavorite, ...productFields } = product;
-      const productData = formatProductTags(productFields, tagMaps);
-      return {
-        ...productData,
-        isFavorite: Boolean(isFavorite),
-        intro: introMap[product.id] || {},
-        avatar: avatarMap[product.id]?.[0] || null,
-        tags: summarizeItemTags(items),
-        items,
-      };
-    }),
+    products: await formatProductCardRows(productRows, tagMaps),
   };
 };
 
@@ -566,26 +576,125 @@ const getFavoriteListData = async (userId, tagMaps) => {
     [userId],
   );
 
-  const productIds = rows.map((product) => product.id);
-  const [introMap, avatarMap] = productIds.length
-    ? await Promise.all([
-        getProductIntroMap(productIds, true),
-        getProductAvatarMap(productIds, true),
-      ])
-    : [{}, {}];
+  return formatProductCardRows(rows, tagMaps, true);
+};
 
-  return rows.map((product) => {
-    const items = parseJsonArray(product.items);
-    const productData = formatProductTags(product, tagMaps);
-    return {
-      ...productData,
-      isFavorite: true,
-      intro: introMap[product.id] || {},
-      avatar: avatarMap[product.id]?.[0] || null,
-      tags: summarizeItemTags(items),
-      items,
-    };
-  });
+// 讀取商品詳細頁推薦商品
+const getRecommendedProductListData = async (
+  petTypeId,
+  productId,
+  tagMaps,
+  userId = null,
+) => {
+  const [[currentProduct]] = await pool.query(
+    `
+      SELECT id, pet_tag_id_fk, category_id_fk
+      FROM products
+      WHERE id = ? AND pet_tag_id_fk = ?
+      LIMIT 1;
+    `,
+    [productId, petTypeId],
+  );
+
+  if (!currentProduct) return null;
+
+  const [tagRows] = await pool.query(
+    `
+      SELECT DISTINCT it.tag_id_fk AS id
+      FROM items i
+      INNER JOIN item_tags it ON it.item_id_fk = i.id
+      WHERE i.prod_id_fk = ?;
+    `,
+    [productId],
+  );
+  const tagIds = tagRows.map((tag) => tag.id);
+  const tagMatchSql = tagIds.length
+    ? `
+        EXISTS (
+          SELECT 1
+          FROM items tag_i
+          INNER JOIN item_tags it ON it.item_id_fk = tag_i.id
+          WHERE tag_i.prod_id_fk = p.id AND it.tag_id_fk IN (?)
+        )
+      `
+    : "FALSE";
+
+  const [rows] = await pool.query(
+    `
+      SELECT
+        p.id AS id,
+        p.prod_name,
+        p.pet_tag_id_fk,
+        p.category_id_fk,
+        p.price,
+        p.slug,
+        p.created_at,
+        COALESCE(item_stats.total_sold, 0) AS total_sold,
+        COALESCE(item_stats.total_stock, 0) AS total_stock,
+        EXISTS (
+          SELECT 1
+          FROM user_favorites uf
+          WHERE uf.user_id_fk = ? AND uf.prod_id_fk = p.id
+        ) AS isFavorite,
+        COALESCE(
+          (
+            SELECT JSON_ARRAYAGG(
+              JSON_OBJECT(
+                'item_id', i.id,
+                'item_name', i.item_name,
+                'sku', i.sku,
+                'sold', i.sold,
+                'stock', i.stock,
+                'tags', COALESCE(
+                  (
+                    SELECT JSON_ARRAYAGG(
+                      JSON_OBJECT(
+                        'id', pst.id,
+                        'tag_ch', pst.tag_ch,
+                        'tag_slug', pst.tag_slug
+                      )
+                    )
+                    FROM item_tags it
+                    INNER JOIN product_special_tags pst ON pst.id = it.tag_id_fk
+                    WHERE it.item_id_fk = i.id
+                  ),
+                  JSON_ARRAY()
+                )
+              )
+            )
+            FROM items i
+            WHERE i.prod_id_fk = p.id
+          ),
+          JSON_ARRAY()
+        ) AS items
+      FROM products p
+      LEFT JOIN (
+        SELECT
+          prod_id_fk,
+          SUM(sold) AS total_sold,
+          SUM(stock) AS total_stock
+        FROM items
+        GROUP BY prod_id_fk
+      ) item_stats ON item_stats.prod_id_fk = p.id
+      WHERE p.id <> ?
+        AND (
+          p.pet_tag_id_fk = ?
+          OR p.category_id_fk = ?
+          OR ${tagMatchSql}
+        )
+      ORDER BY RAND()
+      LIMIT 4;
+    `,
+    [
+      userId,
+      productId,
+      currentProduct.pet_tag_id_fk,
+      currentProduct.category_id_fk,
+      ...(tagIds.length ? [tagIds] : []),
+    ],
+  );
+
+  return formatProductCardRows(rows, tagMaps);
 };
 router.get("/getFavorite", requireAuth, async (req, res) => {
   const userId = req.currentUser.id;
@@ -853,6 +962,52 @@ router.get("/:petTypeId/:productId/buy", async (req, res) => {
     avatars,
     intros,
   });
+});
+
+// 商品詳細頁推薦商品
+router.get("/:petTypeId/:productId/recommendations", async (req, res) => {
+  const petTypeId = parseNumber(req.params.petTypeId, 0);
+  const productId = parseNumber(req.params.productId, 0);
+
+  if (!Number.isInteger(petTypeId) || petTypeId <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "商品分類格式錯誤",
+    });
+  }
+
+  if (!Number.isInteger(productId) || productId <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "商品格式錯誤",
+    });
+  }
+
+  try {
+    const userId = await getOptionalUserId(req);
+    const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
+    const recommendations = await getRecommendedProductListData(
+      petTypeId,
+      productId,
+      tagMaps,
+      userId,
+    );
+
+    if (recommendations === null) {
+      return res.status(404).json({
+        success: false,
+        message: "找不到商品",
+      });
+    }
+
+    return res.json({ success: true, recommendations });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "讀取推薦商品失敗",
+    });
+  }
 });
 
 // 商品詳細頁
