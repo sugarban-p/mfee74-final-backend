@@ -798,7 +798,7 @@ router.get("/getCart", requireAuth, async (req, res) => {
         INNER JOIN items i ON i.id = ci.sku_id_fk
         INNER JOIN products p ON p.id = i.prod_id_fk
         WHERE ci.user_id_fk = ?
-        ORDER BY ci.updated_at DESC, ci.id DESC;
+        ORDER BY ci.created_at DESC, ci.id DESC;
       `,
       [userId],
     );
