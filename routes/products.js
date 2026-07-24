@@ -474,6 +474,39 @@ const sumItemDetail = (items) => {
   return result;
 };
 
+const getProductDetailData = async (petTypeId, productId, userId, tagMaps) => {
+  const product = await getProduct(productId, userId);
+
+  if (!product) return null;
+
+  const [items, avatarResult, introResult, images] = await Promise.all([
+    getProductItem(productId),
+    getProductAvatarMap(productId),
+    getProductIntroMap(productId),
+    getProductImage(productId),
+  ]);
+  const { totalSold, totalStock } = sumItemDetail(items);
+  const [avatars] = Object.values(avatarResult);
+  const [intros] = Object.values(introResult);
+
+  return {
+    success: true,
+    petTypeId,
+    productId,
+    params: { petTypeId, productId },
+    product: {
+      ...formatProductTags(product, tagMaps),
+      totalSold,
+      totalStock,
+      tags: summarizeItemTags(items),
+    },
+    items,
+    avatars,
+    images,
+    intros,
+  };
+};
+
 router.get("/", async (req, res) => {
   return res.json({
     success: true,
@@ -937,6 +970,60 @@ router.get("/resolve/:petTypeSlug/:productSlug", async (req, res) => {
   }
 });
 
+// 商品 slug 詳細頁
+router.get("/:petTypeSlug/:productSlug/detail", async (req, res, next) => {
+  if (/^\d+$/.test(req.params.petTypeSlug)) return next();
+
+  const petType = req.petTypeList.find(
+    (item) => item.tag_slug === req.params.petTypeSlug,
+  );
+
+  if (!petType) {
+    return res.status(404).json({
+      success: false,
+      message: "找不到商品分類",
+    });
+  }
+
+  try {
+    const productId = await getProductIdBySlug(
+      petType.id,
+      req.params.productSlug,
+    );
+
+    if (!productId) {
+      return res.status(404).json({
+        success: false,
+        message: "找不到商品",
+      });
+    }
+
+    const userId = await getOptionalUserId(req);
+    const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
+    const detail = await getProductDetailData(
+      petType.id,
+      productId,
+      userId,
+      tagMaps,
+    );
+
+    if (!detail) {
+      return res.status(404).json({
+        success: false,
+        message: "找不到商品",
+      });
+    }
+
+    return res.json(detail);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "商品資料載入失敗",
+    });
+  }
+});
+
 // 商品快速選購頁
 router.get("/:petTypeId/:productId/buy", async (req, res) => {
   const petTypeId = req.params.petTypeId;
@@ -1012,31 +1099,48 @@ router.get("/:petTypeId/:productId/recommendations", async (req, res) => {
 
 // 商品詳細頁
 router.get("/:petTypeId/:productId/detail", async (req, res) => {
-  const petTypeId = req.params.petTypeId;
-  const productId = req.params.productId;
-  const userId = await getOptionalUserId(req);
-  const product = await getProduct(productId, userId);
-  const items = await getProductItem(productId);
-  const { totalSold, totalStock } = sumItemDetail(items);
-  const avatarResult = await getProductAvatarMap(productId);
-  const [avatars] = Object.values(avatarResult);
-  const introResult = await getProductIntroMap(productId);
-  const [intros] = Object.values(introResult);
-  const images = await getProductImage(productId);
-  const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
-  res.json({
-    params: { petTypeId, productId },
-    product: {
-      ...formatProductTags(product, tagMaps),
-      totalSold: totalSold,
-      totalStock: totalStock,
-      tags: summarizeItemTags(items),
-    },
-    items,
-    avatars,
-    images,
-    intros,
-  });
+  const petTypeId = parseNumber(req.params.petTypeId, 0);
+  const productId = parseNumber(req.params.productId, 0);
+
+  if (!Number.isInteger(petTypeId) || petTypeId <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "商品分類格式錯誤",
+    });
+  }
+
+  if (!Number.isInteger(productId) || productId <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "商品格式錯誤",
+    });
+  }
+
+  try {
+    const userId = await getOptionalUserId(req);
+    const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
+    const detail = await getProductDetailData(
+      petTypeId,
+      productId,
+      userId,
+      tagMaps,
+    );
+
+    if (!detail) {
+      return res.status(404).json({
+        success: false,
+        message: "找不到商品",
+      });
+    }
+
+    return res.json(detail);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "商品資料載入失敗",
+    });
+  }
 });
 
 // 商品列表頁
