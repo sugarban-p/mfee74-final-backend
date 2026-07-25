@@ -2,9 +2,15 @@
 
 import { Router } from "express";
 import pool from "../utils/connect-mysql.js";
-import { getSessionUser, requireAuth } from "../utils/auth-session.js";
+import { requireAuth } from "../utils/auth-session.js";
 
 const router = Router();
+const publicProductCacheControl =
+  "public, max-age=60, s-maxage=300, stale-while-revalidate=600";
+
+const setPublicProductCache = (res) => {
+  res.set("Cache-Control", publicProductCacheControl);
+};
 
 // 排序選項 對照 sql
 const sortList = {
@@ -70,11 +76,6 @@ const formatProductTags = (product, tagMaps) => {
     petType: tagMaps.petTypes.get(pet_tag_id_fk) || null,
     category: tagMaps.categories.get(category_id_fk) || null,
   };
-};
-
-const getOptionalUserId = async (req) => {
-  const user = await getSessionUser(req);
-  return user?.id || null;
 };
 
 // sql - 寵物類別列表
@@ -150,7 +151,7 @@ const getProductAvatarMap = async (productIds, firstOnly = false) => {
 const formatProductCardRows = async (
   productRows,
   tagMaps,
-  defaultFavorite = null,
+  defaultFavorite,
 ) => {
   const productIds = productRows.map((product) => product.id);
   const [introMap, avatarMap] = productIds.length
@@ -162,12 +163,12 @@ const formatProductCardRows = async (
 
   return productRows.map((product) => {
     const items = parseJsonArray(product.items);
-    const { isFavorite, ...productFields } = product;
+    const productFields = { ...product };
+    delete productFields.isFavorite;
     const productData = formatProductTags(productFields, tagMaps);
     return {
       ...productData,
-      isFavorite:
-        defaultFavorite === null ? Boolean(isFavorite) : defaultFavorite,
+      ...(defaultFavorite === undefined ? {} : { isFavorite: defaultFavorite }),
       intro: introMap[product.id] || {},
       avatar: avatarMap[product.id]?.[0] || null,
       tags: summarizeItemTags(items),
@@ -302,7 +303,6 @@ const getProductMap = async (
   sort = "default",
   page = 1,
   tagMaps,
-  userId = null,
 ) => {
   const perPage = 16;
   const currentPage = Math.max(1, Math.floor(Number(page) || 1));
@@ -339,11 +339,6 @@ const getProductMap = async (
       p.created_at,
       COALESCE(item_stats.total_sold, 0) AS total_sold,
       COALESCE(item_stats.total_stock, 0) AS total_stock,
-      EXISTS (
-        SELECT 1
-        FROM user_favorites uf
-        WHERE uf.user_id_fk = ? AND uf.prod_id_fk = p.id
-      ) AS isFavorite,
       COALESCE(
         (
           SELECT JSON_ARRAYAGG(
@@ -389,7 +384,6 @@ const getProductMap = async (
     LIMIT ? OFFSET ?;
   `;
   const [productRows] = await pool.query(productSql, [
-    userId,
     ...sqlValues,
     perPage,
     offset,
@@ -403,21 +397,15 @@ const getProductMap = async (
 };
 
 // sql - 讀取指定商品 (選購)
-const getProduct = async (productId, userId = null) => {
+const getProduct = async (productId) => {
   const sql = `
     SELECT
-      p.*,
-      EXISTS (
-        SELECT 1
-        FROM user_favorites uf
-        WHERE uf.user_id_fk = ? AND uf.prod_id_fk = p.id
-      ) AS isFavorite
+      p.*
     FROM products p
     WHERE p.id = ?
     ;
   `;
-  const [[productRow]] = await pool.query(sql, [userId, productId]);
-  if (productRow) productRow.isFavorite = Boolean(productRow.isFavorite);
+  const [[productRow]] = await pool.query(sql, [productId]);
   return productRow;
 };
 
@@ -474,8 +462,8 @@ const sumItemDetail = (items) => {
   return result;
 };
 
-const getProductDetailData = async (petTypeId, productId, userId, tagMaps) => {
-  const product = await getProduct(productId, userId);
+const getProductDetailData = async (petTypeId, productId, tagMaps) => {
+  const product = await getProduct(productId);
 
   if (!product) return null;
 
@@ -536,6 +524,7 @@ router.get("/mega-menu", async (req, res) => {
       }),
     );
 
+    setPublicProductCache(res);
     return res.json({ success: true, cards });
   } catch (err) {
     console.error(err);
@@ -612,12 +601,26 @@ const getFavoriteListData = async (userId, tagMaps) => {
   return formatProductCardRows(rows, tagMaps, true);
 };
 
+const getFavoriteProductIds = async (userId, productIds) => {
+  if (!productIds.length) return [];
+
+  const [rows] = await pool.query(
+    `
+      SELECT prod_id_fk AS productId
+      FROM user_favorites
+      WHERE user_id_fk = ? AND prod_id_fk IN (?);
+    `,
+    [userId, productIds],
+  );
+
+  return rows.map((row) => row.productId);
+};
+
 // 讀取商品詳細頁推薦商品
 const getRecommendedProductListData = async (
   petTypeId,
   productId,
   tagMaps,
-  userId = null,
 ) => {
   const [[currentProduct]] = await pool.query(
     `
@@ -664,11 +667,6 @@ const getRecommendedProductListData = async (
         p.created_at,
         COALESCE(item_stats.total_sold, 0) AS total_sold,
         COALESCE(item_stats.total_stock, 0) AS total_stock,
-        EXISTS (
-          SELECT 1
-          FROM user_favorites uf
-          WHERE uf.user_id_fk = ? AND uf.prod_id_fk = p.id
-        ) AS isFavorite,
         COALESCE(
           (
             SELECT JSON_ARRAYAGG(
@@ -719,7 +717,6 @@ const getRecommendedProductListData = async (
       LIMIT 4;
     `,
     [
-      userId,
       productId,
       currentProduct.pet_tag_id_fk,
       currentProduct.category_id_fk,
@@ -736,12 +733,31 @@ router.get("/getFavorite", requireAuth, async (req, res) => {
     const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
     const favorites = await getFavoriteListData(userId, tagMaps);
 
+    res.set("Cache-Control", "private, no-store");
     return res.json({ success: true, favorites });
   } catch (err) {
     console.error(err);
     return res.status(500).json({
       success: false,
       message: "讀取收藏列表失敗",
+    });
+  }
+});
+
+router.get("/favorites", requireAuth, async (req, res) => {
+  const userId = req.currentUser.id;
+  const productIds = parseIdList(req.query.ids ?? req.query.productIds);
+
+  try {
+    const favorites = await getFavoriteProductIds(userId, productIds);
+
+    res.set("Cache-Control", "private, no-store");
+    return res.json({ success: true, favorites });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "讀取收藏商品失敗",
     });
   }
 });
@@ -998,14 +1014,8 @@ router.get("/:petTypeSlug/:productSlug/detail", async (req, res, next) => {
       });
     }
 
-    const userId = await getOptionalUserId(req);
     const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
-    const detail = await getProductDetailData(
-      petType.id,
-      productId,
-      userId,
-      tagMaps,
-    );
+    const detail = await getProductDetailData(petType.id, productId, tagMaps);
 
     if (!detail) {
       return res.status(404).json({
@@ -1014,6 +1024,7 @@ router.get("/:petTypeSlug/:productSlug/detail", async (req, res, next) => {
       });
     }
 
+    setPublicProductCache(res);
     return res.json(detail);
   } catch (err) {
     console.error(err);
@@ -1028,8 +1039,7 @@ router.get("/:petTypeSlug/:productSlug/detail", async (req, res, next) => {
 router.get("/:petTypeId/:productId/buy", async (req, res) => {
   const petTypeId = req.params.petTypeId;
   const productId = req.params.productId;
-  const userId = await getOptionalUserId(req);
-  const product = await getProduct(productId, userId);
+  const product = await getProduct(productId);
   const items = await getProductItem(productId);
   const { totalSold, totalStock } = sumItemDetail(items);
   const avatarResult = await getProductAvatarMap(productId);
@@ -1037,6 +1047,7 @@ router.get("/:petTypeId/:productId/buy", async (req, res) => {
   const introResult = await getProductIntroMap(productId);
   const [intros] = Object.values(introResult);
   const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
+  setPublicProductCache(res);
   res.json({
     params: { petTypeId, productId },
     product: {
@@ -1071,13 +1082,11 @@ router.get("/:petTypeId/:productId/recommendations", async (req, res) => {
   }
 
   try {
-    const userId = await getOptionalUserId(req);
     const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
     const recommendations = await getRecommendedProductListData(
       petTypeId,
       productId,
       tagMaps,
-      userId,
     );
 
     if (recommendations === null) {
@@ -1087,6 +1096,7 @@ router.get("/:petTypeId/:productId/recommendations", async (req, res) => {
       });
     }
 
+    setPublicProductCache(res);
     return res.json({ success: true, recommendations });
   } catch (err) {
     console.error(err);
@@ -1117,14 +1127,8 @@ router.get("/:petTypeId/:productId/detail", async (req, res) => {
   }
 
   try {
-    const userId = await getOptionalUserId(req);
     const tagMaps = buildProductTagMaps(req.petTypeList, req.categoryList);
-    const detail = await getProductDetailData(
-      petTypeId,
-      productId,
-      userId,
-      tagMaps,
-    );
+    const detail = await getProductDetailData(petTypeId, productId, tagMaps);
 
     if (!detail) {
       return res.status(404).json({
@@ -1133,6 +1137,7 @@ router.get("/:petTypeId/:productId/detail", async (req, res) => {
       });
     }
 
+    setPublicProductCache(res);
     return res.json(detail);
   } catch (err) {
     console.error(err);
@@ -1146,7 +1151,6 @@ router.get("/:petTypeId/:productId/detail", async (req, res) => {
 // 商品列表頁
 router.get("/:petTypeId", async (req, res) => {
   const petTypeId = req.params.petTypeId;
-  const userId = await getOptionalUserId(req);
   const categoriesCount = await countCategoryProduct(petTypeId);
   const search =
     typeof req.query.search === "string" ? req.query.search.trim() : "";
@@ -1163,9 +1167,9 @@ router.get("/:petTypeId", async (req, res) => {
     req.query.sort,
     req.query.page,
     tagMaps,
-    userId,
   );
 
+  setPublicProductCache(res);
   res.json({
     success: true,
     petTypeId,
