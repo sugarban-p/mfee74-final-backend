@@ -367,7 +367,10 @@ router.post("/send", requireAuth, async (req, res) => {
     }
 
     const history = await loadRecentHistory(consultationId);
-    const { reply, type, meta } = await processMessage(content, { history });
+    const { reply, type, meta } = await processMessage(content, {
+      history,
+      userId: user.id,
+    });
     const userMetaParsed = parseMessageMeta(userMeta);
     const aiMeta = JSON.stringify({
       ...userMetaParsed,
@@ -375,6 +378,9 @@ router.post("/send", requireAuth, async (req, res) => {
       aiProvider: meta?.provider || null,
       aiModel: meta?.model || null,
       aiLatencyMs: Number(meta?.latencyMs || 0) || null,
+      knowledgeSources: Array.isArray(meta?.knowledgeSources)
+        ? meta.knowledgeSources
+        : [],
       aiUsage: meta?.usage || null,
       aiFinishReason: meta?.finishReason || null,
       aiReason: meta?.reason || null,
