@@ -10,7 +10,7 @@
       --bg: #f5f7fb;
       --ink: #1f2937;
       --muted: #64748b;
-      --line: #94a3b8;
+      --line: #8294AE;
       --card: #ffffff;
       --border: #cbd5e1;
       --member: #e0f2fe;
@@ -76,9 +76,9 @@
 
     .canvas {
       position: relative;
-      width: 1680px;
-      min-width: 1680px;
-      height: 1120px;
+      width: 3800px;
+      min-width: 1440px;
+      height: 2120px;
       min-height: 1120px;
       margin: 0 32px 32px;
       padding: 32px;
@@ -152,6 +152,14 @@
 
     .table.positioned {
       position: absolute;
+    }
+
+    .table.reffered {
+      border-style: dashed;
+    }
+
+    .table.reffered li {
+      opacity: .4;
     }
 
     .table.row1 {
@@ -333,11 +341,11 @@
     <section class="table product col1" data-table="product_avatars" style="top:1000px;">
       <strong>product_avatars</strong>
     </section>
-    <section class="table product col1" data-table="keywords" style="top:1300px;">
-      <strong>keywords</strong>
-    </section>
-    <section class="table product col1" data-table="item_tags" style="top:1700px;">
+    <section class="table product col1" data-table="item_tags" style="top:1500px;">
       <strong>item_tags</strong>
+    </section>
+    <section class="table product col1" data-table="keywords" style="top:1900px;">
+      <strong>keywords</strong>
     </section>
 
     <section class="table pet col2 row1" data-table="pets">
@@ -353,20 +361,20 @@
     <section class="table pet col3 row1" data-table="pet_attributes">
       <strong>pet_attributes</strong>
     </section>
-    <section class="table member col3" data-table="ai_knowledge_docs" style="top:460px;">
-      <strong>ai_knowledge_docs</strong>
-    </section>
-    <section class="table pet col3" data-table="pet_attr_details" style="top:1700px;">
+    <section class="table pet col3" data-table="pet_attr_details" style="top:550px;">
       <strong>pet_attr_details</strong>
+    </section>
+    <section class="table member col3" data-table="ai_knowledge_docs" style="top:1000px;">
+      <strong>ai_knowledge_docs</strong>
     </section>
 
     <section class="table commerce col4 row1" data-table="order_items">
       <strong>order_items</strong>
     </section>
-    <section class="table commerce col4" data-table="orders" style="top:500px;">
+    <section class="table commerce col4" data-table="orders" style="top:530px;">
       <strong>orders</strong>
     </section>
-    <section class="table commerce col4" data-table="coupons" style="top:1600px;">
+    <section class="table commerce col4" data-table="coupons" style="top:1480px;">
       <strong>coupons</strong>
     </section>
 
@@ -395,7 +403,7 @@
     <section class="table product col6" data-table="product_special_tags" style="top:1000px;">
       <strong>product_special_tags</strong>
     </section>
-    <section class="table commerce col6" data-table="user_favorites" style="top:1300px;">
+    <section class="table product col6" data-table="user_favorites" style="top:1300px;">
       <strong>user_favorites</strong>
     </section>
     <section class="table product col6" data-table="product_pet_tags" style="top:1700px;">
@@ -424,7 +432,7 @@
     <section class="table commerce col8" data-table="order_status_logs" style="top:500px;">
       <strong>order_status_logs</strong>
     </section>
-    <section class="table member col8" data-table="login_logs" style="top:1200px;">
+    <section class="table member col8" data-table="login_logs" style="top:900px;">
       <strong>login_logs</strong>
     </section>
 
@@ -434,14 +442,14 @@
     <section class="table member col9" data-table="users" style="top:500px;">
       <strong>users</strong>
     </section>
-    <section class="table event col9" data-table="event_products" style="top:1400px;">
+    <!-- <section class="table event col9" data-table="event_products" style="top:1400px;">
       <strong>event_products</strong>
-    </section>
+    </section> -->
 
-    <section class="table product col10" data-table="items" style="top:500px;">
+    <section class="table product col10" data-table="items" style="top:200px;">
       <strong>items</strong>
     </section>
-    <section class="table commerce col10" data-table="cart_items" style="top:1000px;">
+    <section class="table commerce col10" data-table="cart_items" style="top:700px;">
       <strong>cart_items</strong>
     </section>
   </main>
@@ -972,18 +980,18 @@
     }
 
     function resizeCanvasToTables(canvas) {
-      const padding = 120;
+      const padding = 50;
       const tables = [...canvas.querySelectorAll(".table.positioned")];
       const width = Math.max(
-        1680,
+        3740,
         ...tables.map(
           (table) => table.offsetLeft + table.offsetWidth + padding,
         ),
       );
       const height = Math.max(
-        1120,
+        2120,
         ...tables.map(
-          (table) => table.offsetTop + table.offsetHeight,
+          (table) => table.offsetTop + table.offsetHeight + padding * 0.5,
         ),
       );
       canvas.style.width = `${width}px`;
