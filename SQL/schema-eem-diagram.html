@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-Hant">
 
 <head>
@@ -118,6 +118,14 @@
       word-break: break-word;
     }
 
+    .table strong small {
+      display: block;
+      margin-top: 4px;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
     .table em {
       display: block;
       padding: 8px 12px;
@@ -187,49 +195,49 @@
 
     </svg>
 
-    <section class="table member" style="left: 40px; top: 80px"><strong>user_oauth_accounts</strong><em>FK to users</em></section>
-    <section class="table member" style="left: 40px; top: 160px"><strong>sessions</strong><em>FK to users</em></section>
-    <section class="table member" style="left: 40px; top: 240px"><strong>otp_codes</strong><em>FK to users</em></section>
-    <section class="table member" style="left: 40px; top: 320px"><strong>login_logs</strong><em>FK to users</em></section>
-    <section class="table member" style="left: 40px; top: 400px"><strong>socket_connections</strong><em>FK to users</em></section>
-    <section class="table member" style="left: 330px; top: 80px"><strong>users</strong><em>Member root</em></section>
+    <section class="table member" data-table="user_oauth_accounts" style="left: 40px; top: 80px"><strong>user_oauth_accounts<small>蝚砌??寧?亙董??/small></strong><em>FK to users</em></section>
+    <section class="table member" data-table="sessions" style="left: 40px; top: 160px"><strong>sessions<small>?餃撌乩??挾</small></strong><em>FK to users</em></section>
+    <section class="table member" data-table="otp_codes" style="left: 40px; top: 240px"><strong>otp_codes<small>銝甈⊥折?霅Ⅳ</small></strong><em>FK to users</em></section>
+    <section class="table member" data-table="login_logs" style="left: 40px; top: 320px"><strong>login_logs<small>?餃蝝??/small></strong><em>FK to users</em></section>
+    <section class="table member" data-table="socket_connections" style="left: 40px; top: 400px"><strong>socket_connections<small>Socket ???</small></strong><em>FK to users</em></section>
+    <section class="table member" data-table="users" style="left: 330px; top: 80px"><strong>users<small>?撣唾?</small></strong><em>Member root</em></section>
 
-    <section class="table chat" style="left: 330px; top: 480px"><strong>chat_consultations</strong><em>FK to users</em></section>
-    <section class="table chat" style="left: 620px; top: 480px"><strong>chat_messages</strong><em>FK to consultations/users</em></section>
-    <section class="table chat" style="left: 910px; top: 480px"><strong>chat_attachments</strong><em>FK to messages</em></section>
+    <section class="table chat" data-table="chat_consultations" style="left: 330px; top: 480px"><strong>chat_consultations<small>摰Ｘ?隢株岷獢辣</small></strong><em>FK to users</em></section>
+    <section class="table chat" data-table="chat_messages" style="left: 620px; top: 480px"><strong>chat_messages<small>摰Ｘ?閮</small></strong><em>FK to consultations/users</em></section>
+    <section class="table chat" data-table="chat_attachments" style="left: 910px; top: 480px"><strong>chat_attachments<small>閮?辣</small></strong><em>FK to messages</em></section>
 
-    <section class="table product" style="left: 620px; top: 80px"><strong>products</strong><em>Product root</em></section>
-    <section class="table product" style="left: 910px; top: 80px"><strong>items</strong><em>SKU</em></section>
-    <section class="table product" style="left: 1170px; top: 80px"><strong>product_intros</strong><em>FK to products</em></section>
-    <section class="table product" style="left: 1170px; top: 160px"><strong>product_avatars</strong><em>FK to products</em></section>
-    <section class="table product" style="left: 1170px; top: 240px"><strong>product_images</strong><em>FK to products</em></section>
-    <section class="table product" style="left: 1170px; top: 320px"><strong>product_pet_tags</strong><em>Referenced by products</em></section>
-    <section class="table product" style="left: 1170px; top: 400px"><strong>product_category_tags</strong><em>Referenced by products</em></section>
-    <section class="table product" style="left: 910px; top: 160px"><strong>item_tags</strong><em>Items x special tags</em></section>
-    <section class="table product" style="left: 910px; top: 240px"><strong>item_keywords</strong><em>Items x keywords</em></section>
-    <section class="table product" style="left: 620px; top: 160px"><strong>product_special_tags</strong><em>Tag master</em></section>
-    <section class="table product" style="left: 620px; top: 240px"><strong>keywords</strong><em>Keyword master</em></section>
+    <section class="table product" data-table="products" style="left: 620px; top: 80px"><strong>products<small>??銝餅?</small></strong><em>Product root</em></section>
+    <section class="table product" data-table="items" style="left: 910px; top: 80px"><strong>items<small>??閬 SKU</small></strong><em>SKU</em></section>
+    <section class="table product" data-table="product_intros" style="left: 1170px; top: 80px"><strong>product_intros<small>??隞晶</small></strong><em>FK to products</em></section>
+    <section class="table product" data-table="product_avatars" style="left: 1170px; top: 160px"><strong>product_avatars<small>???剖???/small></strong><em>FK to products</em></section>
+    <section class="table product" data-table="product_images" style="left: 1170px; top: 240px"><strong>product_images<small>????</small></strong><em>FK to products</em></section>
+    <section class="table product" data-table="product_pet_tags" style="left: 1170px; top: 320px"><strong>product_pet_tags<small>撖萇??璅惜</small></strong><em>Referenced by products</em></section>
+    <section class="table product" data-table="product_category_tags" style="left: 1170px; top: 400px"><strong>product_category_tags<small>??憿璅惜</small></strong><em>Referenced by products</em></section>
+    <section class="table product" data-table="item_tags" style="left: 910px; top: 160px"><strong>item_tags<small>閬?寞?璅惜?</small></strong><em>Items x special tags</em></section>
+    <section class="table product" data-table="item_keywords" style="left: 910px; top: 240px"><strong>item_keywords<small>閬?摮???/small></strong><em>Items x keywords</em></section>
+    <section class="table product" data-table="product_special_tags" style="left: 620px; top: 160px"><strong>product_special_tags<small>???寞?璅惜</small></strong><em>Tag master</em></section>
+    <section class="table product" data-table="keywords" style="left: 620px; top: 240px"><strong>keywords<small>???摮?/small></strong><em>Keyword master</em></section>
 
-    <section class="table pet" style="left: 330px; top: 560px"><strong>pet_attributes</strong><em>Attribute groups</em></section>
-    <section class="table pet" style="left: 620px; top: 560px"><strong>pet_attr_details</strong><em>Attribute options</em></section>
-    <section class="table pet" style="left: 330px; top: 640px"><strong>pets</strong><em>FK to users/options</em></section>
-    <section class="table pet" style="left: 620px; top: 640px"><strong>pet_selected_options</strong><em>Pets x options</em></section>
-    <section class="table pet" style="left: 330px; top: 720px"><strong>pet_health_product_tags</strong><em>Health option x product tag</em></section>
-    <section class="table pet" style="left: 620px; top: 720px"><strong>pet_ai_logs</strong><em>FK to users/pets</em></section>
+    <section class="table pet" data-table="pet_attributes" style="left: 330px; top: 560px"><strong>pet_attributes<small>撖萇撅祆抒黎蝯?/small></strong><em>Attribute groups</em></section>
+    <section class="table pet" data-table="pet_attr_details" style="left: 620px; top: 560px"><strong>pet_attr_details<small>撖萇撅祆折??/small></strong><em>Attribute options</em></section>
+    <section class="table pet" data-table="pets" style="left: 330px; top: 640px"><strong>pets<small>撖萇鞈?</small></strong><em>FK to users/options</em></section>
+    <section class="table pet" data-table="pet_selected_options" style="left: 620px; top: 640px"><strong>pet_selected_options<small>撖萇?賊?蝝??/small></strong><em>Pets x options</em></section>
+    <section class="table pet" data-table="pet_health_product_tags" style="left: 330px; top: 720px"><strong>pet_health_product_tags<small>?亙熒?賊???璅惜</small></strong><em>Health option x product tag</em></section>
+    <section class="table pet" data-table="pet_ai_logs" style="left: 620px; top: 720px"><strong>pet_ai_logs<small>撖萇 AI 蝝??/small></strong><em>FK to users/pets</em></section>
 
-    <section class="table commerce" style="left: 40px; top: 800px"><strong>coupons</strong><em>FK from orders</em></section>
-    <section class="table commerce" style="left: 330px; top: 800px"><strong>orders</strong><em>Order root</em></section>
-    <section class="table commerce" style="left: 620px; top: 800px"><strong>order_items</strong><em>FK to orders/items</em></section>
-    <section class="table commerce" style="left: 910px; top: 800px"><strong>order_shipping_infos</strong><em>FK to orders</em></section>
-    <section class="table commerce" style="left: 1170px; top: 800px"><strong>ecpay_payments</strong><em>FK to orders</em></section>
-    <section class="table commerce" style="left: 1170px; top: 880px"><strong>order_status_logs</strong><em>FK to orders</em></section>
-    <section class="table commerce" style="left: 40px; top: 880px"><strong>cart_items</strong><em>FK to users/items</em></section>
-    <section class="table commerce" style="left: 330px; top: 880px"><strong>user_favorites</strong><em>Users x products</em></section>
+    <section class="table commerce" data-table="coupons" style="left: 40px; top: 800px"><strong>coupons<small>?芣???/small></strong><em>FK from orders</em></section>
+    <section class="table commerce" data-table="orders" style="left: 330px; top: 800px"><strong>orders<small>閮銝餅?</small></strong><em>Order root</em></section>
+    <section class="table commerce" data-table="order_items" style="left: 620px; top: 800px"><strong>order_items<small>閮?敦</small></strong><em>FK to orders/items</em></section>
+    <section class="table commerce" data-table="order_shipping_infos" style="left: 910px; top: 800px"><strong>order_shipping_infos<small>閮?嗡辣鞈?</small></strong><em>FK to orders</em></section>
+    <section class="table commerce" data-table="ecpay_payments" style="left: 1170px; top: 800px"><strong>ecpay_payments<small>蝬?隞狡蝝??/small></strong><em>FK to orders</em></section>
+    <section class="table commerce" data-table="order_status_logs" style="left: 1170px; top: 880px"><strong>order_status_logs<small>閮?????/small></strong><em>FK to orders</em></section>
+    <section class="table commerce" data-table="cart_items" style="left: 40px; top: 880px"><strong>cart_items<small>鞈潛頠???/small></strong><em>FK to users/items</em></section>
+    <section class="table commerce" data-table="user_favorites" style="left: 330px; top: 880px"><strong>user_favorites<small>??嗉???</small></strong><em>Users x products</em></section>
 
-    <section class="table event" style="left: 910px; top: 880px"><strong>events</strong><em>Event root</em></section>
-    <section class="table event" style="left: 620px; top: 880px"><strong>event_products</strong><em>Events x products</em></section>
+    <section class="table event" data-table="events" style="left: 910px; top: 880px"><strong>events<small>瘣餃?銝餅?</small></strong><em>Event root</em></section>
+    <section class="table event" data-table="event_products" style="left: 620px; top: 880px"><strong>event_products<small>瘣餃????</small></strong><em>Events x products</em></section>
 
-    <section class="table ai" style="left: 40px; top: 1010px"><strong>ai_knowledge_docs</strong><em>No FK in source SQL</em></section>
+    <section class="table ai" data-table="ai_knowledge_docs" style="left: 40px; top: 1010px"><strong>ai_knowledge_docs<small>AI ?亥??辣</small></strong><em>No FK in source SQL</em></section>
   </main>
 
   <script>
@@ -284,7 +292,7 @@
       svg.querySelectorAll(".relation").forEach((line) => line.remove());
 
       const tables = new Map(
-        [...canvas.querySelectorAll(".table")].map((el) => [el.querySelector("strong").textContent.trim(), el])
+        [...canvas.querySelectorAll(".table")].map((el) => [el.dataset.table, el])
       );
       const root = canvas.getBoundingClientRect();
 
