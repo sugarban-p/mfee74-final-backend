@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-23T09:03:44.646Z",
+  "generatedAt": "2026-07-27T06:47:12.056Z",
   "total": 54,
   "docs": [
     {
@@ -28,7 +28,7 @@
       "retrievalWeight": 1.05,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:12.000Z"
     },
     {
       "id": 98,
@@ -57,7 +57,7 @@
       "retrievalWeight": 1.05,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:12.000Z"
     },
     {
       "id": 102,
@@ -68,8 +68,8 @@
       "sourcePk": "order_status:aggregate",
       "title": "MOFU 訂單狀態說明",
       "summary": "訂單狀態代碼與目前訂單分布。",
-      "content": "訂單狀態代碼與分布：\n      1. 處理中（代碼：1，共 1 筆）\n\n      說明：查詢單一訂單時，應同時參考付款狀態(payment_status)與配送狀態(shipping_status)。",
-      "contentHash": "8f28db33ae8ef14d0f3fa90dee3f235a3504f564",
+      "content": "訂單狀態代碼與分布：\n      1. 處理中（代碼：1，共 3 筆）\n\n      說明：查詢單一訂單時，應同時參考付款狀態(payment_status)與配送狀態(shipping_status)。",
+      "contentHash": "2fd421c4956e1e8e9669d0bb33d05351d9f1e528",
       "sourceUrl": "http://localhost:3000/member/orders",
       "locale": "zh-TW",
       "tags": [
@@ -84,7 +84,7 @@
       "retrievalWeight": 1.1,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:12.000Z"
     },
     {
       "id": 99,
@@ -94,9 +94,9 @@
       "sourceTable": "orders",
       "sourcePk": "payment_method:aggregate",
       "title": "MOFU 付款方式",
-      "summary": "依訂單紀錄整理的可辨識付款方式與代碼。",
-      "content": "目前系統可辨識的付款方式如下：\n      1. 信用卡（代碼：credit，使用 1 筆）\n\n      說明：此清單依歷史訂單 payment_method 欄位統計，實際可用方式以結帳頁顯示為準。",
-      "contentHash": "50e62d83056e919c6e8681f333cf41de995aa170",
+      "summary": "目前結帳支援信用卡付款與 LINE Pay 付款。",
+      "content": "目前結帳可使用的付款方式如下：\n      1. 信用卡付款（代碼：credit；支援 Visa / Mastercard / JCB）\n2. LINE Pay 付款（代碼：linepay）\n\n      說明：請以結帳頁顯示為準，目前統一提供上述兩種方式。",
+      "contentHash": "b464a12028af667172a77db002dcde5a370f8bc4",
       "sourceUrl": "http://localhost:3000/checkout",
       "locale": "zh-TW",
       "tags": [
@@ -105,13 +105,17 @@
         "訂單"
       ],
       "metadata": {
-        "itemCount": 1
+        "methods": [
+          "credit",
+          "linepay"
+        ],
+        "itemCount": 2
       },
       "priority": 80,
       "retrievalWeight": 1.15,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:12.000Z"
     },
     {
       "id": 100,
@@ -122,8 +126,8 @@
       "sourcePk": "shipping_method:aggregate",
       "title": "MOFU 配送方式",
       "summary": "依訂單收件資訊整理的配送方式。",
-      "content": "目前系統紀錄中的配送方式：\n      1. 宅配（使用 1 筆）\n\n      說明：此資料依訂單收件資訊統計，實際開放配送方式以結帳頁顯示為準。",
-      "contentHash": "9e0bfb9630875cfa0dfa456d116a5b4411871f03",
+      "content": "目前系統紀錄中的配送方式：\n      1. 宅配（使用 3 筆）\n\n      說明：此資料依訂單收件資訊統計，實際開放配送方式以結帳頁顯示為準。",
+      "contentHash": "ceb24062c4f993597b0099484aaa81210a36fde1",
       "sourceUrl": "http://localhost:3000/checkout",
       "locale": "zh-TW",
       "tags": [
@@ -138,7 +142,7 @@
       "retrievalWeight": 1.1,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:12.000Z"
     },
     {
       "id": 101,
@@ -166,7 +170,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:12.000Z"
     },
     {
       "id": 1,
@@ -195,7 +199,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 2,
@@ -224,7 +228,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 3,
@@ -253,7 +257,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 4,
@@ -282,7 +286,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 5,
@@ -311,7 +315,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 6,
@@ -340,7 +344,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 7,
@@ -369,7 +373,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 8,
@@ -398,7 +402,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 9,
@@ -427,7 +431,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 10,
@@ -456,7 +460,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 11,
@@ -485,7 +489,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 12,
@@ -514,7 +518,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 13,
@@ -543,7 +547,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 14,
@@ -572,7 +576,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 15,
@@ -601,7 +605,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 16,
@@ -630,7 +634,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 17,
@@ -659,7 +663,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 18,
@@ -688,7 +692,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 19,
@@ -717,7 +721,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 20,
@@ -746,7 +750,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 21,
@@ -775,7 +779,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 22,
@@ -804,7 +808,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 23,
@@ -833,7 +837,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 24,
@@ -862,7 +866,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 25,
@@ -891,7 +895,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 26,
@@ -920,7 +924,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 27,
@@ -949,7 +953,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 28,
@@ -978,7 +982,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 29,
@@ -1007,7 +1011,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 30,
@@ -1036,7 +1040,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 31,
@@ -1065,7 +1069,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 32,
@@ -1094,7 +1098,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 33,
@@ -1123,7 +1127,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 34,
@@ -1152,7 +1156,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 35,
@@ -1181,7 +1185,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 36,
@@ -1210,7 +1214,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 37,
@@ -1239,7 +1243,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 38,
@@ -1268,7 +1272,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 39,
@@ -1297,7 +1301,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 40,
@@ -1326,7 +1330,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 41,
@@ -1355,7 +1359,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 42,
@@ -1384,7 +1388,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:11.000Z"
     },
     {
       "id": 43,
@@ -1413,7 +1417,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:12.000Z"
     },
     {
       "id": 44,
@@ -1442,7 +1446,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:12.000Z"
     },
     {
       "id": 45,
@@ -1471,7 +1475,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:12.000Z"
     },
     {
       "id": 46,
@@ -1500,7 +1504,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:12.000Z"
     },
     {
       "id": 47,
@@ -1529,7 +1533,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:12.000Z"
     },
     {
       "id": 48,
@@ -1558,7 +1562,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-23T09:03:44.000Z"
+      "updatedAt": "2026-07-27T06:47:12.000Z"
     }
   ]
 }

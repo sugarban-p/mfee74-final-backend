@@ -9,6 +9,7 @@ import pool from "../utils/connect-mysql.js";
 import { parseUserAgent } from "../utils/auth-session.js";
 import {
   clearAuthCookies,
+  buildClientIp,
   findActiveSessionByRefreshToken,
   getAccessTokenFromRequest,
   getRefreshTokenFromRequest,
@@ -41,11 +42,7 @@ async function insertLoginLog({
   const tableReady = await hasTable("login_logs");
   if (!tableReady) return;
 
-  const ip =
-    req.headers["x-forwarded-for"] ||
-    req.headers["x-real-ip"] ||
-    req.ip ||
-    "unknown";
+  const ip = buildClientIp(req).slice(0, 64);
   const userAgent = req.headers["user-agent"] || "";
   const parsed = parseUserAgent(userAgent);
 
