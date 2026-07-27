@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MOFU Database EEM Diagram</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --ink: #1f2937;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --card: #ffffff;
+      --border: #cbd5e1;
+      --member: #e0f2fe;
+      --chat: #ecfccb;
+      --product: #fff7ed;
+      --pet: #fce7f3;
+      --commerce: #ede9fe;
+      --event: #dcfce7;
+      --ai: #fef9c3;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Segoe UI", Arial, "Microsoft JhengHei", sans-serif;
+    }
+
+    header {
+      padding: 24px 32px 12px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 0 32px 20px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .swatch {
+      width: 14px;
+      height: 14px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+    }
+
+    .canvas {
+      position: relative;
+      width: 1680px;
+      height: 1120px;
+      margin: 0 32px 32px;
+      background:
+        linear-gradient(#e2e8f0 1px, transparent 1px),
+        linear-gradient(90deg, #e2e8f0 1px, transparent 1px),
+        #fff;
+      background-size: 24px 24px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .relation {
+      stroke: var(--line);
+      stroke-width: 2;
+    }
+
+    .table {
+      position: absolute;
+      width: 210px;
+      min-height: 58px;
+      background: var(--card);
+      border: 1px solid #64748b;
+      border-radius: 4px;
+      box-shadow: 0 8px 18px rgb(15 23 42 / 10%);
+      overflow: hidden;
+    }
+
+    .table strong {
+      display: block;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      word-break: break-word;
+    }
+
+    .table em {
+      display: block;
+      padding: 8px 12px;
+      color: var(--muted);
+      font-size: 12px;
+      font-style: normal;
+    }
+
+    .member strong {
+      background: var(--member);
+    }
+
+    .chat strong {
+      background: var(--chat);
+    }
+
+    .product strong {
+      background: var(--product);
+    }
+
+    .pet strong {
+      background: var(--pet);
+    }
+
+    .commerce strong {
+      background: var(--commerce);
+    }
+
+    .event strong {
+      background: var(--event);
+    }
+
+    .ai strong {
+      background: var(--ai);
+    }
+
+    .footnote {
+      color: var(--muted);
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>MOFU Database EEM Diagram</h1>
+    <div class="footnote">箭頭方向：child table 指向 referenced parent table。</div>
+  </header>
+
+  <div class="legend">
+    <span><i class="swatch" style="background: var(--member)"></i>Member/Auth</span>
+    <span><i class="swatch" style="background: var(--chat)"></i>Chat</span>
+    <span><i class="swatch" style="background: var(--product)"></i>Product</span>
+    <span><i class="swatch" style="background: var(--pet)"></i>Pet</span>
+    <span><i class="swatch" style="background: var(--commerce)"></i>Commerce</span>
+    <span><i class="swatch" style="background: var(--event)"></i>Event</span>
+    <span><i class="swatch" style="background: var(--ai)"></i>AI/Knowledge</span>
+  </div>
+
+  <main class="canvas" aria-label="Database EEM diagram">
+    <svg viewBox="0 0 1680 1120" aria-hidden="true">
+      <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L9,3 z" fill="#94a3b8"></path>
+        </marker>
+      </defs>
+
+    </svg>
+
+    <section class="table member" style="left: 40px; top: 80px"><strong>user_oauth_accounts</strong><em>FK to users</em></section>
+    <section class="table member" style="left: 40px; top: 160px"><strong>sessions</strong><em>FK to users</em></section>
+    <section class="table member" style="left: 40px; top: 240px"><strong>otp_codes</strong><em>FK to users</em></section>
+    <section class="table member" style="left: 40px; top: 320px"><strong>login_logs</strong><em>FK to users</em></section>
+    <section class="table member" style="left: 40px; top: 400px"><strong>socket_connections</strong><em>FK to users</em></section>
+    <section class="table member" style="left: 330px; top: 80px"><strong>users</strong><em>Member root</em></section>
+
+    <section class="table chat" style="left: 330px; top: 480px"><strong>chat_consultations</strong><em>FK to users</em></section>
+    <section class="table chat" style="left: 620px; top: 480px"><strong>chat_messages</strong><em>FK to consultations/users</em></section>
+    <section class="table chat" style="left: 910px; top: 480px"><strong>chat_attachments</strong><em>FK to messages</em></section>
+
+    <section class="table product" style="left: 620px; top: 80px"><strong>products</strong><em>Product root</em></section>
+    <section class="table product" style="left: 910px; top: 80px"><strong>items</strong><em>SKU</em></section>
+    <section class="table product" style="left: 1170px; top: 80px"><strong>product_intros</strong><em>FK to products</em></section>
+    <section class="table product" style="left: 1170px; top: 160px"><strong>product_avatars</strong><em>FK to products</em></section>
+    <section class="table product" style="left: 1170px; top: 240px"><strong>product_images</strong><em>FK to products</em></section>
+    <section class="table product" style="left: 1170px; top: 320px"><strong>product_pet_tags</strong><em>Referenced by products</em></section>
+    <section class="table product" style="left: 1170px; top: 400px"><strong>product_category_tags</strong><em>Referenced by products</em></section>
+    <section class="table product" style="left: 910px; top: 160px"><strong>item_tags</strong><em>Items x special tags</em></section>
+    <section class="table product" style="left: 910px; top: 240px"><strong>item_keywords</strong><em>Items x keywords</em></section>
+    <section class="table product" style="left: 620px; top: 160px"><strong>product_special_tags</strong><em>Tag master</em></section>
+    <section class="table product" style="left: 620px; top: 240px"><strong>keywords</strong><em>Keyword master</em></section>
+
+    <section class="table pet" style="left: 330px; top: 560px"><strong>pet_attributes</strong><em>Attribute groups</em></section>
+    <section class="table pet" style="left: 620px; top: 560px"><strong>pet_attr_details</strong><em>Attribute options</em></section>
+    <section class="table pet" style="left: 330px; top: 640px"><strong>pets</strong><em>FK to users/options</em></section>
+    <section class="table pet" style="left: 620px; top: 640px"><strong>pet_selected_options</strong><em>Pets x options</em></section>
+    <section class="table pet" style="left: 330px; top: 720px"><strong>pet_health_product_tags</strong><em>Health option x product tag</em></section>
+    <section class="table pet" style="left: 620px; top: 720px"><strong>pet_ai_logs</strong><em>FK to users/pets</em></section>
+
+    <section class="table commerce" style="left: 40px; top: 800px"><strong>coupons</strong><em>FK from orders</em></section>
+    <section class="table commerce" style="left: 330px; top: 800px"><strong>orders</strong><em>Order root</em></section>
+    <section class="table commerce" style="left: 620px; top: 800px"><strong>order_items</strong><em>FK to orders/items</em></section>
+    <section class="table commerce" style="left: 910px; top: 800px"><strong>order_shipping_infos</strong><em>FK to orders</em></section>
+    <section class="table commerce" style="left: 1170px; top: 800px"><strong>ecpay_payments</strong><em>FK to orders</em></section>
+    <section class="table commerce" style="left: 1170px; top: 880px"><strong>order_status_logs</strong><em>FK to orders</em></section>
+    <section class="table commerce" style="left: 40px; top: 880px"><strong>cart_items</strong><em>FK to users/items</em></section>
+    <section class="table commerce" style="left: 330px; top: 880px"><strong>user_favorites</strong><em>Users x products</em></section>
+
+    <section class="table event" style="left: 910px; top: 880px"><strong>events</strong><em>Event root</em></section>
+    <section class="table event" style="left: 620px; top: 880px"><strong>event_products</strong><em>Events x products</em></section>
+
+    <section class="table ai" style="left: 40px; top: 1010px"><strong>ai_knowledge_docs</strong><em>No FK in source SQL</em></section>
+  </main>
+
+  <script>
+    const relations = [
+      ["user_oauth_accounts", "users"],
+      ["sessions", "users"],
+      ["otp_codes", "users"],
+      ["login_logs", "users"],
+      ["chat_consultations", "users"],
+      ["chat_messages", "chat_consultations"],
+      ["chat_messages", "users"],
+      ["chat_attachments", "chat_messages"],
+      ["socket_connections", "users"],
+      ["event_products", "products"],
+      ["event_products", "events"],
+      ["products", "product_pet_tags"],
+      ["products", "product_category_tags"],
+      ["product_intros", "products"],
+      ["items", "products"],
+      ["item_tags", "items"],
+      ["item_tags", "product_special_tags"],
+      ["item_keywords", "items"],
+      ["item_keywords", "keywords"],
+      ["product_avatars", "products"],
+      ["product_images", "products"],
+      ["user_favorites", "users"],
+      ["user_favorites", "products"],
+      ["pet_attr_details", "pet_attributes"],
+      ["pets", "users"],
+      ["pets", "pet_attr_details"],
+      ["pet_selected_options", "pets"],
+      ["pet_selected_options", "pet_attributes"],
+      ["pet_selected_options", "pet_attr_details"],
+      ["pet_health_product_tags", "pet_attr_details"],
+      ["pet_health_product_tags", "product_special_tags"],
+      ["pet_ai_logs", "users"],
+      ["pet_ai_logs", "pets"],
+      ["cart_items", "users"],
+      ["cart_items", "items"],
+      ["orders", "users"],
+      ["orders", "coupons"],
+      ["order_shipping_infos", "orders"],
+      ["order_items", "orders"],
+      ["order_items", "items"],
+      ["order_status_logs", "orders"],
+      ["ecpay_payments", "orders"]
+    ];
+
+    function drawRelations() {
+      const canvas = document.querySelector(".canvas");
+      const svg = canvas.querySelector("svg");
+      svg.querySelectorAll(".relation").forEach((line) => line.remove());
+
+      const tables = new Map(
+        [...canvas.querySelectorAll(".table")].map((el) => [el.querySelector("strong").textContent.trim(), el])
+      );
+      const root = canvas.getBoundingClientRect();
+
+      for (const [child, parent] of relations) {
+        const from = tables.get(child);
+        const to = tables.get(parent);
+        if (!from || !to) continue;
+
+        const a = from.getBoundingClientRect();
+        const b = to.getBoundingClientRect();
+        const ac = {
+          x: a.left - root.left + a.width / 2,
+          y: a.top - root.top + a.height / 2
+        };
+        const bc = {
+          x: b.left - root.left + b.width / 2,
+          y: b.top - root.top + b.height / 2
+        };
+        const horizontal = Math.abs(ac.x - bc.x) > Math.abs(ac.y - bc.y);
+        const x1 = horizontal ? (ac.x < bc.x ? a.right - root.left : a.left - root.left) : ac.x;
+        const y1 = horizontal ? ac.y : (ac.y < bc.y ? a.bottom - root.top : a.top - root.top);
+        const x2 = horizontal ? (ac.x < bc.x ? b.left - root.left : b.right - root.left) : bc.x;
+        const y2 = horizontal ? bc.y : (ac.y < bc.y ? b.top - root.top : b.bottom - root.top);
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("class", "relation");
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+        line.setAttribute("marker-end", "url(#arrow)");
+        svg.appendChild(line);
+      }
+    }
+
+    window.addEventListener("load", drawRelations);
+    window.addEventListener("resize", drawRelations);
+  </script>
+</body>
+
+</html>
