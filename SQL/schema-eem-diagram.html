@@ -96,10 +96,6 @@
       cursor: pointer;
     }
 
-    .canvas.arrow-accent {
-      --line-current: #d0600a;
-    }
-
     svg {
       position: absolute;
       inset: 0;
@@ -110,12 +106,22 @@
     }
 
     .relation {
-      stroke: var(--line-current, var(--line));
+      stroke: var(--line);
       stroke-width: 2;
+      cursor: pointer;
+      pointer-events: stroke;
+    }
+
+    .relation.is-accent {
+      stroke: #d0600a;
     }
 
     #arrow-head {
-      fill: var(--line-current, var(--line));
+      fill: var(--line);
+    }
+
+    #arrow-head-accent {
+      fill: #d0600a;
     }
 
     .table {
@@ -288,8 +294,6 @@
       箭頭方向：child table 指向 referenced parent table。點擊 diagram
       可切換箭頭顏色。
     </div>
-    <!-- TODO: 箭頭顏色切換目前仍綁在整張 canvas；後續應改成每條 relation 各自獨立判定。 -->
-    <!-- TODO: relation 端點仍需完善錨點判定；後續應讓端點精準指向對應資料表邊界與方向。 -->
   </header>
 
   <div class="legend">
@@ -307,6 +311,9 @@
       <defs>
         <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
           <path id="arrow-head" d="M0,0 L0,6 L9,3 z"></path>
+        </marker>
+        <marker id="arrow-accent" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path id="arrow-head-accent" d="M0,0 L0,6 L9,3 z"></path>
         </marker>
       </defs>
     </svg>
@@ -478,6 +485,7 @@
       ["order_status_logs", "orders"],
       ["ecpay_payments", "orders"],
     ];
+    const accentedRelations = new Set();
 
     const tableTitles = {
       user_oauth_accounts: "第三方登入帳號",
@@ -907,8 +915,6 @@
       ],
     };
 
-    let suppressCanvasClick = false;
-
     function renderFields() {
       for (const section of document.querySelectorAll(".table")) {
         if (section.querySelector(".field-list")) continue;
@@ -991,12 +997,6 @@
       function endDrag(event) {
         if (!active || active.pointerId !== event.pointerId) return;
         active.table.classList.remove("dragging");
-        if (active.moved) {
-          suppressCanvasClick = true;
-          setTimeout(() => {
-            suppressCanvasClick = false;
-          }, 0);
-        }
         active = null;
         drawRelations();
       }
@@ -1066,6 +1066,7 @@
       const root = canvas.getBoundingClientRect();
 
       for (const [child, parent] of relations) {
+        const relationKey = `${child}->${parent}`;
         const from = tables.get(child);
         const to = tables.get(parent);
         if (!from || !to) continue;
@@ -1105,12 +1106,29 @@
           "http://www.w3.org/2000/svg",
           "line",
         );
-        line.setAttribute("class", "relation");
+        const isAccent = accentedRelations.has(relationKey);
+        line.setAttribute("class", isAccent ? "relation is-accent" : "relation");
         line.setAttribute("x1", x1);
         line.setAttribute("y1", y1);
         line.setAttribute("x2", x2);
         line.setAttribute("y2", y2);
-        line.setAttribute("marker-end", "url(#arrow)");
+        line.setAttribute(
+          "marker-end",
+          isAccent ? "url(#arrow-accent)" : "url(#arrow)",
+        );
+        line.addEventListener("click", (event) => {
+          const accented = line.classList.toggle("is-accent");
+          if (accented) {
+            accentedRelations.add(relationKey);
+          } else {
+            accentedRelations.delete(relationKey);
+          }
+          line.setAttribute(
+            "marker-end",
+            accented ? "url(#arrow-accent)" : "url(#arrow)",
+          );
+          event.stopPropagation();
+        });
         svg.appendChild(line);
       }
     }
@@ -1122,10 +1140,6 @@
       lockTablePositions(canvas);
       enableTableDrag(canvas);
       drawRelations();
-      canvas.addEventListener("click", () => {
-        if (suppressCanvasClick) return;
-        canvas.classList.toggle("arrow-accent");
-      });
     });
     window.addEventListener("resize", drawRelations);
   </script>
