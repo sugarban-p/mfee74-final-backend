@@ -90,6 +90,11 @@
       background-size: 24px 24px;
       border: 1px solid var(--border);
       overflow: hidden;
+      cursor: pointer;
+    }
+
+    .canvas.arrow-accent {
+      --line-current: #D0600A;
     }
 
     svg {
@@ -102,8 +107,12 @@
     }
 
     .relation {
-      stroke: var(--line);
+      stroke: var(--line-current, var(--line));
       stroke-width: 2;
+    }
+
+    #arrow-head {
+      fill: var(--line-current, var(--line));
     }
 
     .table {
@@ -205,7 +214,7 @@
 <body>
   <header>
     <h1>MOFU Database EEM Diagram</h1>
-    <div class="footnote">箭頭方向：child table 指向 referenced parent table。</div>
+    <div class="footnote">箭頭方向：child table 指向 referenced parent table。點擊 diagram 可切換箭頭顏色。</div>
   </header>
 
   <div class="legend">
@@ -222,7 +231,7 @@
     <svg viewBox="0 0 1680 1120" aria-hidden="true">
       <defs>
         <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
-          <path d="M0,0 L0,6 L9,3 z" fill="#94a3b8"></path>
+          <path id="arrow-head" d="M0,0 L0,6 L9,3 z"></path>
         </marker>
       </defs>
 
@@ -592,9 +601,13 @@
     }
 
     window.addEventListener("load", () => {
+      const canvas = document.querySelector(".canvas");
       renderTitles();
       renderFields();
       drawRelations();
+      canvas.addEventListener("click", () => {
+        canvas.classList.toggle("arrow-accent");
+      });
     });
     window.addEventListener("resize", drawRelations);
   </script>
