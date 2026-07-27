@@ -20,6 +20,7 @@
       --commerce: #ede9fe;
       --event: #dcfce7;
       --ai: #fef9c3;
+      --gap-col: 25px;
     }
 
     * {
@@ -132,14 +133,59 @@
       cursor: grab;
     }
 
-    .table:not(.positioned) {
+    /* .table:not(.positioned) {
       left: auto !important;
       top: auto !important;
-    }
+    } */
 
     .table.positioned {
       position: absolute;
     }
+
+    .table.row1 {
+      top: 50px;
+    }
+
+    .table.col1 {
+      left: 50px;
+    }
+
+    .table.col2 {
+      left: calc(400px + var(--gap-col));
+    }
+
+    .table.col3 {
+      left: calc(830px + var(--gap-col) * 2);
+    }
+
+    .table.col4 {
+      left: calc(1140px + var(--gap-col) * 3);
+    }
+
+    .table.col5 {
+      left: calc(1500px + var(--gap-col) * 4);
+    }
+
+    .table.col6 {
+      left: calc(1830px + var(--gap-col) * 5);
+    }
+
+    .table.col7 {
+      left: calc(2150px + var(--gap-col) * 6);
+    }
+
+    .table.col8 {
+      left: calc(2530px + var(--gap-col) * 7);
+    }
+
+    .table.col9 {
+      left: calc(2920px + var(--gap-col) * 8);
+    }
+
+    .table.col10 {
+      left: calc(3250px + var(--gap-col) * 9);
+    }
+
 
     .table.dragging {
       cursor: grabbing;
@@ -265,124 +311,124 @@
       </defs>
     </svg>
 
-    <section class="table commerce" data-table="order_shipping_infos" style="top:4px; left:4px;">
+    <section class="table commerce col1 row1" data-table="order_shipping_infos">
       <strong>order_shipping_infos</strong>
     </section>
-    <section class="table member" data-table="user_oauth_accounts" style="top:4px; left:4px;">
+    <section class="table member col1" data-table="user_oauth_accounts" style="top:560px;">
       <strong>user_oauth_accounts</strong>
     </section>
-    <section class="table product" data-table="product_avatars" style="top:4px; left:4px;">
+    <section class="table product col1" data-table="product_avatars" style="top:1000px;">
       <strong>product_avatars</strong>
     </section>
-    <section class="table product" data-table="keywords" style="top:4px; left:4px;">
+    <section class="table product col1" data-table="keywords" style="top:1300px;">
       <strong>keywords</strong>
     </section>
-    <section class="table product" data-table="item_tags" style="top:4px; left:4px;">
+    <section class="table product col1" data-table="item_tags" style="top:1700px;">
       <strong>item_tags</strong>
     </section>
 
-    <section class="table pet" data-table="pets" style="top:4px; left:4px;">
+    <section class="table pet col2 row1" data-table="pets">
       <strong>pets</strong>
     </section>
-    <section class="table commerce" data-table="ecpay_payments" style="top:4px; left:4px;">
+    <section class="table commerce col2" data-table="ecpay_payments" style="top:800px;">
       <strong>ecpay_payments</strong>
     </section>
-    <section class="table pet" data-table="pet_health_product_tags" style="top:4px; left:4px;">
+    <section class="table pet col2" data-table="pet_health_product_tags" style="top:1700px;">
       <strong>pet_health_product_tags</strong>
     </section>
 
-    <section class="table pet" data-table="pet_attributes" style="top:4px; left:4px;">
+    <section class="table pet col3 row1" data-table="pet_attributes">
       <strong>pet_attributes</strong>
     </section>
-    <section class="table member" data-table="ai_knowledge_docs" style="top:4px; left:4px;">
+    <section class="table member col3" data-table="ai_knowledge_docs" style="top:460px;">
       <strong>ai_knowledge_docs</strong>
     </section>
-    <section class="table pet" data-table="pet_attr_details" style="top:4px; left:4px;">
+    <section class="table pet col3" data-table="pet_attr_details" style="top:1700px;">
       <strong>pet_attr_details</strong>
     </section>
 
-    <section class="table commerce" data-table="order_items" style="top:4px; left:4px;">
+    <section class="table commerce col4 row1" data-table="order_items">
       <strong>order_items</strong>
     </section>
-    <section class="table commerce" data-table="orders" style="top:4px; left:4px;">
+    <section class="table commerce col4" data-table="orders" style="top:500px;">
       <strong>orders</strong>
     </section>
-    <section class="table commerce" data-table="coupons" style="top:4px; left:4px;">
+    <section class="table commerce col4" data-table="coupons" style="top:1600px;">
       <strong>coupons</strong>
     </section>
 
-    <section class="table event" data-table="events" style="top:4px; left:4px;">
+    <section class="table event col5 row1" data-table="events">
       <strong>events</strong>
     </section>
-    <section class="table member" data-table="otp_codes" style="top:4px; left:4px;">
+    <section class="table member col5" data-table="otp_codes" style="top:400px;">
       <strong>otp_codes</strong>
     </section>
-    <section class="table product" data-table="product_intros" style="top:4px; left:4px;">
+    <section class="table product col5" data-table="product_intros" style="top:880px;">
       <strong>product_intros</strong>
     </section>
-    <section class="table member" data-table="chat_messages" style="top:4px; left:4px;">
+    <section class="table member col5" data-table="chat_messages" style="top:1200px;">
       <strong>chat_messages</strong>
     </section>
-    <section class="table pet" data-table="pet_selected_options" style="top:4px; left:4px;">
+    <section class="table pet col5" data-table="pet_selected_options" style="top:1700px;">
       <strong>pet_selected_options</strong>
     </section>
 
-    <section class="table member" data-table="chat_consultations" style="top:4px; left:4px;">
+    <section class="table member col6 row1" data-table="chat_consultations">
       <strong>chat_consultations</strong>
     </section>
-    <section class="table product" data-table="product_category_tags" style="top:4px; left:4px;">
+    <section class="table product col6" data-table="product_category_tags" style="top:700px;">
       <strong>product_category_tags</strong>
     </section>
-    <section class="table product" data-table="product_special_tags" style="top:4px; left:4px;">
+    <section class="table product col6" data-table="product_special_tags" style="top:1000px;">
       <strong>product_special_tags</strong>
     </section>
-    <section class="table commerce" data-table="user_favorites" style="top:4px; left:4px;">
+    <section class="table commerce col6" data-table="user_favorites" style="top:1300px;">
       <strong>user_favorites</strong>
     </section>
-    <section class="table product" data-table="product_pet_tags" style="top:4px; left:4px;">
+    <section class="table product col6" data-table="product_pet_tags" style="top:1700px;">
       <strong>product_pet_tags</strong>
     </section>
 
-    <section class="table product" data-table="products" style="top:4px; left:4px;">
+    <section class="table product col7 row1" data-table="products">
       <strong>products</strong>
     </section>
-    <section class="table member" data-table="sessions" style="top:4px; left:4px;">
+    <section class="table member col7" data-table="sessions" style="top:500px;">
       <strong>sessions</strong>
     </section>
-    <section class="table member" data-table="socket_connections" style="top:4px; left:4px;">
+    <section class="table member col7" data-table="socket_connections" style="top:1000px;">
       <strong>socket_connections</strong>
     </section>
-    <section class="table member" data-table="chat_attachments" style="top:4px; left:4px;">
+    <section class="table member col7" data-table="chat_attachments" style="top:1400px;">
       <strong>chat_attachments</strong>
     </section>
-    <section class="table product" data-table="item_keywords" style="top:4px; left:4px;">
+    <section class="table product col7" data-table="item_keywords" style="top:1900px;">
       <strong>item_keywords</strong>
     </section>
 
-    <section class="table pet" data-table="pet_ai_logs" style="top:4px; left:4px;">
+    <section class="table pet col8 row1" data-table="pet_ai_logs">
       <strong>pet_ai_logs</strong>
     </section>
-    <section class="table commerce" data-table="order_status_logs" style="top:4px; left:4px;">
+    <section class="table commerce col8" data-table="order_status_logs" style="top:500px;">
       <strong>order_status_logs</strong>
     </section>
-    <section class="table member" data-table="login_logs" style="top:4px; left:4px;">
+    <section class="table member col8" data-table="login_logs" style="top:1200px;">
       <strong>login_logs</strong>
     </section>
 
-    <section class="table product" data-table="product_images" style="top:4px; left:4px;">
+    <section class="table product col9 row1" data-table="product_images">
       <strong>product_images</strong>
     </section>
-    <section class="table member" data-table="users" style="top:4px; left:4px;">
+    <section class="table member col9" data-table="users" style="top:500px;">
       <strong>users</strong>
     </section>
-    <section class="table event" data-table="event_products" style="top:4px; left:4px;">
+    <section class="table event col9" data-table="event_products" style="top:1400px;">
       <strong>event_products</strong>
     </section>
 
-    <section class="table product" data-table="items" style="top:4px; left:4px;">
+    <section class="table product col10" data-table="items" style="top:500px;">
       <strong>items</strong>
     </section>
-    <section class="table commerce" data-table="cart_items" style="top:4px; left:4px;">
+    <section class="table commerce col10" data-table="cart_items" style="top:1000px;">
       <strong>cart_items</strong>
     </section>
   </main>
@@ -907,14 +953,14 @@
           top
         } of positions) {
         table.classList.add("positioned");
-        table.style.left = `${left}px`;
-        table.style.top = `${top}px`;
+        // table.style.left = `${left}px`;
+        // table.style.top = `${top}px`;
       }
       resizeCanvasToTables(canvas);
     }
 
     function resizeCanvasToTables(canvas) {
-      const padding = 64;
+      const padding = 120;
       const tables = [...canvas.querySelectorAll(".table.positioned")];
       const width = Math.max(
         1680,
@@ -925,7 +971,7 @@
       const height = Math.max(
         1120,
         ...tables.map(
-          (table) => table.offsetTop + table.offsetHeight + padding,
+          (table) => table.offsetTop + table.offsetHeight,
         ),
       );
       canvas.style.width = `${width}px`;
