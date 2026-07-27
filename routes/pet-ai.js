@@ -113,7 +113,13 @@ router.post("/recommendations", async (req, res) => {
      * 2. 寵物屬於目前登入會員
      * 3. 寵物沒有被軟刪除
      */
+    // 記錄整個推薦流程開始的時間，方便判斷延遲發生在哪個階段。
+    const startTime = performance.now();
+
     const petContext = await getOwnedPetRecommendationContext(userId, petId);
+
+    // 記錄寵物資料查詢完成的時間。
+    const petQueryTime = performance.now();
 
     /**
      * 找不到時統一回傳 404。
@@ -144,11 +150,14 @@ router.post("/recommendations", async (req, res) => {
      * - 使用者選擇的導購需求
      * - 寵物健康情況
      * - 過敏食材排除
-     * - 商品與品項庫存
      *
      * Azure 不會參與這個篩選過程。
      */
-    const products = await getPetCandidateProducts(petContext, needCode);
+    const products = await getPetCandidateProducts(
+      petContext,
+      needCode,
+      userId,
+    );
 
     /**
      * 將後端篩選好的候選商品交給 Azure。
@@ -160,6 +169,24 @@ router.post("/recommendations", async (req, res) => {
       petContext,
       guidedNeed,
       products,
+    });
+
+    // 記錄 Azure 推薦理由完成的時間。
+    const aiTime = performance.now();
+
+    /**
+     * 在後端 Terminal 顯示每個階段的耗時。
+     *
+     * petQueryMs：查詢寵物資料
+     * productQueryMs：篩選候選商品
+     * azureMs：等待 Azure 產生推薦理由
+     * totalMs：整支推薦 API 的主要處理時間
+     */
+    console.log("[Pet AI performance]", {
+      petQueryMs: Math.round(petQueryTime - startTime),
+      productQueryMs: Math.round(productQueryTime - petQueryTime),
+      azureMs: Math.round(aiTime - productQueryTime),
+      totalMs: Math.round(aiTime - startTime),
     });
 
     /**

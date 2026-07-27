@@ -190,13 +190,19 @@ function splitGroupConcat(value) {
  * needCode：
  * 前端引導式對話選項，例如 health_based、main_food。
  */
-export async function getPetCandidateProducts(petContext, needCode) {
+export async function getPetCandidateProducts(petContext, needCode, userId) {
   if (!petContext) {
     throw new Error("缺少寵物推薦資料");
   }
 
   if (!isValidGuidedNeedCode(needCode)) {
     throw new Error("不支援的導購需求");
+  }
+
+  const normalizedUserId = Number(userId);
+
+  if (!Number.isInteger(normalizedUserId) || normalizedUserId <= 0) {
+    throw new Error("缺少登入會員資料");
   }
 
   const guidedNeed = GUIDED_NEEDS[needCode];
@@ -225,11 +231,17 @@ export async function getPetCandidateProducts(petContext, needCode) {
   /**
    * sqlValues 的順序必須和 SQL 中的 ? 完全一致。
    *
-   * 第一個 ?：健康情況 IDs
-   * 第二個 ?：固定 18 項商品 IDs
-   * 第三個 ?：寵物物種 cat 或 dog
+   * 第一個 ?：目前登入會員 ID
+   * 第二個 ?：健康情況 IDs
+   * 第三個 ?：固定 18 項商品 IDs
+   * 第四個 ?：寵物物種 cat 或 dog
    */
-  const sqlValues = [healthIdsForSql, DEMO_PRODUCT_IDS, petContext.speciesCode];
+  const sqlValues = [
+    normalizedUserId,
+    healthIdsForSql,
+    DEMO_PRODUCT_IDS,
+    petContext.speciesCode,
+  ];
 
   /**
    * main_food、treat、care 需要限制商品分類。
@@ -274,6 +286,7 @@ export async function getPetCandidateProducts(petContext, needCode) {
 
   /**
    * 每一列代表一個符合條件且沒有過敏成分的商品品項。
+   * 期末專題不處理庫存限制，因此這裡不依 stock 排除品項。
    */
   const candidateSql = `
     SELECT
@@ -282,6 +295,16 @@ export async function getPetCandidateProducts(petContext, needCode) {
       product.price,
       product.slug,
 
+      EXISTS (
+        SELECT 1
+
+        FROM user_favorites AS favorite
+
+        WHERE favorite.user_id_fk = ?
+          AND favorite.prod_id_fk = product.id
+      ) AS isFavorite,
+
+      pet_type.id AS petTypeId,
       pet_type.tag_slug AS petType,
 
       category.tag_slug AS categorySlug,
@@ -372,7 +395,6 @@ export async function getPetCandidateProducts(petContext, needCode) {
 
     WHERE product.id IN (?)
       AND pet_type.tag_slug = ?
-      AND item.stock > 0
 
       ${categoryFilter}
       ${allergyFilter}
@@ -382,6 +404,7 @@ export async function getPetCandidateProducts(petContext, needCode) {
       product.prod_name,
       product.price,
       product.slug,
+      pet_type.id,
       pet_type.tag_slug,
       category.tag_slug,
       category.tag_ch,
@@ -412,6 +435,8 @@ export async function getPetCandidateProducts(petContext, needCode) {
         name: row.productName,
         price: Number(row.price),
         slug: row.slug,
+        isFavorite: Boolean(row.isFavorite),
+        petTypeId: row.petTypeId,
         petType: row.petType,
         categorySlug: row.categorySlug,
         categoryLabel: row.categoryLabel,
@@ -428,6 +453,9 @@ export async function getPetCandidateProducts(petContext, needCode) {
 
         // 此寵物可以安全選擇的品項。
         safeItems: [],
+
+        // 快速選購會使用這份資料顯示過敏提醒，但不會禁止購買。
+        allergyRiskItems: [],
       });
     }
 
@@ -510,5 +538,59 @@ export async function getPetCandidateProducts(petContext, needCode) {
   });
 
   // 前端一次最多顯示三張商品卡。
-  return products.slice(0, 3);
+  const selectedProducts = products.slice(0, 3);
+
+  /**
+   * 推薦篩選只會留下安全品項，但快速選購仍會顯示商品的全部品項。
+   * 因此另外查出「目前這隻寵物需要注意」的品項，提供前端標示紅字。
+   *
+   * 這裡只讀取資料，不會修改商品、購物車或寵物資料。
+   */
+  if (allergyCodes.length > 0 && selectedProducts.length > 0) {
+    const allergyRiskSql = `
+      SELECT
+        item.prod_id_fk AS productId,
+        item.id AS itemId,
+
+        GROUP_CONCAT(
+          DISTINCT allergy_keyword.keyword
+          ORDER BY allergy_keyword.id
+          SEPARATOR ','
+        ) AS allergyLabels
+
+      FROM items AS item
+
+      JOIN item_keywords AS item_keyword
+        ON item_keyword.item_id_fk = item.id
+
+      JOIN keywords AS allergy_keyword
+        ON allergy_keyword.id = item_keyword.keyword_id_fk
+
+      WHERE item.prod_id_fk IN (?)
+        AND allergy_keyword.slug IN (?)
+
+      GROUP BY item.prod_id_fk, item.id
+      ORDER BY item.prod_id_fk, item.id;
+    `;
+
+    const selectedProductIds = selectedProducts.map(
+      (product) => product.productId,
+    );
+    const [allergyRiskRows] = await pool.query(allergyRiskSql, [
+      selectedProductIds,
+      allergyCodes,
+    ]);
+    const selectedProductMap = new Map(
+      selectedProducts.map((product) => [product.productId, product]),
+    );
+
+    for (const row of allergyRiskRows) {
+      selectedProductMap.get(row.productId)?.allergyRiskItems.push({
+        itemId: row.itemId,
+        allergyLabels: splitGroupConcat(row.allergyLabels),
+      });
+    }
+  }
+
+  return selectedProducts;
 }
