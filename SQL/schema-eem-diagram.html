@@ -93,7 +93,7 @@
       background-size: 24px 24px;
       border: 1px solid var(--border);
       overflow: visible;
-      cursor: pointer;
+      cursor: default;
     }
 
     svg {
@@ -108,12 +108,18 @@
     .relation {
       stroke: var(--line);
       stroke-width: 2;
-      cursor: pointer;
-      pointer-events: stroke;
+      pointer-events: none;
     }
 
     .relation.is-accent {
       stroke: #d0600a;
+    }
+
+    .relation-hit {
+      stroke: transparent;
+      stroke-width: 20;
+      cursor: pointer;
+      pointer-events: stroke;
     }
 
     #arrow-head {
@@ -1051,7 +1057,7 @@
     function drawRelations() {
       const canvas = document.querySelector(".canvas");
       const svg = canvas.querySelector("svg");
-      svg.querySelectorAll(".relation").forEach((line) => line.remove());
+      svg.querySelectorAll(".relation, .relation-hit").forEach((line) => line.remove());
       svg.setAttribute(
         "viewBox",
         `0 0 ${canvas.clientWidth} ${canvas.clientHeight}`,
@@ -1112,11 +1118,13 @@
         line.setAttribute("y1", y1);
         line.setAttribute("x2", x2);
         line.setAttribute("y2", y2);
+        const hitLine = line.cloneNode();
+        hitLine.setAttribute("class", "relation-hit");
         line.setAttribute(
           "marker-end",
           isAccent ? "url(#arrow-accent)" : "url(#arrow)",
         );
-        line.addEventListener("click", (event) => {
+        hitLine.addEventListener("click", (event) => {
           const accented = line.classList.toggle("is-accent");
           if (accented) {
             accentedRelations.add(relationKey);
@@ -1130,6 +1138,7 @@
           event.stopPropagation();
         });
         svg.appendChild(line);
+        svg.appendChild(hitLine);
       }
     }
 
