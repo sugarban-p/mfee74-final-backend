@@ -27,7 +27,7 @@ GET {{baseUrl}}/api/products/{{petTypeId}}/{{productId}}/buy
 
 ### 商品詳細頁
 
-GET {{baseUrl}}/api/products/{{petTypeId}}/{{productId}}/detail
+GET {{baseUrl}}/api/products/dog/doghpprawfood/detail
 
 ### 收藏商品
 
