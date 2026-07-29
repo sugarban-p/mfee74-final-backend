@@ -202,7 +202,19 @@ router.get("/security", async (req, res) => {
             FROM user_oauth_accounts uoa
             WHERE uoa.user_id = users.id AND uoa.provider = 'GOOGLE'
             LIMIT 1
-          ) AS googleId
+          ) AS googleId,
+          (
+            SELECT provider_email
+            FROM user_oauth_accounts uoa
+            WHERE uoa.user_id = users.id AND uoa.provider = 'GOOGLE'
+            LIMIT 1
+          ) AS googleEmail,
+          (
+            SELECT created_at
+            FROM user_oauth_accounts uoa
+            WHERE uoa.user_id = users.id AND uoa.provider = 'GOOGLE'
+            LIMIT 1
+          ) AS googleLinkedAt
         FROM users
         WHERE id = ?
         LIMIT 1
@@ -240,6 +252,14 @@ router.get("/security", async (req, res) => {
         ? new Date(base.emailVerifiedAt).toISOString()
         : null,
       googleLinked: Boolean(base.googleId),
+      googleVerified: Boolean(base.googleId),
+      googleVerification: {
+        linked: Boolean(base.googleId),
+        email: base.googleEmail ? String(base.googleEmail) : null,
+        linkedAt: base.googleLinkedAt
+          ? new Date(base.googleLinkedAt).toISOString()
+          : null,
+      },
       lockedUntil: base.lockedUntil
         ? new Date(base.lockedUntil).toISOString()
         : null,

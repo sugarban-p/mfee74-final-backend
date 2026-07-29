@@ -4,9 +4,12 @@ import axios from "axios";
 
 import pool from "../utils/connect-mysql.js";
 import {
+  buildClientIp,
   issueAuthTokensAndSession,
   setAuthCookies,
 } from "../utils/auth-tokens.js";
+import { parseUserAgent } from "../utils/auth-session.js";
+import { hasTable } from "../utils/schema.js";
 import { buildUserNo } from "../utils/user-no.js";
 
 const router = Router();
@@ -28,6 +31,29 @@ function getFrontendBaseUrl() {
   } catch {
     return "http://localhost:3000";
   }
+}
+
+async function insertGoogleLoginLog({ userId = null, email = null, req }) {
+  const tableReady = await hasTable("login_logs");
+  if (!tableReady) return;
+
+  const ip = buildClientIp(req).slice(0, 64);
+  const userAgent = req.headers["user-agent"] || "";
+  const parsed = parseUserAgent(userAgent);
+
+  const sql = `
+    INSERT INTO login_logs (user_id, email, method, ip, user_agent, browser, os, device, success, reason, created_at)
+    VALUES (?, ?, 'GOOGLE', ?, ?, ?, ?, ?, 1, NULL, NOW())
+  `;
+  await pool.execute(sql, [
+    userId,
+    email,
+    ip,
+    userAgent,
+    parsed.browser,
+    parsed.os,
+    parsed.device,
+  ]);
 }
 
 // =====================================================
@@ -223,6 +249,12 @@ router.get("/google/callback", async (req, res) => {
 
       req,
     });
+
+    try {
+      await insertGoogleLoginLog({ userId, email, req });
+    } catch (error) {
+      console.error("[oauth/google] insert login log failed:", error.message);
+    }
 
     setAuthCookies(res, tokenResult);
 

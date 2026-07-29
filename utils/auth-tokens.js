@@ -8,13 +8,13 @@ import jwt from "jsonwebtoken";
 import pool from "./connect-mysql.js";
 
 const ACCESS_TOKEN_TTL_SEC = Number(
-  process.env.ACCESS_TOKEN_TTL_SEC || 15 * 60,
+  process.env.ACCESS_TOKEN_TTL_SEC || 60 * 60,
 );
 const REFRESH_TOKEN_TTL_SEC = Number(
-  process.env.REFRESH_TOKEN_TTL_SEC || 7 * 24 * 60 * 60,
+  process.env.REFRESH_TOKEN_TTL_SEC || 60 * 60,
 );
 const ACCESS_TOKEN_TTL_SEC_REMEMBER = Number(
-  process.env.ACCESS_TOKEN_TTL_SEC_REMEMBER || REFRESH_TOKEN_TTL_SEC,
+  process.env.ACCESS_TOKEN_TTL_SEC_REMEMBER || ACCESS_TOKEN_TTL_SEC,
 );
 const REFRESH_TOKEN_TTL_SEC_REMEMBER = Number(
   process.env.REFRESH_TOKEN_TTL_SEC_REMEMBER || REFRESH_TOKEN_TTL_SEC,
