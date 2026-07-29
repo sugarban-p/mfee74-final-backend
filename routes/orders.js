@@ -88,6 +88,14 @@ function getProductImage(index) {
   return productImages[index % productImages.length];
 }
 
+function formatProductImage(image, fallbackIndex = 0) {
+  if (!image) return getProductImage(fallbackIndex);
+  if (String(image).startsWith("/") || String(image).startsWith("http")) {
+    return image;
+  }
+  return `/${image}`;
+}
+
 function getPaymentText(method) {
   if (method === "linepay") return "LINE Pay 付款";
   return "信用卡付款";
@@ -184,14 +192,21 @@ function createEcpayCheckMacValue(params) {
     .toUpperCase();
 }
 
+function escapeHtmlAttribute(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
 function createAutoSubmitForm(action, params) {
   const inputs = Object.entries(params)
     .map(
       ([key, value]) =>
-        `<input type="hidden" name="${key}" value="${String(value).replaceAll(
-          '"',
-          "&quot;",
-        )}" />`,
+        `<input type="hidden" name="${escapeHtmlAttribute(
+          key,
+        )}" value="${escapeHtmlAttribute(value)}" />`,
     )
     .join("");
 
@@ -247,14 +262,20 @@ router.get("/cart", async (req, res) => {
       ci.id,
       ci.sku_id_fk AS skuId,
       ci.quantity AS qty,
+      i.sku,
       p.prod_name AS name,
       i.item_name AS spec,
       p.price,
-      ppt.tag_ch AS brand
+      (
+        SELECT pa.thumbnail
+        FROM product_avatars pa
+        WHERE pa.prod_id_fk = p.id
+        ORDER BY pa.avatar_order, pa.id
+        LIMIT 1
+      ) AS image
     FROM cart_items ci
     JOIN items i ON i.id = ci.sku_id_fk
     JOIN products p ON p.id = i.prod_id_fk
-    LEFT JOIN product_pet_tags ppt ON ppt.id = p.pet_tag_id_fk
     WHERE ci.user_id_fk = ? AND ci.is_selected = 1
     ORDER BY ci.id`,
     [demoUserId],
@@ -264,8 +285,8 @@ router.get("/cart", async (req, res) => {
     success: true,
     items: rows.map((item, index) => ({
       ...item,
-      brand: item.brand ? `${item.brand}商品` : "MOFU",
-      image: getProductImage(index),
+      brand: item.sku || "MOFU",
+      image: formatProductImage(item.image, index),
     })),
   });
 });
@@ -360,7 +381,14 @@ router.post("/checkout", async (req, res) => {
         ci.quantity AS qty,
         p.prod_name AS productName,
         i.item_name AS skuName,
-        p.price
+        p.price,
+        (
+          SELECT pa.thumbnail
+          FROM product_avatars pa
+          WHERE pa.prod_id_fk = p.id
+          ORDER BY pa.avatar_order, pa.id
+          LIMIT 1
+        ) AS productImage
       FROM cart_items ci
       JOIN items i ON i.id = ci.sku_id_fk
       JOIN products p ON p.id = i.prod_id_fk
@@ -493,7 +521,7 @@ router.post("/checkout", async (req, res) => {
           item.skuId,
           item.productName,
           item.skuName,
-          null,
+          item.productImage,
           item.price,
           item.qty,
           Number(item.price) * Number(item.qty),
@@ -557,9 +585,24 @@ router.get("/list", async (req, res) => {
       o.payment_method AS paymentMethod,
       DATE_FORMAT(o.created_at, '%Y-%m-%d %H:%i') AS createdAt,
       COUNT(oi.id) AS itemCount,
-      MIN(oi.product_name) AS firstProduct
+      MIN(oi.product_name) AS firstProduct,
+      GROUP_CONCAT(
+        COALESCE(
+          oi.product_image,
+          (
+            SELECT pa.thumbnail
+            FROM product_avatars pa
+            WHERE pa.prod_id_fk = i.prod_id_fk
+            ORDER BY pa.avatar_order, pa.id
+            LIMIT 1
+          )
+        )
+        ORDER BY oi.id
+        SEPARATOR ','
+      ) AS productImages
     FROM orders o
     LEFT JOIN order_items oi ON oi.order_id_fk = o.id
+    LEFT JOIN items i ON i.id = oi.sku_id_fk
     WHERE o.user_id_fk = ?
     GROUP BY o.id
     ORDER BY o.created_at DESC`,
@@ -571,6 +614,11 @@ router.get("/list", async (req, res) => {
     orders: orders.map((order, index) => {
       const status = getOrderBadge(order);
       const paymentStatus = getPaymentBadge(order.payment_status);
+      const images = String(order.productImages || "")
+        .split(",")
+        .filter(Boolean)
+        .slice(0, 3)
+        .map((image, imageIndex) => formatProductImage(image, imageIndex));
 
       return {
         id: order.orderNo,
@@ -586,10 +634,7 @@ router.get("/list", async (req, res) => {
             : order.firstProduct,
         payment: getPaymentText(order.paymentMethod),
         total: order.total,
-        images: Array.from(
-          { length: Math.min(Number(order.itemCount) || 1, 3) },
-          (_, imageIndex) => getProductImage(index + imageIndex),
-        ),
+        images: images.length ? images : [getProductImage(index)],
       };
     }),
   });
@@ -621,6 +666,68 @@ router.post("/rebuy/:orderNo", async (req, res) => {
   return res.json({ success: true });
 });
 
+router.patch("/cancel/:orderNo", async (req, res) => {
+  const userId = req.currentUser.id;
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const [[order]] = await connection.query(
+      `SELECT id, order_status, payment_status
+      FROM orders
+      WHERE order_no = ? AND user_id_fk = ?
+      LIMIT 1
+      FOR UPDATE`,
+      [req.params.orderNo, userId],
+    );
+
+    if (!order) {
+      await connection.rollback();
+      return res.status(404).json({ success: false, message: "找不到訂單" });
+    }
+
+    if (order.order_status === 3) {
+      await connection.rollback();
+      return res.json({ success: true });
+    }
+
+    if (order.payment_status !== 0) {
+      await connection.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "已付款訂單無法直接取消",
+      });
+    }
+
+    await connection.query(
+      `UPDATE orders SET order_status = 3 WHERE id = ?`,
+      [order.id],
+    );
+    await connection.query(
+      `INSERT INTO order_status_logs (
+        order_id_fk,
+        status_type,
+        status_value,
+        note
+      ) VALUES (?, 'order', 3, '訂單取消')`,
+      [order.id],
+    );
+
+    await connection.commit();
+    return res.json({ success: true });
+  } catch (error) {
+    await connection.rollback();
+    console.error("Cancel order error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "取消訂單失敗",
+    });
+  } finally {
+    connection.release();
+  }
+});
+
 router.get("/list/:orderNo", async (req, res) => {
   const demoUserId = req.currentUser.id;
   const [[order]] = await pool.query(
@@ -643,10 +750,27 @@ router.get("/list/:orderNo", async (req, res) => {
   }
 
   const [items] = await pool.query(
-    `SELECT product_name AS name, sku_name AS spec, price, quantity AS qty, subtotal
-    FROM order_items
-    WHERE order_id_fk = ?
-    ORDER BY id`,
+    `SELECT
+      oi.product_name AS name,
+      oi.sku_name AS spec,
+      oi.price,
+      oi.quantity AS qty,
+      oi.subtotal,
+      i.sku,
+      COALESCE(
+        oi.product_image,
+        (
+          SELECT pa.thumbnail
+          FROM product_avatars pa
+          WHERE pa.prod_id_fk = i.prod_id_fk
+          ORDER BY pa.avatar_order, pa.id
+          LIMIT 1
+        )
+      ) AS image
+    FROM order_items oi
+    LEFT JOIN items i ON i.id = oi.sku_id_fk
+    WHERE oi.order_id_fk = ?
+    ORDER BY oi.id`,
     [order.id],
   );
 
@@ -672,6 +796,7 @@ router.get("/list/:orderNo", async (req, res) => {
       createdAt: order.createdAt,
       paidAt: order.paidAt,
       payment: getPaymentText(order.payment_method),
+      paymentMethod: order.payment_method,
       subtotal: order.items_amount,
       shippingFee: order.shipping_fee,
       discount: order.coupon_discount,
@@ -685,8 +810,8 @@ router.get("/list/:orderNo", async (req, res) => {
       },
       items: items.map((item, index) => ({
         ...item,
-        brand: "MOFU",
-        image: getProductImage(index),
+        brand: item.sku || "MOFU",
+        image: formatProductImage(item.image, index),
       })),
       timeline: logs.map((log) => ({
         label: log.note,
@@ -705,6 +830,7 @@ router.get("/payments/ecpay", (req, res) => {
   }
 
   const merchantTradeNo = createOrderNo();
+  const orderKey = orderNo || merchantTradeNo;
   const params = {
     MerchantID: ecpay.merchantId,
     MerchantTradeNo: merchantTradeNo,
@@ -717,14 +843,17 @@ router.get("/payments/ecpay", (req, res) => {
     ReturnURL: `${backendUrl}/api/orders/payments/ecpay/notify`,
     OrderResultURL: `${backendUrl}/api/orders/payments/ecpay/return`,
     ChoosePayment: "Credit",
-    CustomField1: orderNo || merchantTradeNo,
+    CustomField1: orderKey,
   };
 
   res.send(
-    createAutoSubmitForm(ecpay.apiUrl, {
-      ...params,
-      CheckMacValue: createEcpayCheckMacValue(params),
-    }),
+    createAutoSubmitForm(
+      ecpay.apiUrl,
+      {
+        ...params,
+        CheckMacValue: createEcpayCheckMacValue(params),
+      },
+    ),
   );
 });
 
