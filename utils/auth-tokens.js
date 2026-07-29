@@ -58,14 +58,28 @@ function buildDeviceName(ua) {
   return `${parsed.os}/${parsed.browser}`;
 }
 
-function buildClientIp(req) {
+function normalizeClientIp(ip) {
+  const value = String(ip || "").trim();
+  if (!value) return "unknown";
+
+  if (value === "::1") return "127.0.0.1";
+  if (value.startsWith("::ffff:")) {
+    return value.slice(7) || "unknown";
+  }
+
+  return value;
+}
+
+export function buildClientIp(req) {
   const forwarded = String(req.headers["x-forwarded-for"] || "").trim();
   if (forwarded) {
     const first = forwarded.split(",")[0]?.trim();
-    if (first) return first;
+    if (first) return normalizeClientIp(first);
   }
 
-  return String(req.headers["x-real-ip"] || "").trim() || req.ip || "unknown";
+  return normalizeClientIp(
+    String(req.headers["x-real-ip"] || "").trim() || req.ip || "unknown",
+  );
 }
 
 function signAccessToken(userId, accessTtlSec) {
