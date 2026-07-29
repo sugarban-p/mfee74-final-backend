@@ -33,12 +33,6 @@ const outputJsonPath = path.join(
   "mofu-knowledge.json",
 );
 
-const paymentMethodLabelMap = {
-  credit: "信用卡",
-  linepay: "LINE Pay",
-  atm: "ATM 轉帳",
-};
-
 const orderStatusLabelMap = {
   1: "處理中",
   2: "已完成",
@@ -522,24 +516,10 @@ async function loadFavoritesFaqDoc() {
 }
 
 async function loadPaymentPolicyDoc() {
-  if (!(await hasTable("orders"))) return null;
-  if (!(await hasColumn("orders", "payment_method"))) return null;
-
-  const [rows] = await pool.execute(
-    `
-      SELECT payment_method AS paymentMethod, COUNT(*) AS total
-      FROM orders
-      WHERE payment_method IS NOT NULL AND payment_method <> ''
-      GROUP BY payment_method
-      ORDER BY total DESC, payment_method ASC
-    `,
-  );
-
-  const lines = formatTopItems(rows, (row) => {
-    const key = String(row.paymentMethod || "").toLowerCase();
-    const label = paymentMethodLabelMap[key] || key || "未命名方式";
-    return `${label}（代碼：${key || "n/a"}，使用 ${row.total} 筆）`;
-  });
+  const lines = [
+    "1. 信用卡付款（代碼：credit；支援 Visa / Mastercard / JCB）",
+    "2. LINE Pay 付款（代碼：linepay）",
+  ].join("\n");
 
   return {
     doc_key: "POLICY:PAYMENT_METHODS",
@@ -548,18 +528,19 @@ async function loadPaymentPolicyDoc() {
     source_table: "orders",
     source_pk: "payment_method:aggregate",
     title: "MOFU 付款方式",
-    summary: "依訂單紀錄整理的可辨識付款方式與代碼。",
+    summary: "目前結帳支援信用卡付款與 LINE Pay 付款。",
     content: normalizeText(`
-      目前系統可辨識的付款方式如下：
+      目前結帳可使用的付款方式如下：
       ${lines}
 
-      說明：此清單依歷史訂單 payment_method 欄位統計，實際可用方式以結帳頁顯示為準。
+      說明：請以結帳頁顯示為準，目前統一提供上述兩種方式。
     `),
     source_url: `${getBaseUrl()}/checkout`,
     locale: "zh-TW",
     tags: ["POLICY", "付款", "訂單"],
     metadata: {
-      itemCount: rows.length,
+      itemCount: 2,
+      methods: ["credit", "linepay"],
     },
     priority: 80,
     retrieval_weight: 1.15,
