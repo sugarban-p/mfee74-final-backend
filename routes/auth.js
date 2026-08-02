@@ -17,10 +17,12 @@ import {
   revokeSessionByTokens,
   rotateSessionTokens,
   setAuthCookies,
+  verifyAccessToken,
   verifyRefreshToken,
 } from "../utils/auth-tokens.js";
 import { sendEmailVerification } from "../utils/mailer.js";
 import { createOTP } from "../utils/otp.js";
+import { disconnectUserSockets } from "../utils/realtime-chat.js";
 import { hasTable } from "../utils/schema.js";
 import { buildUserNo } from "../utils/user-no.js";
 
@@ -267,7 +269,14 @@ router.post("/logout", async (req, res) => {
     const accessToken = getAccessTokenFromRequest(req);
     const refreshToken = getRefreshTokenFromRequest(req);
 
+    const accessPayload = verifyAccessToken(accessToken);
+    const refreshPayload = verifyRefreshToken(refreshToken);
+    const logoutUserId = Number(accessPayload?.sub ?? refreshPayload?.sub ?? 0);
+
     await revokeSessionByTokens({ accessToken, refreshToken });
+    if (Number.isInteger(logoutUserId) && logoutUserId > 0) {
+      await disconnectUserSockets(logoutUserId, "LOGOUT");
+    }
 
     clearAuthCookies(res);
     req.session?.destroy(() => {
