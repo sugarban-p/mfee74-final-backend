@@ -626,8 +626,8 @@ VALUES (
     (
         11,
         1,
-        'images/products/avatars/cat/main-food/prod_0011_01_src.jpg',
-        'images/products/avatars/cat/main-food/prod_0011_01_thumbnail.jpg'
+        'images/products/avatars/cat/main-food/prod_0011_07_src.jpg',
+        'images/products/avatars/cat/main-food/prod_0011_07_thumbnail.jpg'
     ),
     (
         11,
@@ -659,21 +659,21 @@ VALUES (
         'images/products/avatars/cat/main-food/prod_0011_06_src.jpg',
         'images/products/avatars/cat/main-food/prod_0011_06_thumbnail.jpg'
     ),
+    -- (
+    --     11,
+    --     7,
+    --     'images/products/avatars/cat/main-food/prod_0011_07_src.jpg',
+    --     'images/products/avatars/cat/main-food/prod_0011_07_thumbnail.jpg'
+    -- ),
     (
         11,
         7,
-        'images/products/avatars/cat/main-food/prod_0011_07_src.jpg',
-        'images/products/avatars/cat/main-food/prod_0011_07_thumbnail.jpg'
-    ),
-    (
-        11,
-        8,
         'images/products/avatars/cat/main-food/prod_0011_08_src.jpg',
         'images/products/avatars/cat/main-food/prod_0011_08_thumbnail.jpg'
     ),
     (
         11,
-        9,
+        8,
         'images/products/avatars/cat/main-food/prod_0011_09_src.jpg',
         'images/products/avatars/cat/main-food/prod_0011_09_thumbnail.jpg'
     ),
@@ -761,30 +761,30 @@ VALUES (
         'images/products/avatars/cat/supplies/prod_0012_14_src.jpg',
         'images/products/avatars/cat/supplies/prod_0012_14_thumbnail.jpg'
     ),
-    (
-        13,
-        1,
-        'images/products/avatars/cat/supplies/prod_0013_01_src.jpg',
-        'images/products/avatars/cat/supplies/prod_0013_01_thumbnail.jpg'
-    ),
-    (
-        13,
-        2,
-        'images/products/avatars/cat/supplies/prod_0013_02_src.png',
-        'images/products/avatars/cat/supplies/prod_0013_02_thumbnail.png'
-    ),
-    (
-        13,
-        3,
-        'images/products/avatars/cat/supplies/prod_0013_03_src.jpg',
-        'images/products/avatars/cat/supplies/prod_0013_03_thumbnail.jpg'
-    ),
-    (
-        13,
-        4,
-        'images/products/avatars/cat/supplies/prod_0013_04_src.png',
-        'images/products/avatars/cat/supplies/prod_0013_04_thumbnail.png'
-    ),
+    -- (
+    --     13,
+    --     1,
+    --     'images/products/avatars/cat/supplies/prod_0013_01_src.jpg',
+    --     'images/products/avatars/cat/supplies/prod_0013_01_thumbnail.jpg'
+    -- ),
+    -- (
+    --     13,
+    --     2,
+    --     'images/products/avatars/cat/supplies/prod_0013_02_src.png',
+    --     'images/products/avatars/cat/supplies/prod_0013_02_thumbnail.png'
+    -- ),
+    -- (
+    --     13,
+    --     3,
+    --     'images/products/avatars/cat/supplies/prod_0013_03_src.jpg',
+    --     'images/products/avatars/cat/supplies/prod_0013_03_thumbnail.jpg'
+    -- ),
+    -- (
+    --     13,
+    --     4,
+    --     'images/products/avatars/cat/supplies/prod_0013_04_src.png',
+    --     'images/products/avatars/cat/supplies/prod_0013_04_thumbnail.png'
+    -- ),
     (
         14,
         1,
@@ -1433,45 +1433,45 @@ VALUES (
         'images/products/avatars/cat/main-food/prod_0027_01_src.jpg',
         'images/products/avatars/cat/main-food/prod_0027_01_thumbnail.jpg'
     ),
+    -- (
+    --     27,
+    --     2,
+    --     'images/products/avatars/cat/main-food/prod_0027_02_src.jpg',
+    --     'images/products/avatars/cat/main-food/prod_0027_02_thumbnail.jpg'
+    -- ),
     (
         27,
         2,
-        'images/products/avatars/cat/main-food/prod_0027_02_src.jpg',
-        'images/products/avatars/cat/main-food/prod_0027_02_thumbnail.jpg'
-    ),
-    (
-        27,
-        3,
         'images/products/avatars/cat/main-food/prod_0027_03_src.jpg',
         'images/products/avatars/cat/main-food/prod_0027_03_thumbnail.jpg'
     ),
     (
         27,
-        4,
+        3,
         'images/products/avatars/cat/main-food/prod_0027_04_src.jpg',
         'images/products/avatars/cat/main-food/prod_0027_04_thumbnail.jpg'
     ),
     (
         27,
-        5,
+        4,
         'images/products/avatars/cat/main-food/prod_0027_05_src.png',
         'images/products/avatars/cat/main-food/prod_0027_05_thumbnail.png'
     ),
     (
         27,
-        6,
+        5,
         'images/products/avatars/cat/main-food/prod_0027_06_src.jpg',
         'images/products/avatars/cat/main-food/prod_0027_06_thumbnail.jpg'
     ),
     (
         27,
-        7,
+        6,
         'images/products/avatars/cat/main-food/prod_0027_07_src.jpg',
         'images/products/avatars/cat/main-food/prod_0027_07_thumbnail.jpg'
     ),
     (
         27,
-        8,
+        7,
         'images/products/avatars/cat/main-food/prod_0027_08_src.jpg',
         'images/products/avatars/cat/main-food/prod_0027_08_thumbnail.jpg'
     ),
@@ -2087,42 +2087,42 @@ VALUES (
         'images/products/avatars/dog/main-food/prod_0041_14_src.jpg',
         'images/products/avatars/dog/main-food/prod_0041_14_thumbnail.jpg'
     ),
-    (
-        42,
-        1,
-        'images/products/avatars/dog/supplies/prod_0042_01_src.jpg',
-        'images/products/avatars/dog/supplies/prod_0042_01_thumbnail.jpg'
-    ),
-    (
-        42,
-        2,
-        'images/products/avatars/dog/supplies/prod_0042_02_src.jpg',
-        'images/products/avatars/dog/supplies/prod_0042_02_thumbnail.jpg'
-    ),
-    (
-        42,
-        3,
-        'images/products/avatars/dog/supplies/prod_0042_03_src.jpg',
-        'images/products/avatars/dog/supplies/prod_0042_03_thumbnail.jpg'
-    ),
-    (
-        42,
-        4,
-        'images/products/avatars/dog/supplies/prod_0042_04_src.jpg',
-        'images/products/avatars/dog/supplies/prod_0042_04_thumbnail.jpg'
-    ),
-    (
-        42,
-        5,
-        'images/products/avatars/dog/supplies/prod_0042_05_src.jpg',
-        'images/products/avatars/dog/supplies/prod_0042_05_thumbnail.jpg'
-    ),
-    (
-        42,
-        6,
-        'images/products/avatars/dog/supplies/prod_0042_06_src.jpg',
-        'images/products/avatars/dog/supplies/prod_0042_06_thumbnail.jpg'
-    ),
+    -- (
+    --     42,
+    --     1,
+    --     'images/products/avatars/dog/supplies/prod_0042_01_src.jpg',
+    --     'images/products/avatars/dog/supplies/prod_0042_01_thumbnail.jpg'
+    -- ),
+    -- (
+    --     42,
+    --     2,
+    --     'images/products/avatars/dog/supplies/prod_0042_02_src.jpg',
+    --     'images/products/avatars/dog/supplies/prod_0042_02_thumbnail.jpg'
+    -- ),
+    -- (
+    --     42,
+    --     3,
+    --     'images/products/avatars/dog/supplies/prod_0042_03_src.jpg',
+    --     'images/products/avatars/dog/supplies/prod_0042_03_thumbnail.jpg'
+    -- ),
+    -- (
+    --     42,
+    --     4,
+    --     'images/products/avatars/dog/supplies/prod_0042_04_src.jpg',
+    --     'images/products/avatars/dog/supplies/prod_0042_04_thumbnail.jpg'
+    -- ),
+    -- (
+    --     42,
+    --     5,
+    --     'images/products/avatars/dog/supplies/prod_0042_05_src.jpg',
+    --     'images/products/avatars/dog/supplies/prod_0042_05_thumbnail.jpg'
+    -- ),
+    -- (
+    --     42,
+    --     6,
+    --     'images/products/avatars/dog/supplies/prod_0042_06_src.jpg',
+    --     'images/products/avatars/dog/supplies/prod_0042_06_thumbnail.jpg'
+    -- ),
     (
         43,
         1,
@@ -2435,81 +2435,81 @@ VALUES (
         'images/products/avatars/dog/main-food/prod_0052_11_src.jpg',
         'images/products/avatars/dog/main-food/prod_0052_11_thumbnail.jpg'
     ),
+    -- (
+    --     53,
+    --     1,
+    --     'images/products/avatars/dog/main-food/prod_0053_01_src.jpg',
+    --     'images/products/avatars/dog/main-food/prod_0053_01_thumbnail.jpg'
+    -- ),
+    -- (
+    --     53,
+    --     2,
+    --     'images/products/avatars/dog/main-food/prod_0053_02_src.jpg',
+    --     'images/products/avatars/dog/main-food/prod_0053_02_thumbnail.jpg'
+    -- ),
+    -- (
+    --     53,
+    --     3,
+    --     'images/products/avatars/dog/main-food/prod_0053_03_src.jpg',
+    --     'images/products/avatars/dog/main-food/prod_0053_03_thumbnail.jpg'
+    -- ),
+    -- (
+    --     53,
+    --     4,
+    --     'images/products/avatars/dog/main-food/prod_0053_04_src.jpg',
+    --     'images/products/avatars/dog/main-food/prod_0053_04_thumbnail.jpg'
+    -- ),
     (
         53,
         1,
-        'images/products/avatars/dog/main-food/prod_0053_01_src.jpg',
-        'images/products/avatars/dog/main-food/prod_0053_01_thumbnail.jpg'
-    ),
-    (
-        53,
-        2,
-        'images/products/avatars/dog/main-food/prod_0053_02_src.jpg',
-        'images/products/avatars/dog/main-food/prod_0053_02_thumbnail.jpg'
-    ),
-    (
-        53,
-        3,
-        'images/products/avatars/dog/main-food/prod_0053_03_src.jpg',
-        'images/products/avatars/dog/main-food/prod_0053_03_thumbnail.jpg'
-    ),
-    (
-        53,
-        4,
-        'images/products/avatars/dog/main-food/prod_0053_04_src.jpg',
-        'images/products/avatars/dog/main-food/prod_0053_04_thumbnail.jpg'
-    ),
-    (
-        53,
-        5,
         'images/products/avatars/dog/main-food/prod_0053_05_src.jpg',
         'images/products/avatars/dog/main-food/prod_0053_05_thumbnail.jpg'
     ),
     (
         53,
-        6,
+        2,
         'images/products/avatars/dog/main-food/prod_0053_06_src.jpg',
         'images/products/avatars/dog/main-food/prod_0053_06_thumbnail.jpg'
     ),
     (
         53,
-        7,
+        3,
         'images/products/avatars/dog/main-food/prod_0053_07_src.jpg',
         'images/products/avatars/dog/main-food/prod_0053_07_thumbnail.jpg'
     ),
     (
         53,
-        8,
+        4,
         'images/products/avatars/dog/main-food/prod_0053_08_src.png',
         'images/products/avatars/dog/main-food/prod_0053_08_thumbnail.png'
     ),
     (
         53,
-        9,
+        5,
         'images/products/avatars/dog/main-food/prod_0053_09_src.jpg',
         'images/products/avatars/dog/main-food/prod_0053_09_thumbnail.jpg'
     ),
     (
         53,
-        10,
+        6,
         'images/products/avatars/dog/main-food/prod_0053_10_src.jpg',
         'images/products/avatars/dog/main-food/prod_0053_10_thumbnail.jpg'
     ),
     (
         53,
-        11,
+        7,
         'images/products/avatars/dog/main-food/prod_0053_11_src.jpg',
         'images/products/avatars/dog/main-food/prod_0053_11_thumbnail.jpg'
     ),
     (
         53,
-        12,
+        8,
         'images/products/avatars/dog/main-food/prod_0053_12_src.jpg',
         'images/products/avatars/dog/main-food/prod_0053_12_thumbnail.jpg'
     ),
     (
         53,
-        13,
+        9,
         'images/products/avatars/dog/main-food/prod_0053_13_src.jpg',
         'images/products/avatars/dog/main-food/prod_0053_13_thumbnail.jpg'
     ),
