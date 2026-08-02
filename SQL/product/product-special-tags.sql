@@ -13,4 +13,9 @@ VALUES (1, '幼齡(0~1歲)', 'baby'),
     (11, '鮮食', 'fresh-food'),
     (12, '腸胃養護', 'digestion-care'),
     (13, '皮膚保健', 'skin-care'),
-    (14, '泌尿保健', 'urinary-care');
+    (14, '泌尿保健', 'urinary-care'),
+    (15, '毛球保健', 'hairball-care'),
+    (16, '關節保健', 'joint-care'),
+    (17, '牙齒保健', 'dental-care'),
+    (18, '情緒舒緩', 'stress-care'),
+    (19, '眼睛保健', 'eye-care');
