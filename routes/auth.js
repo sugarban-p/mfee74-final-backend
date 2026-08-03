@@ -153,7 +153,20 @@ router.post("/login", async (req, res) => {
     const [rows] = await pool.execute(sql, [email]);
     const user = rows[0];
 
-    if (!user || !user.passwordHash) {
+    if (!user) {
+      await insertLoginLog({
+        email,
+        success: false,
+        reason: "USER_NOT_REGISTERED",
+        req,
+      });
+      return res.status(404).json({
+        error: "USER_NOT_REGISTERED",
+        message: "此帳號尚未註冊",
+      });
+    }
+
+    if (!user.passwordHash) {
       await insertLoginLog({
         email,
         success: false,

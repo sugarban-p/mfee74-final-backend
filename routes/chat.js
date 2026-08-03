@@ -456,6 +456,59 @@ router.post("/send", requireAuth, async (req, res) => {
         [consultationId],
       );
 
+      const quickResult = await processMessage(content, {
+        userId: user.id,
+        allowAI: false,
+      });
+
+      const shouldReplyQuick =
+        quickResult.type !== "DEFERRED" &&
+        String(quickResult.reply || "").trim().length > 0;
+
+      if (shouldReplyQuick) {
+        const userMetaParsed = parseMessageMeta(userMeta);
+        const quickMeta = JSON.stringify({
+          ...userMetaParsed,
+          replyType: quickResult.type,
+          aiReason: quickResult?.meta?.reason || null,
+        });
+
+        const [quickInsert] = await pool.execute(
+          `
+            INSERT INTO chat_messages
+            (consultation_id, user_id, content, sender, type, metadata, created_at)
+            VALUES (?, ?, ?, ?, 'TEXT', ?, NOW())
+          `,
+          [
+            consultationId,
+            user.id,
+            quickResult.reply,
+            quickResult.type === "BLOCKED" ? "SYSTEM" : "AI",
+            quickMeta,
+          ],
+        );
+
+        const [createdRows] = await pool.execute(
+          "SELECT id, content, sender, type, created_at FROM chat_messages WHERE id IN (?, ?) ORDER BY id ASC",
+          [userInsert.insertId, quickInsert.insertId],
+        );
+
+        const userMessage = normalizeMessage(createdRows[0]);
+        const botMessage = normalizeMessage(createdRows[1]);
+
+        emitCaseMessage({ userId: user.id, caseId, message: userMessage });
+        emitCaseMessage({ userId: user.id, caseId, message: botMessage });
+        emitCaseUpdated({ userId: user.id, caseId, status: "OPEN" });
+
+        return res.json({
+          userMessage,
+          botMessage,
+          caseId,
+          caseStatus: "OPEN",
+          aiDeferred: false,
+        });
+      }
+
       const [createdRows] = await pool.execute(
         "SELECT id, content, sender, type, created_at FROM chat_messages WHERE id = ? LIMIT 1",
         [userInsert.insertId],

@@ -399,6 +399,7 @@ function buildAiInput(content, history, knowledgeContext) {
 export async function processMessage(content, options = {}) {
   const history = Array.isArray(options.history) ? options.history : [];
   const userId = Number(options.userId || 0);
+  const allowAI = options.allowAI !== false;
 
   if (isSensitive(content)) {
     return { reply: formatReplyText(SENSITIVE_REPLY), type: "BLOCKED" };
@@ -466,6 +467,15 @@ export async function processMessage(content, options = {}) {
 
   const faqReply = matchFAQ(content);
   if (faqReply) return { reply: formatReplyText(faqReply), type: "FAQ" };
+
+  if (!allowAI) {
+    return {
+      type: "DEFERRED",
+      meta: {
+        reason: "AI_DISABLED",
+      },
+    };
+  }
 
   if (process.env.AI_ENABLED !== "true") {
     return {
