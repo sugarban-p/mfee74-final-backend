@@ -1,4 +1,3 @@
--- Active: 1780228993227@@127.0.0.1@3306@final_team3
 -- clear product mock data
 SET FOREIGN_KEY_CHECKS = 0;
 
@@ -671,15 +670,15 @@ VALUES (
         'dog_freshfood',
         '2026-05-16 00:00:00'
     ),
-    -- (
-    --     42,
-    --     '玩具總動員系列 罐罐專用湯匙-三入組',
-    --     327,
-    --     2,
-    --     5,
-    --     'spoonset',
-    --     '2026-04-22 00:00:00'
-    -- ),
+    (
+        42,
+        '玩具總動員系列 罐罐專用湯匙-三入組',
+        327,
+        2,
+        5,
+        'spoonset',
+        '2026-04-22 00:00:00'
+    ),
     (
         43,
         'MOFU減壓胸背帶',
@@ -2016,26 +2015,26 @@ VALUES
         '2026-08-02 16:54:44',
         '2026-08-02 16:54:44'
     ),
-    -- (
-    --     127,
-    --     'DGSP042001',
-    --     42,
-    --     '迪士尼湯匙3入綜合組(款式隨機)',
-    --     405,
-    --     24,
-    --     '2026-08-02 16:54:44',
-    --     '2026-08-02 16:54:44'
-    -- ),
-    -- (
-    --     128,
-    --     'DGSP042002',
-    --     42,
-    --     '迪士尼湯匙綜合組(款式隨機)',
-    --     6,
-    --     61,
-    --     '2026-08-02 16:54:44',
-    --     '2026-08-02 16:54:44'
-    -- ),
+    (
+        127,
+        'DGSP042001',
+        42,
+        '迪士尼湯匙3入綜合組(款式隨機)',
+        405,
+        24,
+        '2026-08-02 16:54:44',
+        '2026-08-02 16:54:44'
+    ),
+    (
+        128,
+        'DGSP042002',
+        42,
+        '迪士尼湯匙綜合組(款式隨機)',
+        6,
+        61,
+        '2026-08-02 16:54:44',
+        '2026-08-02 16:54:44'
+    ),
     (
         129,
         'DGLH043001',
@@ -3189,20 +3188,20 @@ VALUES
     (126, 170),
     (126, 171),
     (126, 172),
-    -- (127, 84),
-    -- (127, 173),
-    -- (127, 174),
-    -- (127, 175),
-    -- (127, 176),
-    -- (127, 177),
-    -- (127, 178),
-    -- (128, 84),
-    -- (128, 173),
-    -- (128, 174),
-    -- (128, 175),
-    -- (128, 176),
-    -- (128, 177),
-    -- (128, 178),
+    (127, 84),
+    (127, 173),
+    (127, 174),
+    (127, 175),
+    (127, 176),
+    (127, 177),
+    (127, 178),
+    (128, 84),
+    (128, 173),
+    (128, 174),
+    (128, 175),
+    (128, 176),
+    (128, 177),
+    (128, 178),
     (129, 50),
     (129, 179),
     (130, 50),
@@ -5462,42 +5461,42 @@ VALUES (
         'images/products/avatars/dog/main-food/prod_0041_14_src.jpg',
         'images/products/avatars/dog/main-food/prod_0041_14_thumbnail.jpg'
     ),
-    -- (
-    --     42,
-    --     1,
-    --     'images/products/avatars/dog/supplies/prod_0042_01_src.jpg',
-    --     'images/products/avatars/dog/supplies/prod_0042_01_thumbnail.jpg'
-    -- ),
-    -- (
-    --     42,
-    --     2,
-    --     'images/products/avatars/dog/supplies/prod_0042_02_src.jpg',
-    --     'images/products/avatars/dog/supplies/prod_0042_02_thumbnail.jpg'
-    -- ),
-    -- (
-    --     42,
-    --     3,
-    --     'images/products/avatars/dog/supplies/prod_0042_03_src.jpg',
-    --     'images/products/avatars/dog/supplies/prod_0042_03_thumbnail.jpg'
-    -- ),
-    -- (
-    --     42,
-    --     4,
-    --     'images/products/avatars/dog/supplies/prod_0042_04_src.jpg',
-    --     'images/products/avatars/dog/supplies/prod_0042_04_thumbnail.jpg'
-    -- ),
-    -- (
-    --     42,
-    --     5,
-    --     'images/products/avatars/dog/supplies/prod_0042_05_src.jpg',
-    --     'images/products/avatars/dog/supplies/prod_0042_05_thumbnail.jpg'
-    -- ),
-    -- (
-    --     42,
-    --     6,
-    --     'images/products/avatars/dog/supplies/prod_0042_06_src.jpg',
-    --     'images/products/avatars/dog/supplies/prod_0042_06_thumbnail.jpg'
-    -- ),
+    (
+        42,
+        1,
+        'images/products/avatars/dog/supplies/prod_0042_01_src.jpg',
+        'images/products/avatars/dog/supplies/prod_0042_01_thumbnail.jpg'
+    ),
+    (
+        42,
+        2,
+        'images/products/avatars/dog/supplies/prod_0042_02_src.jpg',
+        'images/products/avatars/dog/supplies/prod_0042_02_thumbnail.jpg'
+    ),
+    (
+        42,
+        3,
+        'images/products/avatars/dog/supplies/prod_0042_03_src.jpg',
+        'images/products/avatars/dog/supplies/prod_0042_03_thumbnail.jpg'
+    ),
+    (
+        42,
+        4,
+        'images/products/avatars/dog/supplies/prod_0042_04_src.jpg',
+        'images/products/avatars/dog/supplies/prod_0042_04_thumbnail.jpg'
+    ),
+    (
+        42,
+        5,
+        'images/products/avatars/dog/supplies/prod_0042_05_src.jpg',
+        'images/products/avatars/dog/supplies/prod_0042_05_thumbnail.jpg'
+    ),
+    (
+        42,
+        6,
+        'images/products/avatars/dog/supplies/prod_0042_06_src.jpg',
+        'images/products/avatars/dog/supplies/prod_0042_06_thumbnail.jpg'
+    ),
     (
         43,
         1,
@@ -6438,17 +6437,17 @@ VALUES (
         'remark',
         '※ 原肉糧與蔬肉粒顏色因未添加人工色素，易受季節食材及製程批次影響，深淺請以實物為準\n※一磅(lb)約等於454克'
     ),
-    -- (42, 'slogan', '汪喵雙11'),
-    -- (
-    --     42,
-    --     'content',
-    --     '🎁 全館汪喵幣 3 倍送！\n🎁 直購享好禮 7 重送！\n滿 $799 送限量宇宙屋型箱\n滿 $1,600 折\n滿 $3,000 折\n滿 $6,000 折\n滿 $8,000 折\n滿 $12,000 折\n* 直購限定，寄倉服務另有獨立優惠\n* 不可累折，最多使用單一門檻折扣\n主食罐\n｜\n保健品\n｜\n貓砂\n｜\n凍乾主食\n｜\n迪士尼'
-    -- ),
-    -- (
-    --     42,
-    --     'remark',
-    --     '3款超人氣角色，閃亮登場！\n► 玩具總動員超人氣款！\n• 304不鏽鋼材質，耐用、好清洗\n• 經SGS食品器具檢驗，開心吃更放心\n• 小匙面超好挖，把罐罐挖乾淨！\n☑ Disney 迪士尼正版授權\n> 前往「迪士尼專區」'
-    -- ),
+    (
+        42,
+        'slogan',
+        'Disney 迪士尼正版授權!'
+    ),
+    (
+        42,
+        'content',
+        '3款超人氣角色，閃亮登場！\n► 玩具總動員超人氣款！\n• 304不鏽鋼材質，耐用、好清洗\n• 經SGS食品器具檢驗，開心吃更放心\n• 小匙面超好挖，把罐罐挖乾淨！'
+    ),
+    (42, 'remark', ''),
     (
         43,
         'slogan',
@@ -11084,23 +11083,91 @@ VALUES (
         'images/products/images/dog/main-food/prod_0041_28.jpg',
         28
     ),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_01.jpg', 1),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_02.jpg', 2),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_03.png', 3),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_04.gif', 4),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_05.jpg', 5),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_06.jpg', 6),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_07.jpg', 7),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_08.jpg', 8),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_09.jpg', 9),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_10.jpg', 10),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_11.jpg', 11),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_12.png', 12),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_13.gif', 13),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_14.jpg', 14),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_15.jpg', 15),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_16.jpg', 16),
-    -- (42, 'images/products/images/dog/supplies/prod_0042_17.jpg', 17),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_01.jpg',
+        1
+    ),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_02.jpg',
+        2
+    ),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_03.png',
+        3
+    ),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_04.gif',
+        4
+    ),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_05.jpg',
+        5
+    ),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_06.jpg',
+        6
+    ),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_07.jpg',
+        7
+    ),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_08.jpg',
+        8
+    ),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_09.jpg',
+        9
+    ),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_10.jpg',
+        10
+    ),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_11.jpg',
+        11
+    ),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_12.png',
+        12
+    ),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_13.gif',
+        13
+    ),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_14.jpg',
+        14
+    ),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_15.jpg',
+        15
+    ),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_16.jpg',
+        16
+    ),
+    (
+        42,
+        'images/products/images/dog/supplies/prod_0042_17.jpg',
+        17
+    ),
     (
         43,
         'images/products/images/dog/leash/prod_0043_01.jpg',
