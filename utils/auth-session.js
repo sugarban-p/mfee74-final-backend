@@ -1,6 +1,7 @@
 // Functionality: provide session-based auth helpers and user-agent parsing. Purpose: share the same login guard behavior across private APIs.
 
 import pool from "./connect-mysql.js";
+import { buildGoogleAvatarProxyUrl, isGoogleAvatarUrl } from "./avatar-url.js";
 import {
   findActiveSessionByAccessToken,
   getAccessTokenFromRequest,
@@ -40,6 +41,12 @@ export async function getSessionUser(req) {
         WHERE uoa.user_id = users.id AND uoa.provider = 'GOOGLE'
         LIMIT 1
       ) AS googleId,
+      (
+        SELECT provider_avatar
+        FROM user_oauth_accounts uoa
+        WHERE uoa.user_id = users.id AND uoa.provider = 'GOOGLE'
+        LIMIT 1
+      ) AS googleAvatar,
       created_at AS createdAt,
       login_attempts AS loginAttempts,
       locked_until AS lockedUntil
@@ -48,7 +55,16 @@ export async function getSessionUser(req) {
     LIMIT 1
   `;
   const [rows] = await pool.execute(sql, [userId]);
-  return rows[0] || null;
+  const user = rows[0] || null;
+  if (!user) return null;
+
+  const avatarSource = user.avatar || user.googleAvatar;
+  if (isGoogleAvatarUrl(avatarSource)) {
+    const origin = `${req.protocol}://${req.get("host")}`;
+    user.avatar = buildGoogleAvatarProxyUrl(origin, avatarSource);
+  }
+
+  return user;
 }
 
 export async function requireAuth(req, res, next) {
