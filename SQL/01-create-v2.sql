@@ -1,4 +1,4 @@
--- Active: 1782194421861@@127.0.0.1@3306@final_team3
+-- Active: 1780228993227@@127.0.0.1@3306@final_team3
 -- final_team3 完整建表檔 v2
 -- 會刪除並重建整個 final_team3 資料庫。
 -- 寵物欄位已採用：活動量單選、健康情況多選、過敏食材多選；不使用 body_size。
@@ -158,6 +158,45 @@ CREATE TABLE `socket_connections` (
 ) ENGINE = InnoDB;
 
 CREATE INDEX `idx_socket_user` ON `socket_connections` (`user_id`);
+
+CREATE TABLE `ai_knowledge_docs` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT,
+    `doc_key` VARCHAR(120) NOT NULL,
+    `source_type` ENUM('FAQ', 'POLICY', 'PRODUCT') NOT NULL,
+    `source_system` VARCHAR(40) NOT NULL DEFAULT 'db',
+    `source_table` VARCHAR(64) DEFAULT NULL,
+    `source_pk` VARCHAR(120) DEFAULT NULL,
+    `title` VARCHAR(255) NOT NULL,
+    `summary` TEXT DEFAULT NULL,
+    `content` MEDIUMTEXT NOT NULL,
+    `content_hash` CHAR(40) NOT NULL,
+    `source_url` VARCHAR(500) DEFAULT NULL,
+    `locale` VARCHAR(10) NOT NULL DEFAULT 'zh-TW',
+    `tags_json` JSON DEFAULT NULL,
+    `metadata_json` JSON DEFAULT NULL,
+    `priority` INT NOT NULL DEFAULT 100,
+    `retrieval_weight` DECIMAL(6, 3) NOT NULL DEFAULT 1.000,
+    `freshness_score` DECIMAL(5, 2) NOT NULL DEFAULT 1.00,
+    `effective_from` DATETIME DEFAULT NULL,
+    `effective_to` DATETIME DEFAULT NULL,
+    `published_at` DATETIME DEFAULT NULL,
+    `last_synced_at` DATETIME DEFAULT NULL,
+    `version_no` INT NOT NULL DEFAULT 1,
+    `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_ai_knowledge_doc_key` (`doc_key`),
+    KEY `idx_ai_knowledge_source_ref` (`source_table`, `source_pk`),
+    KEY `idx_ai_knowledge_locale` (`locale`),
+    KEY `idx_ai_knowledge_priority` (`priority`),
+    KEY `idx_ai_knowledge_weight` (`retrieval_weight`),
+    KEY `idx_ai_knowledge_source_type` (`source_type`),
+    KEY `idx_ai_knowledge_is_active` (`is_active`),
+    KEY `idx_ai_knowledge_updated_at` (`updated_at`),
+    KEY `idx_ai_knowledge_last_synced_at` (`last_synced_at`),
+    FULLTEXT KEY `ft_ai_knowledge_text` (`title`, `summary`, `content`)
+);
 
 CREATE TABLE `events` (
     `id` INT NOT NULL AUTO_INCREMENT,
@@ -610,28 +649,28 @@ ADD CONSTRAINT `fk_products_pet_tag` FOREIGN KEY (`pet_tag_id_fk`) REFERENCES `p
 ADD CONSTRAINT `fk_products_category` FOREIGN KEY (`category_id_fk`) REFERENCES `product_category_tags` (`id`);
 
 ALTER TABLE `product_intros`
-ADD CONSTRAINT `fk_product_intros_product` FOREIGN KEY (`prod_id_fk`) REFERENCES `products` (`id`);
+ADD CONSTRAINT `fk_product_intros_product` FOREIGN KEY (`prod_id_fk`) REFERENCES `products` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `items`
-ADD CONSTRAINT `fk_items_product` FOREIGN KEY (`prod_id_fk`) REFERENCES `products` (`id`);
+ADD CONSTRAINT `fk_items_product` FOREIGN KEY (`prod_id_fk`) REFERENCES `products` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `item_tags`
-ADD CONSTRAINT `fk_item_tags_item` FOREIGN KEY (`item_id_fk`) REFERENCES `items` (`id`),
-ADD CONSTRAINT `fk_item_tags_tag` FOREIGN KEY (`tag_id_fk`) REFERENCES `product_special_tags` (`id`);
+ADD CONSTRAINT `fk_item_tags_item` FOREIGN KEY (`item_id_fk`) REFERENCES `items` (`id`) ON DELETE CASCADE,
+ADD CONSTRAINT `fk_item_tags_tag` FOREIGN KEY (`tag_id_fk`) REFERENCES `product_special_tags` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `item_keywords`
-ADD CONSTRAINT `fk_item_keywords_item` FOREIGN KEY (`item_id_fk`) REFERENCES `items` (`id`),
-ADD CONSTRAINT `fk_item_keywords_keyword` FOREIGN KEY (`keyword_id_fk`) REFERENCES `keywords` (`id`);
+ADD CONSTRAINT `fk_item_keywords_item` FOREIGN KEY (`item_id_fk`) REFERENCES `items` (`id`) ON DELETE CASCADE,
+ADD CONSTRAINT `fk_item_keywords_keyword` FOREIGN KEY (`keyword_id_fk`) REFERENCES `keywords` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `product_avatars`
-ADD CONSTRAINT `fk_product_avatars_product` FOREIGN KEY (`prod_id_fk`) REFERENCES `products` (`id`);
+ADD CONSTRAINT `fk_product_avatars_product` FOREIGN KEY (`prod_id_fk`) REFERENCES `products` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `product_images`
-ADD CONSTRAINT `fk_product_images_product` FOREIGN KEY (`prod_id_fk`) REFERENCES `products` (`id`);
+ADD CONSTRAINT `fk_product_images_product` FOREIGN KEY (`prod_id_fk`) REFERENCES `products` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `user_favorites`
-ADD CONSTRAINT `fk_user_favorites_user` FOREIGN KEY (`user_id_fk`) REFERENCES `users` (`id`),
-ADD CONSTRAINT `fk_user_favorites_product` FOREIGN KEY (`prod_id_fk`) REFERENCES `products` (`id`);
+ADD CONSTRAINT `fk_user_favorites_user` FOREIGN KEY (`user_id_fk`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+ADD CONSTRAINT `fk_user_favorites_product` FOREIGN KEY (`prod_id_fk`) REFERENCES `products` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `pet_attr_details`
 ADD CONSTRAINT `fk_pet_attr_details_attribute` FOREIGN KEY (`pet_attr_id_fk`) REFERENCES `pet_attributes` (`id`);
@@ -657,22 +696,22 @@ ADD CONSTRAINT `fk_pet_ai_logs_user` FOREIGN KEY (`user_id_fk`) REFERENCES `user
 ADD CONSTRAINT `fk_pet_ai_logs_pet` FOREIGN KEY (`pet_id_fk`) REFERENCES `pets` (`id`);
 
 ALTER TABLE `cart_items`
-ADD CONSTRAINT `fk_cart_items_user` FOREIGN KEY (`user_id_fk`) REFERENCES `users` (`id`),
-ADD CONSTRAINT `fk_cart_items_sku` FOREIGN KEY (`sku_id_fk`) REFERENCES `items` (`id`);
+ADD CONSTRAINT `fk_cart_items_user` FOREIGN KEY (`user_id_fk`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+ADD CONSTRAINT `fk_cart_items_sku` FOREIGN KEY (`sku_id_fk`) REFERENCES `items` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `orders`
-ADD CONSTRAINT `fk_orders_user` FOREIGN KEY (`user_id_fk`) REFERENCES `users` (`id`),
-ADD CONSTRAINT `fk_orders_coupon` FOREIGN KEY (`coupon_id_fk`) REFERENCES `coupons` (`id`);
+ADD CONSTRAINT `fk_orders_user` FOREIGN KEY (`user_id_fk`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+ADD CONSTRAINT `fk_orders_coupon` FOREIGN KEY (`coupon_id_fk`) REFERENCES `coupons` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `order_shipping_infos`
-ADD CONSTRAINT `fk_order_shipping_infos_order` FOREIGN KEY (`order_id_fk`) REFERENCES `orders` (`id`);
+ADD CONSTRAINT `fk_order_shipping_infos_order` FOREIGN KEY (`order_id_fk`) REFERENCES `orders` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `order_items`
-ADD CONSTRAINT `fk_order_items_order` FOREIGN KEY (`order_id_fk`) REFERENCES `orders` (`id`),
-ADD CONSTRAINT `fk_order_items_sku` FOREIGN KEY (`sku_id_fk`) REFERENCES `items` (`id`);
+ADD CONSTRAINT `fk_order_items_order` FOREIGN KEY (`order_id_fk`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
+ADD CONSTRAINT `fk_order_items_sku` FOREIGN KEY (`sku_id_fk`) REFERENCES `items` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `order_status_logs`
-ADD CONSTRAINT `fk_order_status_logs_order` FOREIGN KEY (`order_id_fk`) REFERENCES `orders` (`id`);
+ADD CONSTRAINT `fk_order_status_logs_order` FOREIGN KEY (`order_id_fk`) REFERENCES `orders` (`id`) ON DELETE CASCADE;
 
 ALTER TABLE `ecpay_payments`
-ADD CONSTRAINT `fk_ecpay_payments_order` FOREIGN KEY (`order_id_fk`) REFERENCES `orders` (`id`);
+ADD CONSTRAINT `fk_ecpay_payments_order` FOREIGN KEY (`order_id_fk`) REFERENCES `orders` (`id`) ON DELETE CASCADE;

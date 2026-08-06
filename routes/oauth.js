@@ -4,12 +4,62 @@ import axios from "axios";
 
 import pool from "../utils/connect-mysql.js";
 import {
+  buildClientIp,
   issueAuthTokensAndSession,
   setAuthCookies,
 } from "../utils/auth-tokens.js";
+import { parseUserAgent } from "../utils/auth-session.js";
+import {
+  buildGoogleAvatarProxyUrl,
+  isGoogleAvatarUrl,
+} from "../utils/avatar-url.js";
+import { hasTable } from "../utils/schema.js";
 import { buildUserNo } from "../utils/user-no.js";
 
 const router = Router();
+
+function getRequestOrigin(req) {
+  return `${req.protocol}://${req.get("host")}`;
+}
+
+function isAllowedGoogleAvatarSource(url) {
+  try {
+    const parsed = new URL(String(url || ""));
+    return (
+      parsed.protocol === "https:" &&
+      parsed.hostname.toLowerCase().endsWith("googleusercontent.com")
+    );
+  } catch {
+    return false;
+  }
+}
+
+router.get("/google/avatar", async (req, res) => {
+  try {
+    const src = String(req.query.src || "").trim();
+    if (!src || !isAllowedGoogleAvatarSource(src)) {
+      return res.status(400).json({ error: "INVALID_AVATAR_SOURCE" });
+    }
+
+    const response = await axios.get(src, {
+      responseType: "arraybuffer",
+      timeout: 8000,
+      maxRedirects: 3,
+    });
+
+    const contentType = String(response.headers["content-type"] || "");
+    if (!contentType.toLowerCase().startsWith("image/")) {
+      return res.status(400).json({ error: "INVALID_AVATAR_CONTENT" });
+    }
+
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    return res.status(200).send(Buffer.from(response.data));
+  } catch (error) {
+    console.error("[oauth/google/avatar]", error?.message || error);
+    return res.status(502).json({ error: "AVATAR_FETCH_FAILED" });
+  }
+});
 
 function sanitizeNextPath(value) {
   if (typeof value !== "string") return null;
@@ -28,6 +78,29 @@ function getFrontendBaseUrl() {
   } catch {
     return "http://localhost:3000";
   }
+}
+
+async function insertGoogleLoginLog({ userId = null, email = null, req }) {
+  const tableReady = await hasTable("login_logs");
+  if (!tableReady) return;
+
+  const ip = buildClientIp(req).slice(0, 64);
+  const userAgent = req.headers["user-agent"] || "";
+  const parsed = parseUserAgent(userAgent);
+
+  const sql = `
+    INSERT INTO login_logs (user_id, email, method, ip, user_agent, browser, os, device, success, reason, created_at)
+    VALUES (?, ?, 'GOOGLE', ?, ?, ?, ?, ?, 1, NULL, NOW())
+  `;
+  await pool.execute(sql, [
+    userId,
+    email,
+    ip,
+    userAgent,
+    parsed.browser,
+    parsed.os,
+    parsed.device,
+  ]);
 }
 
 // =====================================================
@@ -121,6 +194,10 @@ router.get("/google/callback", async (req, res) => {
     const googleUser = profileResponse.data;
 
     const { sub, email, name, picture, email_verified } = googleUser;
+    const requestOrigin = getRequestOrigin(req);
+    const proxyAvatar = isGoogleAvatarUrl(picture)
+      ? buildGoogleAvatarProxyUrl(requestOrigin, picture)
+      : null;
 
     if (!email) {
       throw new Error("Google email missing");
@@ -150,10 +227,32 @@ router.get("/google/callback", async (req, res) => {
         UPDATE users
         SET
           email_verified = ?,
+          name = CASE
+            WHEN (name IS NULL OR name = '') AND ? IS NOT NULL AND ? <> '' THEN ?
+            ELSE name
+          END,
+          avatar = CASE
+            WHEN ? IS NOT NULL AND ? <> '' AND (
+              avatar IS NULL
+              OR avatar = ''
+              OR avatar LIKE 'https://lh3.googleusercontent.com/%'
+              OR avatar LIKE '%/api/oauth/google/avatar?src=%'
+            ) THEN ?
+            ELSE avatar
+          END,
           updated_at = NOW()
         WHERE id = ?
         `,
-        [email_verified ? 1 : 0, userId],
+        [
+          email_verified ? 1 : 0,
+          name,
+          name,
+          name,
+          proxyAvatar,
+          proxyAvatar,
+          proxyAvatar,
+          userId,
+        ],
       );
     } else {
       const tempUserNo = `TMP${Date.now()}`;
@@ -181,7 +280,7 @@ router.get("/google/callback", async (req, res) => {
           NOW()
         )
         `,
-        [tempUserNo, email, name, picture, email_verified ? 1 : 0],
+        [tempUserNo, email, name, proxyAvatar, email_verified ? 1 : 0],
       );
 
       userId = result.insertId;
@@ -223,6 +322,12 @@ router.get("/google/callback", async (req, res) => {
 
       req,
     });
+
+    try {
+      await insertGoogleLoginLog({ userId, email, req });
+    } catch (error) {
+      console.error("[oauth/google] insert login log failed:", error.message);
+    }
 
     setAuthCookies(res, tokenResult);
 

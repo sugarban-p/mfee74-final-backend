@@ -145,6 +145,25 @@ export function getSupportOnlineCountNow() {
   return supportPageSocketIds.size;
 }
 
+export async function disconnectUserSockets(userId, reason = "LOGOUT") {
+  if (!ioInstance) return 0;
+
+  const normalizedUserId = Number(userId);
+  if (!Number.isInteger(normalizedUserId) || normalizedUserId <= 0) return 0;
+
+  const sockets = await ioInstance
+    .in(`user:${normalizedUserId}`)
+    .fetchSockets();
+  if (sockets.length === 0) return 0;
+
+  for (const socket of sockets) {
+    socket.emit("auth:force-logout", { reason });
+    socket.disconnect(true);
+  }
+
+  return sockets.length;
+}
+
 export function initRealtimeChat(server) {
   if (ioInstance) return ioInstance;
 
