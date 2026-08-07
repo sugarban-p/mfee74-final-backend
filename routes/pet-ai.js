@@ -159,6 +159,9 @@ router.post("/recommendations", async (req, res) => {
       userId,
     );
 
+    // 記錄候選商品查詢完成的時間。
+    const productQueryTime = performance.now();
+
     /**
      * 將後端篩選好的候選商品交給 Azure。
      *

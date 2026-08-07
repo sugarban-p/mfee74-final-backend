@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-07-27T06:47:12.056Z",
-  "total": 54,
+  "generatedAt": "2026-08-03T02:21:44.317Z",
+  "total": 53,
   "docs": [
     {
-      "id": 97,
+      "id": 48,
       "docKey": "FAQ:PETS_OVERVIEW",
       "sourceType": "FAQ",
       "sourceSystem": "db",
@@ -28,10 +28,10 @@
       "retrievalWeight": 1.05,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:12.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 98,
+      "id": 49,
       "docKey": "FAQ:FAVORITES_OVERVIEW",
       "sourceType": "FAQ",
       "sourceSystem": "db",
@@ -39,8 +39,8 @@
       "sourcePk": "aggregate",
       "title": "MOFU 收藏清單概況",
       "summary": "收藏總數、使用收藏會員數與熱門收藏商品。",
-      "content": "收藏總筆數：3\n      使用收藏功能的會員數：1\n      被收藏過的商品數：3\n\n      熱門收藏商品 Top：\n      1. 早餐罐｜MOFU迷你無膠早餐罐（1 次收藏）\n2. 貓主食罐｜鮮肉罐｜貓咪98%無膠鮮肉主食罐（1 次收藏）\n3. 貓咪凍乾主食餐（新包裝）（1 次收藏）\n\n      說明：收藏資料來自會員手動收藏/取消收藏行為。",
-      "contentHash": "299145d2ce413ea310661e1d035acc18b659ebcc",
+      "content": "收藏總筆數：6\n      使用收藏功能的會員數：1\n      被收藏過的商品數：6\n\n      熱門收藏商品 Top：\n      1. 小宅生活｜8字貓抓板（1 次收藏）\n2. JW 貓咪指甲剪（1 次收藏）\n3. S型可折疊靜音貓隧道（1 次收藏）\n4. 頂級木天蓼/蟲癭果棒棒（1 次收藏）\n5. 犬用慢烘鮮食蔬肉糧（1 次收藏）\n6. 狗狗凍乾主食餐（1 次收藏）\n\n      說明：收藏資料來自會員手動收藏/取消收藏行為。",
+      "contentHash": "eacf632e0f503bd5c22e430f610e62f1eb208ecf",
       "sourceUrl": "http://localhost:3000/member/favorites",
       "locale": "zh-TW",
       "tags": [
@@ -50,17 +50,17 @@
       ],
       "metadata": {
         "totalUsers": 1,
-        "totalProducts": 3,
-        "totalFavorites": 3
+        "totalProducts": 6,
+        "totalFavorites": 6
       },
       "priority": 70,
       "retrievalWeight": 1.05,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:12.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 102,
+      "id": 53,
       "docKey": "FAQ:ORDER_STATUS",
       "sourceType": "FAQ",
       "sourceSystem": "db",
@@ -68,8 +68,8 @@
       "sourcePk": "order_status:aggregate",
       "title": "MOFU 訂單狀態說明",
       "summary": "訂單狀態代碼與目前訂單分布。",
-      "content": "訂單狀態代碼與分布：\n      1. 處理中（代碼：1，共 3 筆）\n\n      說明：查詢單一訂單時，應同時參考付款狀態(payment_status)與配送狀態(shipping_status)。",
-      "contentHash": "2fd421c4956e1e8e9669d0bb33d05351d9f1e528",
+      "content": "訂單狀態代碼與分布：\n      目前尚無資料\n\n      說明：查詢單一訂單時，應同時參考付款狀態(payment_status)與配送狀態(shipping_status)。",
+      "contentHash": "8e97eeddd8cff0b263d0fa9f2b83fed8742d9100",
       "sourceUrl": "http://localhost:3000/member/orders",
       "locale": "zh-TW",
       "tags": [
@@ -78,16 +78,16 @@
         "狀態"
       ],
       "metadata": {
-        "itemCount": 1
+        "itemCount": 0
       },
       "priority": 75,
       "retrievalWeight": 1.1,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:12.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 99,
+      "id": 50,
       "docKey": "POLICY:PAYMENT_METHODS",
       "sourceType": "POLICY",
       "sourceSystem": "db",
@@ -115,10 +115,10 @@
       "retrievalWeight": 1.15,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:12.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 100,
+      "id": 51,
       "docKey": "POLICY:SHIPPING_METHODS",
       "sourceType": "POLICY",
       "sourceSystem": "db",
@@ -126,8 +126,8 @@
       "sourcePk": "shipping_method:aggregate",
       "title": "MOFU 配送方式",
       "summary": "依訂單收件資訊整理的配送方式。",
-      "content": "目前系統紀錄中的配送方式：\n      1. 宅配（使用 3 筆）\n\n      說明：此資料依訂單收件資訊統計，實際開放配送方式以結帳頁顯示為準。",
-      "contentHash": "ceb24062c4f993597b0099484aaa81210a36fde1",
+      "content": "目前系統紀錄中的配送方式：\n      目前尚無資料\n\n      說明：此資料依訂單收件資訊統計，實際開放配送方式以結帳頁顯示為準。",
+      "contentHash": "0b813c962ec468eea79b7d9839efb4fec0b1faca",
       "sourceUrl": "http://localhost:3000/checkout",
       "locale": "zh-TW",
       "tags": [
@@ -136,16 +136,16 @@
         "訂單"
       ],
       "metadata": {
-        "itemCount": 1
+        "itemCount": 0
       },
       "priority": 80,
       "retrievalWeight": 1.1,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:12.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 101,
+      "id": 52,
       "docKey": "POLICY:COUPONS",
       "sourceType": "POLICY",
       "sourceSystem": "db",
@@ -170,7 +170,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:12.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
       "id": 1,
@@ -179,10 +179,10 @@
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "1",
-      "title": "小宅生活 PAW-SCRATCHER 經典骨頭貓抓板",
+      "title": "小宅生活｜經典骨頭貓抓板",
       "summary": "貓咪界懶骨頭，讓貓咪隨時伸、躺、抓！",
-      "content": "商品名稱：小宅生活 PAW-SCRATCHER 經典骨頭貓抓板\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$540\n\n標語：貓咪界懶骨頭，讓貓咪隨時伸、躺、抓！\n\n說明：• 頂級長纖維紙漿，耐抓不易掉屑\n• 雙材質紙漿設計，打造豐富抓感體驗\n• 3種質感配色，輕鬆融入居家空間\n• 採用無毒膠水製作，不怕貓咪亂咬\n☑ 貓咪抓磨時可能留下抓痕，但不易掉屑，減少清理負擔\n\n備註：※ 因材積限制，僅開放宅配，未開放超商取貨。\n※ 貓抓板為手工製作，外層有 1.5~2mm 偏移為正常現象，不影響毛孩使用喔！\n※ 本產品為手工製作，殘留些許黏著與殘膠痕跡，屬於正常現象不影響產品功能，接合膠水經過ＳＧＳ無毒檢驗，請安心使用",
-      "contentHash": "f51e7cd0e92944e9796d43a476ccbdb18858ae16",
+      "content": "商品名稱：小宅生活｜經典骨頭貓抓板\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$540\n\n標語：貓咪界懶骨頭，讓貓咪隨時伸、躺、抓！\n\n說明：• 頂級長纖維紙漿，耐抓不易掉屑\n• 雙材質紙漿設計，打造豐富抓感體驗\n• 3種質感配色，輕鬆融入居家空間\n• 採用無毒膠水製作，不怕貓咪亂咬\n☑ 貓咪抓磨時可能留下抓痕，但不易掉屑，減少清理負擔\n\n備註：※ 貓抓板尺寸：427 * 65 * 220mm\n※ 因材積限制，僅開放宅配，未開放超商取貨。\n※ 貓抓板為手工製作，外層有 1.5~2mm 偏移為正常現象，不影響毛孩使用喔！\n※ 本產品為手工製作，殘留些許黏著與殘膠痕跡，屬於正常現象不影響產品功能，接合膠水經過ＳＧＳ無毒檢驗，請安心使用",
+      "contentHash": "daeb497d80dab21e0a381a9e3d3dc01f9d0e1972",
       "sourceUrl": "http://localhost:3000/product/paw-scratcher-classic-scratcher",
       "locale": "zh-TW",
       "tags": [
@@ -199,7 +199,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
       "id": 2,
@@ -208,10 +208,10 @@
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "2",
-      "title": "小宅生活 PAW-SCRATCHER 8字貓抓板",
+      "title": "小宅生活｜8字貓抓板",
       "summary": "4面都能抓8字貓抓板，多種玩法讓貓咪盡情抓！",
-      "content": "商品名稱：小宅生活 PAW-SCRATCHER 8字貓抓板\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$1280\n\n標語：4面都能抓8字貓抓板，多種玩法讓貓咪盡情抓！\n\n說明：• 可拆式設計讓抓面利用更完整\n• 超過6種玩法，怎麼玩都不會膩\n• 頂級長纖維紙漿，耐抓不易掉屑\n• 雙材質紙漿打造豐富抓感體驗\n☑ 貓咪抓磨時可能留下抓痕，但不易掉屑，減少清理負擔\n\n備註：※ 因材積限制，僅開放宅配，未開放超商取貨。\n※ 貓抓板為手工製作，外層有 1.5~2mm 偏移為正常現象，不影響毛孩使用喔！\n※ 本產品為手工製作，殘留些許黏著與殘膠痕跡，屬於正常現象不影響產品功能，接合膠水經過ＳＧＳ無毒檢驗，請安心使用。",
-      "contentHash": "7a31e6ae4c58b05b1ab590978d73395d1e641d14",
+      "content": "商品名稱：小宅生活｜8字貓抓板\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$1280\n\n標語：4面都能抓8字貓抓板，多種玩法讓貓咪盡情抓！\n\n說明：• 可拆式設計讓抓面利用更完整\n• 超過6種玩法，怎麼玩都不會膩\n• 頂級長纖維紙漿，耐抓不易掉屑\n• 雙材質紙漿打造豐富抓感體驗\n☑ 貓咪抓磨時可能留下抓痕，但不易掉屑，減少清理負擔\n\n備註：※ 貓抓板尺寸：800 * 243 * 250mm\n※ 因材積限制，僅開放宅配，未開放超商取貨。\n※ 貓抓板為手工製作，外層有 1.5~2mm 偏移為正常現象，不影響毛孩使用喔！\n※ 本產品為手工製作，殘留些許黏著與殘膠痕跡，屬於正常現象不影響產品功能，接合膠水經過ＳＧＳ無毒檢驗，請安心使用。",
+      "contentHash": "8515dee9050830708a965b09290ee67619cea7f7",
       "sourceUrl": "http://localhost:3000/product/paw-scratcher-infinity-scratcher",
       "locale": "zh-TW",
       "tags": [
@@ -228,7 +228,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
       "id": 3,
@@ -237,10 +237,10 @@
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "3",
-      "title": "小宅生活-極致控砂墊",
+      "title": "小宅生活｜極致控砂墊",
       "summary": "獨家８字導砂集砂結構，完美控砂！",
-      "content": "商品名稱：小宅生活-極致控砂墊\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$750\n\n標語：獨家８字導砂集砂結構，完美控砂！\n\n說明：．8字孔設計不限砂種，長條豆腐砂適用\n．FDA認證材料+食品級矽膠，用得安心更放心\n．防水材質，一沖即淨清洗超便利/n徹底解決家中落砂困擾✨\n\n備註：※ 因為材積限制，落砂墊一律採宅配配送。",
-      "contentHash": "d9837f984561852347eff9237e541ad1341b1f0d",
+      "content": "商品名稱：小宅生活｜極致控砂墊\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$750\n\n標語：獨家８字導砂集砂結構，完美控砂！\n\n說明：．8字孔設計不限砂種，長條豆腐砂適用\n．FDA認證材料+食品級矽膠，用得安心更放心\n．防水材質，一沖即淨清洗超便利/n徹底解決家中落砂困擾✨\n\n備註：※ 因為材積限制，落砂墊一律採宅配配送。",
+      "contentHash": "cafd2eef03b87d53aebf1f2d66cef68e069d644d",
       "sourceUrl": "http://localhost:3000/product/catlittermat",
       "locale": "zh-TW",
       "tags": [
@@ -257,7 +257,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
       "id": 4,
@@ -266,10 +266,10 @@
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "4",
-      "title": "貓咪餐包 滴雞精/滴魚精滋補主食餐包",
+      "title": "滴雞精/滴魚精滋補主食餐包",
       "summary": "貓咪滴雞精、滴魚精主食！",
-      "content": "商品名稱：貓咪餐包 滴雞精/滴魚精滋補主食餐包\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$52\n\n標語：貓咪滴雞精、滴魚精主食！\n\n說明：• 富含小分子胺基酸，滋補強身、維持活力\n• 4款機能，顧腸胃Ｘ泌尿Ｘ免疫Ｘ皮膚\n• 高嗜口性，滴精香氣ｘ慕斯肉泥質地\n• 雙開口設計，拿著餵、擠出來都ok\n☑ 無人工膠類 ☑ 無穀 ☑ 無不良添加物\n\n備註：※ 一盒 20 包\n※ 綜合一盒為營養鮮雞餐、鮮雞鮭魚餐、鱈魚牛肉餐、鰹魚烏魚餐各5包，口味皆無法更換，如需不同口味可自行搭配下單",
-      "contentHash": "ba84b6f51c336686ececadf634bb0daafff505c8",
+      "content": "商品名稱：滴雞精/滴魚精滋補主食餐包\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$52\n\n標語：貓咪滴雞精、滴魚精主食！\n\n說明：• 富含小分子胺基酸，滋補強身、維持活力\n• 4款機能，顧腸胃Ｘ泌尿Ｘ免疫Ｘ皮膚\n• 高嗜口性，滴精香氣ｘ慕斯肉泥質地\n• 雙開口設計，拿著餵、擠出來都ok\n☑ 無人工膠類 ☑ 無穀 ☑ 無不良添加物\n\n備註：※ 一盒 20 包",
+      "contentHash": "0e962ecfc7ca5c3b00efff8166564388daf9881d",
       "sourceUrl": "http://localhost:3000/product/chickenfishessence",
       "locale": "zh-TW",
       "tags": [
@@ -286,7 +286,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
       "id": 5,
@@ -295,10 +295,10 @@
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "5",
-      "title": "益生菌消臭無痕砂（豆腐砂＋木薯砂） 2.4kg",
+      "title": "益生菌消臭無痕砂 2.4kg",
       "summary": "超越豆腐砂，鏟砂不留痕！",
-      "content": "商品名稱：益生菌消臭無痕砂（豆腐砂＋木薯砂） 2.4kg\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$498\n\n標語：超越豆腐砂，鏟砂不留痕！\n\n說明：• 木薯砂添加，增強貓砂凝結力，告別碎塊！\n• 長條砂添加，落砂少、維持家中整潔\n• 環境益生菌＋活性碳，消除貓砂異味\n☑ 食品級成分，誤食不擔憂\n☑ 低粉塵設計，保護人寵呼吸道\n\n備註：※ 因重量限制，單筆購買 4 包以上僅開放宅配。\n※ 運送中可能導致真空漏氣，為正常現象不影響貓砂品質，請放心使用。\n※ 為保護商品，貓砂一箱 (6包) 一律採單箱獨立配送，可能於不同時段配達。",
-      "contentHash": "c246f22814a75a06d5a352174b1e629670cedcd1",
+      "content": "商品名稱：益生菌消臭無痕砂 2.4kg\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$498\n\n標語：超越豆腐砂，鏟砂不留痕！\n\n說明：• 木薯砂添加，增強貓砂凝結力，告別碎塊！\n• 長條砂添加，落砂少、維持家中整潔\n• 環境益生菌＋活性碳，消除貓砂異味\n☑ 食品級成分，誤食不擔憂\n☑ 低粉塵設計，保護人寵呼吸道\n\n備註：※ 因重量限制，單筆購買 4 包以上僅開放宅配。\n※ 運送中可能導致真空漏氣，為正常現象不影響貓砂品質，請放心使用。\n※ 為保護商品，貓砂一箱 (6包) 一律採單箱獨立配送，可能於不同時段配達。",
+      "contentHash": "a77afc9ccf45f9c2b90e7612cfbcd3ebedd1a7e3",
       "sourceUrl": "http://localhost:3000/product/mixcassava",
       "locale": "zh-TW",
       "tags": [
@@ -315,7 +315,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
       "id": 6,
@@ -344,7 +344,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
       "id": 7,
@@ -353,10 +353,10 @@
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "7",
-      "title": "小宅生活 開放式大貓砂盆",
+      "title": "小宅生活｜開放式大貓砂盆",
       "summary": "MOFU X 小宅生活獨家開發",
-      "content": "商品名稱：小宅生活 開放式大貓砂盆\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$1239\n\n標語：MOFU X 小宅生活獨家開發\n\n說明：• 剛好的門檻高度，友善毛孩關節\n• 舒適如廁大空間！能轉身不壓迫、不將味道悶住\n• 34cm開放式高牆，滿足貓咪警戒躲藏需求，貓砂尿液不外噴\n• 懸空踏板，滿足習慣站著上廁所的貓\n\n備註：※ 因材積限制，貓砂盆僅開放宅配，未開放超商取貨。\n※ 為保護其他商品，貓砂盆一律採單箱獨立配送。",
-      "contentHash": "f5ccbd071e8c7064ff3fb56be1a46448023f5a90",
+      "content": "商品名稱：小宅生活｜開放式大貓砂盆\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$1239\n\n標語：MOFU X 小宅生活獨家開發\n\n說明：• 剛好的門檻高度，友善毛孩關節\n• 舒適如廁大空間！能轉身不壓迫、不將味道悶住\n• 34cm開放式高牆，滿足貓咪警戒躲藏需求，貓砂尿液不外噴\n• 懸空踏板，滿足習慣站著上廁所的貓\n\n備註：※ 因材積限制，貓砂盆僅開放宅配，未開放超商取貨。\n※ 為保護其他商品，貓砂盆一律採單箱獨立配送。",
+      "contentHash": "bf8b7a6c0ad4ee0351b2829c77240bc156ea074d",
       "sourceUrl": "http://localhost:3000/product/largecatlitterbox",
       "locale": "zh-TW",
       "tags": [
@@ -373,7 +373,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
       "id": 8,
@@ -382,10 +382,10 @@
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "8",
-      "title": "早餐罐｜MOFU迷你無膠早餐罐",
+      "title": "MOFU迷你無膠早餐罐",
       "summary": "小份量快速完食ｘ輕鬆補水！",
-      "content": "商品名稱：早餐罐｜MOFU迷你無膠早餐罐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$42\n\n標語：小份量快速完食ｘ輕鬆補水！\n\n說明：• 55g小份量，快速完食新鮮不浪費\n• 含水量＞70%，輕鬆補足所需水量\n• 全營養主食，依據AAFCO/NRC營養標準\n挑嘴迷你新上市 /\n\n備註：※ 一箱為 24 入 。\n※ 營養罐綜合箱內含鮮嫩雞肉、鱸魚雞肉兩種口味。\n※ 挑嘴罐綜合箱內含鯖魚雞肉、鮭魚鰹魚、秋刀魚雞肉三種口味。",
-      "contentHash": "2ae465922a76be4bf44afe8be7a1b3e83dea289b",
+      "content": "商品名稱：MOFU迷你無膠早餐罐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$42\n\n標語：小份量快速完食ｘ輕鬆補水！\n\n說明：• 55g小份量，快速完食新鮮不浪費\n• 含水量>70%，輕鬆補足所需水量\n• 全營養主食，依據AAFCO/NRC營養標準\n挑嘴迷你新上市 /\n\n備註：※ 一箱 24 入",
+      "contentHash": "a0fea9e5d8f80ca0199ce72a9f59e65f25878936",
       "sourceUrl": "http://localhost:3000/product/morningminican",
       "locale": "zh-TW",
       "tags": [
@@ -402,7 +402,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
       "id": 9,
@@ -411,10 +411,10 @@
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "9",
-      "title": "小宅生活 寵物四季被",
+      "title": "小宅生活｜寵物四季被",
       "summary": "寢具等級面料，一面是涼感親膚、另一面是溫暖毛絨觸感，四季都適用",
-      "content": "商品名稱：小宅生活 寵物四季被\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$650\n\n標語：寢具等級面料，一面是涼感親膚、另一面是溫暖毛絨觸感，四季都適用\n\n說明：• 細短絨超輕膚！\n• 寢具級涼感面料，不悶熱\n• 作為安撫小被被，熟悉的味道最安心",
-      "contentHash": "e2e9b3926ae16b1091d7ba33c87e110c7559bd5c",
+      "content": "商品名稱：小宅生活｜寵物四季被\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$650\n\n標語：寢具等級面料，一面是涼感親膚、另一面是溫暖毛絨觸感，四季都適用\n\n說明：• 細短絨超輕膚！\n• 寢具級涼感面料，不悶熱\n• 作為安撫小被被，熟悉的味道最安心",
+      "contentHash": "f10e39c9785041968f90b20d00dcd30f0fd6d295",
       "sourceUrl": "http://localhost:3000/product/petblanlet",
       "locale": "zh-TW",
       "tags": [
@@ -431,7 +431,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
       "id": 10,
@@ -440,10 +440,10 @@
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "10",
-      "title": "肉泥罐｜貓咪 益菌PRO+綿密肉泥主食罐",
+      "title": "益菌PRO+綿密肉泥主食罐",
       "summary": "綿密肉泥質地 X 專利益菌 X 高含肉量",
-      "content": "商品名稱：肉泥罐｜貓咪 益菌PRO+綿密肉泥主食罐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$52\n\n標語：綿密肉泥質地 X 專利益菌 X 高含肉量\n\n說明：• 綿密慕斯肉泥口感，專為貓咪舔食習性打造\n• 專利益菌三合一，顧腸道助營養吸收\n• 絕佳適口性，水解技術釋放食物天然香氣\n• 98%高含肉量，且無膠無穀無防腐劑\n\n備註：※ 若購買3箱以上罐頭可選擇寄倉",
-      "contentHash": "464e6b48fd5601b94c3959f206181539aa88a05d",
+      "content": "商品名稱：益菌PRO+綿密肉泥主食罐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$52\n\n標語：綿密肉泥質地 X 專利益菌 X 高含肉量\n\n說明：• 綿密慕斯肉泥口感，專為貓咪舔食習性打造\n• 專利益菌三合一，顧腸道助營養吸收\n• 絕佳適口性，水解技術釋放食物天然香氣\n• 98%高含肉量，且無膠無穀無防腐劑",
+      "contentHash": "3068ef65997d65621236674cdea6a43d21e6462d",
       "sourceUrl": "http://localhost:3000/product/creamypureecat",
       "locale": "zh-TW",
       "tags": [
@@ -460,7 +460,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
       "id": 11,
@@ -469,10 +469,10 @@
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "11",
-      "title": "貓用天然低敏凍乾主食餐(小方粒型)",
-      "summary": "【首購限量優惠】",
-      "content": "商品名稱：貓用天然低敏凍乾主食餐(小方粒型)\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$10\n\n標語：【首購限量優惠】\n\n說明：* 優惠僅限首購，一人僅用一次\n\n備註：直接吃、拌著吃或加水吃，輕鬆升級毛孩主餐！\n• 最符合貓咪生理需求的頂級營養主食\n• 98% 超高含肉量與原肉香氣，挑食貓也超愛\n• 新鮮肉塊低溫乾燥有效殺菌，常溫保存最方便\n• 可適用於自動餵食機\n√高適口性 √生食營養 √餵食多情境 √保存方便\n> 前往「貓咪台灣凍乾主食」\n※ 因應環保，塑膠湯匙請視需求額外加購\n※ 小方粒較為酥脆，其長寬高≒1cm，適用接受≥1cm顆粒的自動餵食機",
-      "contentHash": "29779638dd209f11249c2bcb82c601d45020e704",
+      "title": "天然低敏凍乾主食餐(小方粒型)",
+      "summary": "直接吃、拌著吃或加水吃，輕鬆升級毛孩主餐！",
+      "content": "商品名稱：天然低敏凍乾主食餐(小方粒型)\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$10\n\n標語：直接吃、拌著吃或加水吃，輕鬆升級毛孩主餐！\n\n說明：• 最符合貓咪生理需求的頂級營養主食\n• 98% 超高含肉量與原肉香氣，挑食貓也超愛\n• 新鮮肉塊低溫乾燥有效殺菌，常溫保存最方便\n• 可適用於自動餵食機\n√高適口性 √生食營養 √餵食多情境 √保存方便\n\n備註：※ 小方粒較為酥脆，其長寬高≒1cm，適用接受≥1cm顆粒的自動餵食機",
+      "contentHash": "4bbbbdfba453faf2e6195f1a0fcddb056f9c1da0",
       "sourceUrl": "http://localhost:3000/product/catfreezedriedrawfoodmini-cubes",
       "locale": "zh-TW",
       "tags": [
@@ -489,7 +489,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
       "id": 12,
@@ -499,9 +499,9 @@
       "sourceTable": "products",
       "sourcePk": "12",
       "title": "泌尿健康監測隱血砂",
-      "summary": "貓咪泌尿風險天天有",
-      "content": "商品名稱：泌尿健康監測隱血砂\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$518\n\n標語：貓咪泌尿風險天天有\n\n說明：• 使用簡單，倒入砂盆即可監測泌尿健康\n• 每日健檢，日常及早發現貓咪健康警訊\n• 高靈敏度，10 秒測出眼睛看不到的血尿\n☑ 隱血砂：推薦給平時就在使用豆腐砂的貓咪，CP值高！\n※\n隱血砂將\n年 6\n月起，陸續更新為\n2.0 新配方與全新包裝\n，\n過渡期間收到新舊版均屬正常現象，請安心使用。\n\n備註：※ 因重量限制，單筆購買 4 包以上僅開放宅配。\n※ 運送中可能導致真空漏氣，為正常現象不影響貓砂品質，請放心使用。\n※ 為保護商品，貓砂一箱 (6包) 一律採單箱獨立配送，可能於不同時段配達。",
-      "contentHash": "4bcd4762b0366f5eefa7c3212409134b066abb8d",
+      "summary": "推薦給平時就在使用豆腐砂的貓咪，CP值高！",
+      "content": "商品名稱：泌尿健康監測隱血砂\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$518\n\n標語：推薦給平時就在使用豆腐砂的貓咪，CP值高！\n\n說明：• 使用簡單，倒入砂盆即可監測泌尿健康\n• 每日健檢，日常及早發現貓咪健康警訊\n• 高靈敏度，10 秒測出眼睛看不到的血尿\n\n備註：※ 運送中可能導致真空漏氣，為正常現象不影響貓砂品質，請放心使用。\n※ 為保護商品，貓砂一箱 (6包) 一律採單箱獨立配送，可能於不同時段配達。",
+      "contentHash": "ed895e6b21e682460fb81f30e01b025b4d7e1202",
       "sourceUrl": "http://localhost:3000/product/bloodcatlitter",
       "locale": "zh-TW",
       "tags": [
@@ -518,48 +518,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
       "id": 13,
-      "docKey": "PRODUCT:13",
-      "sourceType": "PRODUCT",
-      "sourceSystem": "db",
-      "sourceTable": "products",
-      "sourcePk": "13",
-      "title": "MOFU 8字貓抓板｜耐抓貓抓板",
-      "summary": "隨處擺，讓貓咪隨處抓！",
-      "content": "商品名稱：MOFU 8字貓抓板｜耐抓貓抓板\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$980\n\n標語：隨處擺，讓貓咪隨處抓！\n\n說明：• Paw-Tex專利技術，貓咪抓起來更舒服\n• 紮實分量感，貓咪爽抓不位移\n• SGS 無毒膠水貼合，亂吃亂咬都不怕\n☑ 小８字產品圖貓咪為 3kg ~ 6kg\n☑ 貓抓時可能產生抓痕，但紙屑不會輕易掉落地板，減少清理負擔\n\n備註：※ 因材積限制，8 字貓抓板僅開放宅配，未開放超商取貨。\n※新舊版貓抓板尺寸不同，原大 8 字尺寸為長84 x 高27 x 寬26cm。新款觸感更佳！\n※貓抓板為手工製作，外層有 1.5~2mm 偏移為正常現象，不影響毛孩使用喔！",
-      "contentHash": "ae539be073eb545e216fba2116523222e12c597a",
-      "sourceUrl": "http://localhost:3000/product/mini-scratcher",
-      "locale": "zh-TW",
-      "tags": [
-        "貓",
-        "生活用品",
-        "商品"
-      ],
-      "metadata": {
-        "petTag": "貓",
-        "createdAt": "2026-07-19T16:00:00.000Z",
-        "categoryTag": "生活用品"
-      },
-      "priority": 90,
-      "retrievalWeight": 1.2,
-      "freshnessScore": 1,
-      "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
-    },
-    {
-      "id": 14,
       "docKey": "PRODUCT:14",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "14",
-      "title": "益生菌消臭花草豆腐砂 (條型) 2.7kg",
+      "title": "益生菌消臭花草砂 (條型) 2.7kg",
       "summary": "天然花草 X 瞬吸凝結 X 低粉塵",
-      "content": "商品名稱：益生菌消臭花草豆腐砂 (條型) 2.7kg\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$498\n\n標語：天然花草 X 瞬吸凝結 X 低粉塵\n\n說明：• 100% 無毒花草磨粉融合豆腐砂原料，0化學0色素\n• 環境益生菌 X 活性碳，消除貓砂臭味\n• 最適原料比，1.5 秒快速凝結、3 秒溶水崩解\n• 五道除塵 X 條狀加壓，低粉塵且少落砂\n\n備註：※ 運送中可能導致真空漏氣，為正常現象不影響貓砂品質，請放心使用\n※ 因重量限制，單筆購買 4 包以上僅開放宅配；為保護商品，貓砂一箱 ( 6包 ) 採獨立配送，可能於不同時段配達\n※ 欲購買12包以上貓砂，可選擇寄倉：除同享多包優惠價，還可免費分次出貨、並加贈汪喵幣",
-      "contentHash": "cca368e2099b76dd17f01c701d5d78d09c7e5c2d",
+      "content": "商品名稱：益生菌消臭花草砂 (條型) 2.7kg\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$498\n\n標語：天然花草 X 瞬吸凝結 X 低粉塵\n\n說明：• 100% 無毒花草磨粉融合豆腐砂原料，0化學0色素\n• 環境益生菌 X 活性碳，消除貓砂臭味\n• 最適原料比，1.5 秒快速凝結、3 秒溶水崩解\n• 五道除塵 X 條狀加壓，低粉塵且少落砂\n\n備註：※ 運送中可能導致真空漏氣，為正常現象不影響貓砂品質，請放心使用\n※ 因重量限制，單筆購買 4 包以上僅開放宅配；為保護商品，貓砂一箱 ( 6包 ) 採獨立配送，可能於不同時段配達\n※ 欲購買12包以上貓砂，可選擇寄倉：除同享多包優惠價，還可免費分次出貨、並加贈汪喵幣",
+      "contentHash": "8b85e6ba40f675936a28babe75cc9f701b53c679",
       "sourceUrl": "http://localhost:3000/product/tofucatlitterflower",
       "locale": "zh-TW",
       "tags": [
@@ -576,19 +547,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 15,
+      "id": 14,
       "docKey": "PRODUCT:15",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "15",
-      "title": "低磷罐｜貓咪無膠低磷低蛋白主食罐",
+      "title": "貓咪無膠低磷低蛋白主食罐",
       "summary": "成貓腎臟保養，從每日主食開始",
-      "content": "商品名稱：低磷罐｜貓咪無膠低磷低蛋白主食罐\n\n寵物類型：貓\n\n商品分類：保健品\n\n價格：NT$49\n\n標語：成貓腎臟保養，從每日主食開始\n\n說明：• 低磷+中低蛋白配方，維持腎臟健康\n• 添加專利益生質，幫助腎臟保健\n• 美味食材×水解技術，肉香濃郁，嗜口性高！\n• 慕斯質地，更好進食與消化吸收\n\n備註：※ 低磷罐平均磷含量約 125~135 mg/100 kcal",
-      "contentHash": "6df46f37ecf3e280ec757c6b9c6bc234bdf1f5d7",
+      "content": "商品名稱：貓咪無膠低磷低蛋白主食罐\n\n寵物類型：貓\n\n商品分類：保健品\n\n價格：NT$49\n\n標語：成貓腎臟保養，從每日主食開始\n\n說明：• 低磷+中低蛋白配方，維持腎臟健康\n• 添加專利益生質，幫助腎臟保健\n• 美味食材×水解技術，肉香濃郁，嗜口性高！\n• 慕斯質地，更好進食與消化吸收\n\n備註：※ 低磷罐平均磷含量約 125~135 mg/100 kcal",
+      "contentHash": "f64cf08712a468b6ffd901e6bc0281d6148b359f",
       "sourceUrl": "http://localhost:3000/product/kidneyhealth",
       "locale": "zh-TW",
       "tags": [
@@ -605,19 +576,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 16,
+      "id": 15,
       "docKey": "PRODUCT:16",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "16",
-      "title": "益生菌消臭豆腐砂（米粒型豆腐砂）2.7kg",
+      "title": "益生菌消臭米粒砂 2.7kg",
       "summary": "好適應 + 少粉塵，一次滿足！",
-      "content": "商品名稱：益生菌消臭豆腐砂（米粒型豆腐砂）2.7kg\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$498\n\n標語：好適應 + 少粉塵，一次滿足！\n\n說明：• 表面特殊加壓，少粉塵、不易粉化\n• 高適腳性「小顆粒」，毛孩無痛轉砂\n• 環境益生菌 + 活性碳，雙效除臭\n• 凝結溶水最適比，好鏟不散塊、可沖馬桶\n√貓砂機適用 √可沖馬桶 √小顆粒輕鬆轉砂\n\n備註：※ 運送中可能導致真空漏氣，為正常現象不影響貓砂品質，請放心使用\n※ 因重量限制，單筆購買 4 包以上僅開放宅配；為保護商品，貓砂一箱 ( 6包 ) 採獨立配送，可能於不同時段配達\n※ 欲購買12包以上貓砂，可選擇寄倉：除同享多包優惠價，還可免費分次出貨、並加贈汪喵幣",
-      "contentHash": "bfe03f80b9160da5912bace7019c7175d5b8bc8c",
+      "content": "商品名稱：益生菌消臭米粒砂 2.7kg\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$498\n\n標語：好適應 + 少粉塵，一次滿足！\n\n說明：• 表面特殊加壓，少粉塵、不易粉化\n• 高適腳性「小顆粒」，毛孩無痛轉砂\n• 環境益生菌 + 活性碳，雙效除臭\n• 凝結溶水最適比，好鏟不散塊、可沖馬桶\n√貓砂機適用 √可沖馬桶 √小顆粒輕鬆轉砂\n\n備註：※ 運送中可能導致真空漏氣，為正常現象不影響貓砂品質，請放心使用\n※ 因重量限制，單筆購買 4 包以上僅開放宅配；為保護商品，貓砂一箱 ( 6包 ) 採獨立配送，可能於不同時段配達\n※ 欲購買12包以上貓砂，可選擇寄倉：除同享多包優惠價，還可免費分次出貨、並加贈汪喵幣",
+      "contentHash": "79b94d321f4c67a658cfed37cb6bb931234e0fc2",
       "sourceUrl": "http://localhost:3000/product/shortcatlitter",
       "locale": "zh-TW",
       "tags": [
@@ -634,10 +605,10 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 17,
+      "id": 16,
       "docKey": "PRODUCT:17",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
@@ -663,10 +634,10 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 18,
+      "id": 17,
       "docKey": "PRODUCT:18",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
@@ -692,10 +663,10 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 19,
+      "id": 18,
       "docKey": "PRODUCT:19",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
@@ -721,19 +692,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 20,
+      "id": 19,
       "docKey": "PRODUCT:20",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "20",
-      "title": "專利 8 字快篩貓砂鏟",
+      "title": "專利8字快篩貓砂鏟",
       "summary": "篩的快！小尿塊一個不漏",
-      "content": "商品名稱：專利 8 字快篩貓砂鏟\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$230\n\n標語：篩的快！小尿塊一個不漏\n\n說明：► 獲得台灣專利、榮獲 2022 德國 iF 設計獎！\n• 專利 8 字孔洞，好篩好過濾\n• 大鏟面設計，鏟砂效率加倍！",
-      "contentHash": "43292c7abb5ef7a5b9569af43c54daeaed7442fa",
+      "content": "商品名稱：專利8字快篩貓砂鏟\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$230\n\n標語：篩的快！小尿塊一個不漏\n\n說明：► 獲得台灣專利、榮獲 2022 德國 iF 設計獎！\n• 專利 8 字孔洞，好篩好過濾\n• 大鏟面設計，鏟砂效率加倍！",
+      "contentHash": "c43334371f884bbc79312b3c65452b2ea679c621",
       "sourceUrl": "http://localhost:3000/product/litterscoop",
       "locale": "zh-TW",
       "tags": [
@@ -750,19 +721,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 21,
+      "id": 20,
       "docKey": "PRODUCT:21",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "21",
-      "title": "S型靜音貓隧道（可折疊）",
+      "title": "S型可折疊靜音貓隧道",
       "summary": "最安靜又有質感的貓隧道！",
-      "content": "商品名稱：S型靜音貓隧道（可折疊）\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$490\n\n標語：最安靜又有質感的貓隧道！\n\n說明：• 麂皮絨材質，半夜暴衝不怕吵\n• S 型設計 + 不透光布料，勾起貓咪探險慾望\n• 可折疊，方便收納",
-      "contentHash": "d60fac712f221b48015d8e17d481c7ef188958d8",
+      "content": "商品名稱：S型可折疊靜音貓隧道\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$490\n\n標語：最安靜又有質感的貓隧道！\n\n說明：• 麂皮絨材質，半夜暴衝不怕吵\n• S 型設計 + 不透光布料，勾起貓咪探險慾望\n• 可折疊，方便收納",
+      "contentHash": "a9915b707492a3057b0e678f0bb52a4300f80988",
       "sourceUrl": "http://localhost:3000/product/cat_tunnel",
       "locale": "zh-TW",
       "tags": [
@@ -779,10 +750,10 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 22,
+      "id": 21,
       "docKey": "PRODUCT:22",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
@@ -808,19 +779,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 23,
+      "id": 22,
       "docKey": "PRODUCT:23",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "23",
-      "title": "汪喵配送箱專屬貓抓板（一組兩片）",
+      "title": "汪喵配送箱專屬貓抓板",
       "summary": "家裡有抓板就 LEVEL UP！",
-      "content": "商品名稱：汪喵配送箱專屬貓抓板（一組兩片）\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$129\n\n標語：家裡有抓板就 LEVEL UP！\n\n說明：• 可剛好放入配送箱底部，非屋型箱也OK！\n• 高強度紙材，耐抓耐重、不易掉屑\n• 無毒膠水 x 安全材質，不怕毛孩誤食\n\n備註：※ 本商品不含屋型配送箱\n※ 數量有限，售完為止！",
-      "contentHash": "2542e028fbc552b59bffcdb999aa88b469f84723",
+      "content": "商品名稱：汪喵配送箱專屬貓抓板\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$129\n\n標語：家裡有抓板就 LEVEL UP！\n\n說明：• 可剛好放入配送箱底部，非屋型箱也OK！\n• 高強度紙材，耐抓耐重、不易掉屑\n• 無毒膠水 x 安全材質，不怕毛孩誤食\n\n備註：※ 本商品不含屋型配送箱\n※ 數量有限，售完為止！",
+      "contentHash": "2345fc28e3654b7561b2ff269d1ae7b0821c8d35",
       "sourceUrl": "http://localhost:3000/product/box-scratcher",
       "locale": "zh-TW",
       "tags": [
@@ -837,19 +808,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 24,
+      "id": 23,
       "docKey": "PRODUCT:24",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "24",
-      "title": "貓咪低脂無膠主食罐 | 80g",
+      "title": "貓咪低脂無膠主食罐 80g",
       "summary": "讓貓咪吃一樣多，但攝取的熱量更少！",
-      "content": "商品名稱：貓咪低脂無膠主食罐 | 80g\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$49\n\n標語：讓貓咪吃一樣多，但攝取的熱量更少！\n\n說明：• 特選低脂食材，打造貓咪低卡餐\n• 真材實料，完全無人工膠類\n\n備註：※ 泥狀固定綜合一箱 24 罐，含清爽雞肉泥、虱目魚鰹魚、元氣草飼牛口味各 8 罐。\n※ 固定組合無法更換，如需不同口味可自行搭配下單。",
-      "contentHash": "0df36704c3261fdbbca67b25cf637361b5bcc092",
+      "content": "商品名稱：貓咪低脂無膠主食罐 80g\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$49\n\n標語：讓貓咪吃一樣多，但攝取的熱量更少！\n\n說明：• 特選低脂食材，打造貓咪低卡餐\n• 真材實料，完全無人工膠類",
+      "contentHash": "ec6e8d4864dd523ba6f597be4c34ba392fcb9f2c",
       "sourceUrl": "http://localhost:3000/product/lowfatcatc",
       "locale": "zh-TW",
       "tags": [
@@ -866,19 +837,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 25,
+      "id": 24,
       "docKey": "PRODUCT:25",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "25",
-      "title": "貓咪費洛蒙 &#8211; 法國 FELIWAY",
+      "title": "法國FELIWAY｜貓咪費洛蒙",
       "summary": "【法國原廠台灣代理公司貨】",
-      "content": "商品名稱：貓咪費洛蒙 &#8211; 法國 FELIWAY\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$880\n\n標語：【法國原廠台灣代理公司貨】\n\n說明：• 適用於因環境緊張引起噴尿標記、亂抓家具、多貓打架、搭車外出、到新環境住宿等情況。\n• 插電組：包含 1 主機 + 1 補充瓶，適用電壓為 110V\n• 補充瓶：僅適用於插電組主機，無法單獨使用\n• 費洛蒙插電組由於適用電壓不同，為台灣限定商品唷！",
-      "contentHash": "af3f0e51e87fff50e29bbfb668c5b4126f86c4d0",
+      "content": "商品名稱：法國FELIWAY｜貓咪費洛蒙\n\n寵物類型：貓\n\n商品分類：生活用品\n\n價格：NT$880\n\n標語：【法國原廠台灣代理公司貨】\n\n說明：• 適用於因環境緊張引起噴尿標記、亂抓家具、多貓打架、搭車外出、到新環境住宿等情況。\n• 插電組：包含 1 主機 + 1 補充瓶，適用電壓為 110V\n• 補充瓶：僅適用於插電組主機，無法單獨使用\n• 費洛蒙插電組由於適用電壓不同，為台灣限定商品唷！",
+      "contentHash": "b86446c557b718ce14d0e2eac48ceb9eee2d2c61",
       "sourceUrl": "http://localhost:3000/product/feliway",
       "locale": "zh-TW",
       "tags": [
@@ -895,19 +866,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 26,
+      "id": 25,
       "docKey": "PRODUCT:27",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "27",
-      "title": "挑嘴罐｜挑嘴貓無膠主食罐",
+      "title": "挑嘴貓無膠主食罐",
       "summary": "鮮甜海味征服挑嘴貓！",
-      "content": "商品名稱：挑嘴罐｜挑嘴貓無膠主食罐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$46\n\n標語：鮮甜海味征服挑嘴貓！\n\n說明：• 專為熱愛海鮮毛孩打造的全營養主食罐\n• 適合長期吃乾乾、轉濕食中、挑嘴的毛孩\n• 98% 超高含肉量；完全無人工膠類\n\n備註：※ 小罐一箱 24 入；大罐一箱 12 入。\n※ 綜合(小)一箱：各口味 8 罐；綜合(大)一箱：各口味 4 罐。\n※ 綜合組皆無法更換，如需不同口味可自行搭配下單。",
-      "contentHash": "06d2f54e0c411856b037359ea7f33c9010998b3b",
+      "content": "商品名稱：挑嘴貓無膠主食罐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$46\n\n標語：鮮甜海味征服挑嘴貓！\n\n說明：• 專為熱愛海鮮毛孩打造的全營養主食罐\n• 適合長期吃乾乾、轉濕食中、挑嘴的毛孩\n• 98% 超高含肉量；完全無人工膠類",
+      "contentHash": "a674218e4d87b28a6983cdc4b2d8d6ba17b4c7c6",
       "sourceUrl": "http://localhost:3000/product/pickycat",
       "locale": "zh-TW",
       "tags": [
@@ -924,19 +895,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 27,
+      "id": 26,
       "docKey": "PRODUCT:28",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "28",
-      "title": "貓咪 95%鮮食主食餐包",
+      "title": "95%鮮食主食餐包",
       "summary": "喜歡大口吃肉的貓貓有福了！",
-      "content": "商品名稱：貓咪 95%鮮食主食餐包\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$95\n\n標語：喜歡大口吃肉的貓貓有福了！\n\n說明：• 新鮮肉塊與肉絲＋五色蔬果熬煮\n• 四種機能保健配方，讓貓咪吃進美味和營養\n\n備註：※ 固定組合無法更換，如需不同口味可自行搭配下單。\n※ 商品圖片僅供參考，請以實物為準。\n※ 鮭魚佐紅石榴、鴨肉佐朝鮮薊因原物料短缺將暫時缺貨，造成不便敬請見諒。\n※ 本產品以整塊原肉製作，保留自然肉香與咬感。製程中已細心挑除可見骨碎，但仍可能偶有細小骨碎殘留，建議毛拔麻於餵食時稍加留意。若毛拔麻對產品有任何疑問，歡迎聯繫汪喵客服。",
-      "contentHash": "3d55561a30960f6cbb1b1a08006f1f0adc70c1d0",
+      "content": "商品名稱：95%鮮食主食餐包\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$95\n\n標語：喜歡大口吃肉的貓貓有福了！\n\n說明：• 新鮮肉塊與肉絲＋五色蔬果熬煮\n• 四種機能保健配方，讓貓咪吃進美味和營養\n\n備註：※ 固定組合無法更換，如需不同口味可自行搭配下單。\n※ 商品圖片僅供參考，請以實物為準。\n※ 鮭魚佐紅石榴、鴨肉佐朝鮮薊因原物料短缺將暫時缺貨，造成不便敬請見諒。\n※ 本產品以整塊原肉製作，保留自然肉香與咬感。製程中已細心挑除可見骨碎，但仍可能偶有細小骨碎殘留，建議毛拔麻於餵食時稍加留意。若毛拔麻對產品有任何疑問，歡迎聯繫汪喵客服。",
+      "contentHash": "7af8ec81becb88b1a97910b14f4cfdc456b2b3b2",
       "sourceUrl": "http://localhost:3000/product/catfreshfood",
       "locale": "zh-TW",
       "tags": [
@@ -953,19 +924,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 28,
+      "id": 27,
       "docKey": "PRODUCT:29",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "29",
-      "title": "肉蓉罐｜貓咪無膠肉蓉主食罐",
+      "title": "貓咪無膠肉蓉主食罐",
       "summary": "愛咬咬貓最愛！中低脂肪 x 無內臟配方",
-      "content": "商品名稱：肉蓉罐｜貓咪無膠肉蓉主食罐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$48\n\n標語：愛咬咬貓最愛！中低脂肪 x 無內臟配方\n\n說明：• 全新肉蓉狀主食湯罐！\n• 推薦給愛咬咬、不愛肉泥主食罐毛孩\n• 98% 超高含肉量；完全無人工膠類\n\n備註：※ 小罐一箱 24 入；大罐一箱 12 入。\n※ 綜合一箱：(小)\n各 6 罐\n；(\n大) 各 3 罐。\n※ 固定組合無法更換，如需不同口味可自行搭配下單。",
-      "contentHash": "1a4f2b25a1e50a68f695a3dd064c36a7349f1218",
+      "content": "商品名稱：貓咪無膠肉蓉主食罐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$48\n\n標語：愛咬咬貓最愛！中低脂肪 x 無內臟配方\n\n說明：• 全新肉蓉狀主食湯罐！\n• 推薦給愛咬咬、不愛肉泥主食罐毛孩\n• 98% 超高含肉量；完全無人工膠類",
+      "contentHash": "4faf42abeed3a6dd73a7f3288783536fa90a5ab4",
       "sourceUrl": "http://localhost:3000/product/catcans-ground-meat",
       "locale": "zh-TW",
       "tags": [
@@ -982,19 +953,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 29,
+      "id": 28,
       "docKey": "PRODUCT:30",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "30",
-      "title": "銀養罐｜熟齡貓無膠銀養主食罐",
+      "title": "熟齡貓無膠銀養主食罐",
       "summary": "幫助 7~9 歲以上熟齡貓營養補充",
-      "content": "商品名稱：銀養罐｜熟齡貓無膠銀養主食罐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$48\n\n標語：幫助 7~9 歲以上熟齡貓營養補充\n\n說明：• 老貓專屬營養設計，關節、腦部及心血管營養補充\n• 慕斯質地＋水解蛋白技術，好舔食與消化吸收\n• 98% 含肉量；完全無人工膠類\n\n備註：※ 熟齡貓無膠銀養主食罐 各口味均為80g (小罐)\n※ 綜合一箱：一箱 24 罐，含各口味 8 罐。\n※ 綜合組皆無法更換，如需不同口味可自行搭配下單。\n※ 銀養罐平均磷含量約 130~140 mg/100 kcal",
-      "contentHash": "6d138caa7167315a2171b7114f5f2d42f5fa5942",
+      "content": "商品名稱：熟齡貓無膠銀養主食罐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$48\n\n標語：幫助 7~9 歲以上熟齡貓營養補充\n\n說明：• 老貓專屬營養設計，關節、腦部及心血管營養補充\n• 慕斯質地＋水解蛋白技術，好舔食與消化吸收\n• 98% 含肉量；完全無人工膠類\n\n備註：※ 各口味均為80g (小罐)\n※ 銀養罐平均磷含量約 130~140 mg/100 kcal",
+      "contentHash": "20a59554ed91bdc7ca1b993b6a4245b9d2c391da",
       "sourceUrl": "http://localhost:3000/product/oldcatcan",
       "locale": "zh-TW",
       "tags": [
@@ -1011,10 +982,10 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 30,
+      "id": 29,
       "docKey": "PRODUCT:31",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
@@ -1022,8 +993,8 @@
       "sourcePk": "31",
       "title": "頂級木天蓼/蟲癭果棒棒",
       "summary": "野生天然無農藥，紓壓潔牙好放鬆！",
-      "content": "商品名稱：頂級木天蓼/蟲癭果棒棒\n\n寵物類型：貓\n\n商品分類：零食/點心\n\n價格：NT$99\n\n標語：野生天然無農藥，紓壓潔牙好放鬆！\n\n說明：• 木天蓼直徑約 0.5cm～0.8cm\n• 蟲癭果直徑約 1cm～2cm，\n(因蟲癭果為天然植物，每顆果實尺寸略有不同為正常現象)\n\n備註：※ 大小管主要差異為「克數」不同喔！\n📌\n下單蟲癭果即贈玩具球1顆，建議搭配使用玩耍更安全！",
-      "contentHash": "7322050d9096a5ef28aabb9a99633e89906296c6",
+      "content": "商品名稱：頂級木天蓼/蟲癭果棒棒\n\n寵物類型：貓\n\n商品分類：零食/點心\n\n價格：NT$99\n\n標語：野生天然無農藥，紓壓潔牙好放鬆！\n\n說明：• 木天蓼直徑約 0.5cm~0.8cm\n• 蟲癭果直徑約 1cm~2cm\n\n備註：※ 因蟲癭果為天然植物，每顆果實尺寸略有不同為正常現象\n📌下單蟲癭果即贈玩具球1顆，建議搭配使用玩耍更安全！",
+      "contentHash": "9c11ea1dfae54e30609e46c032f898ef32bfc2df",
       "sourceUrl": "http://localhost:3000/product/catsprayseeds",
       "locale": "zh-TW",
       "tags": [
@@ -1040,19 +1011,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 31,
+      "id": 30,
       "docKey": "PRODUCT:32",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "32",
-      "title": "營養罐｜幼母貓無膠營養主食罐",
+      "title": "幼母貓無膠營養主食罐",
       "summary": "離乳幼貓的第一罐安心主食，從這開始！",
-      "content": "商品名稱：營養罐｜幼母貓無膠營養主食罐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$48\n\n標語：離乳幼貓的第一罐安心主食，從這開始！\n\n說明：• 專屬營養配方，維持免疫力\n• 添加益生元，穩定腸道健康\n• 增量 Omega-3 與 DHA，幫助腦部發育\n• 慕斯質地，好舔食、更容易消化吸收\n\n備註：※ 小罐一箱 24 入；大罐一箱 12 入。\n※ 綜合一箱：(小) 4 款口味各 6 罐；(大) 2 款口味各 6 罐。\n※ 綜合組皆無法更換，如需不同口味可自行搭配下單。",
-      "contentHash": "9525f54cf5dd6242dff6c00debf151dcbd483e4d",
+      "content": "商品名稱：幼母貓無膠營養主食罐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$48\n\n標語：離乳幼貓的第一罐安心主食，從這開始！\n\n說明：• 專屬營養配方，維持免疫力\n• 添加益生元，穩定腸道健康\n• 增量 Omega-3 與 DHA，幫助腦部發育\n• 慕斯質地，好舔食、更容易消化吸收\n\n備註：※ 小罐一箱 24 入；大罐一箱 12 入。\n※ 綜合一箱：(小) 4 款口味各 6 罐；(大) 2 款口味各 6 罐。\n※ 綜合組皆無法更換，如需不同口味可自行搭配下單。",
+      "contentHash": "a3c4e3d7da20a759ff20e7abf5e5649aa2a78d16",
       "sourceUrl": "http://localhost:3000/product/momkittycat",
       "locale": "zh-TW",
       "tags": [
@@ -1069,19 +1040,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 32,
+      "id": 31,
       "docKey": "PRODUCT:33",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "33",
-      "title": "100% Pure 純離胺酸｜貓咪離胺酸",
+      "title": "100% Pure 純離胺酸",
       "summary": "要補就選最純的，100% 純離胺酸無多餘添加",
-      "content": "商品名稱：100% Pure 純離胺酸｜貓咪離胺酸\n\n寵物類型：貓\n\n商品分類：保健品\n\n價格：NT$320\n\n標語：要補就選最純的，100% 純離胺酸無多餘添加\n\n說明：維持貓咪眼鼻正常分泌，舒緩常見皰疹病毒引發不適\n• 品質安心，100% 日本製藥級大廠原料\n• 源自天然食材的左旋離胺酸，貓咪必需胺基酸\n• 單一成分，不含額外添加物",
-      "contentHash": "26e7487eed2b72689b850856a091058bf039357d",
+      "content": "商品名稱：100% Pure 純離胺酸\n\n寵物類型：貓\n\n商品分類：保健品\n\n價格：NT$320\n\n標語：要補就選最純的，100% 純離胺酸無多餘添加\n\n說明：維持貓咪眼鼻正常分泌，舒緩常見皰疹病毒引發不適\n• 品質安心，100% 日本製藥級大廠原料\n• 源自天然食材的左旋離胺酸，貓咪必需胺基酸\n• 單一成分，不含額外添加物",
+      "contentHash": "115714f1b1720f6ad9d05cf42281c1c7de1750ed",
       "sourceUrl": "http://localhost:3000/product/l-lysine",
       "locale": "zh-TW",
       "tags": [
@@ -1098,19 +1069,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 33,
+      "id": 32,
       "docKey": "PRODUCT:34",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "34",
-      "title": "貓主食罐｜鮮肉罐｜貓咪98%無膠鮮肉主食罐",
+      "title": "貓咪98%無膠鮮肉主食罐",
       "summary": "熱銷經典：98% 超高含肉量補足貓咪營養",
-      "content": "商品名稱：貓主食罐｜鮮肉罐｜貓咪98%無膠鮮肉主食罐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$46\n\n標語：熱銷經典：98% 超高含肉量補足貓咪營養\n\n說明：• 98% 鮮肉及內臟＋2% 必需營養素\n• 鮮肉 X 高湯，高嗜口性營養主食\n• 無膠無穀無防腐劑，吃得美味又健康\n\n備註：※ 若購買3箱以上罐頭可選擇寄倉",
-      "contentHash": "0c35851abe64fa3e96590222d718ce8294bb72c5",
+      "content": "商品名稱：貓咪98%無膠鮮肉主食罐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$46\n\n標語：熱銷經典：98% 超高含肉量補足貓咪營養\n\n說明：• 98% 鮮肉及內臟 + 2% 必需營養素\n• 鮮肉 X 高湯，高嗜口性營養主食\n• 無膠無穀無防腐劑，吃得美味又健康\n\n備註：※ 若購買50罐以上罐頭請洽客服聊天",
+      "contentHash": "29fae4ff01e79a58b22db73eb8d230c26a628189",
       "sourceUrl": "http://localhost:3000/product/fantasticcat",
       "locale": "zh-TW",
       "tags": [
@@ -1127,19 +1098,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 34,
+      "id": 33,
       "docKey": "PRODUCT:35",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "35",
-      "title": "貓咪凍乾主食餐（新包裝）",
+      "title": "貓咪凍乾主食餐",
       "summary": "直接吃、拌著吃或加水吃，輕鬆升級毛孩主餐！",
-      "content": "商品名稱：貓咪凍乾主食餐（新包裝）\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$10\n\n標語：直接吃、拌著吃或加水吃，輕鬆升級毛孩主餐！\n\n說明：• 條狀、鬆狀、小方粒多種質地選擇\n• 98% 超高含肉量與原肉香氣，挑食貓也超愛\n• 新鮮肉塊低溫乾燥有效殺菌，常溫保存最方便\n√高適口性 √餵食多情境 √保存方便\n> 前往「貓咪凍乾主食 ( 小方粒型 )」\n\n備註：※ 因應環保，湯匙請視需求額外加購\n※ 因應飼主反饋，自 2025/11 起，已針對產品進行質地優化，使其更成形而不易碎，但配方皆與原本相同 ( 新版凍乾主食已陸續出貨，相較原版會需要花費較長時間復水，建議毛拔麻可先將其壓碎以提升復水還原效率 )",
-      "contentHash": "6672822432e329cf27c7d40e263ee18afeb8723e",
+      "content": "商品名稱：貓咪凍乾主食餐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$10\n\n標語：直接吃、拌著吃或加水吃，輕鬆升級毛孩主餐！\n\n說明：• 條狀、鬆狀、小方粒多種質地選擇\n• 98% 超高含肉量與原肉香氣，挑食貓也超愛\n• 新鮮肉塊低溫乾燥有效殺菌，常溫保存最方便\n√高適口性 √餵食多情境 √保存方便\n> 前往「貓咪凍乾主食 ( 小方粒型 )」\n\n備註：※ 因應環保，湯匙請視需求額外加購\n※ 因應飼主反饋，自 2025/11 起，已針對產品進行質地優化，使其更成形而不易碎，但配方皆與原本相同 ( 新版凍乾主食已陸續出貨，相較原版會需要花費較長時間復水，建議毛拔麻可先將其壓碎以提升復水還原效率 )",
+      "contentHash": "7ac4255ab281d4e2997ca4a52da2d9a4b6b432fa",
       "sourceUrl": "http://localhost:3000/product/catfreezedriedrawfood",
       "locale": "zh-TW",
       "tags": [
@@ -1156,19 +1127,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 35,
+      "id": 34,
       "docKey": "PRODUCT:36",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "36",
-      "title": "MOFU沙西米｜貓咪生食餐",
+      "title": "汪喵沙西米｜貓咪生食餐",
       "summary": "最符合貓咪生理需求的飲食",
-      "content": "商品名稱：MOFU沙西米｜貓咪生食餐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$60\n\n標語：最符合貓咪生理需求的飲食\n\n說明：• 汪喵生食皆有經過 HPP 高壓滅菌處理\n• 依據最嚴格的國家生食標準設計，每批自主送檢\n• 檢驗報告透明公開，安心享受生食！\n\n備註：※ 綜合８入組：300g 安心雞*2、幼母貓/無骨雞*1、櫻桃鴨*1、澳洲羊*1、草飼牛*1、放牧鹿*1、羅曼鵝*1。\n※ 因超商取貨重量限制，冷凍包裹總重量需 ≦ 9.5公斤（約大包27包/小包65包），如超過請改用\n宅配\n方式配送。\n※ 生食經由冷凍保存，有些微結霜是正常的哦！",
-      "contentHash": "484b291ebe8e6569269a2497c9aecddeeecc67be",
+      "content": "商品名稱：汪喵沙西米｜貓咪生食餐\n\n寵物類型：貓\n\n商品分類：主食\n\n價格：NT$60\n\n標語：最符合貓咪生理需求的飲食\n\n說明：• 汪喵生食皆有經過 HPP 高壓滅菌處理\n• 依據最嚴格的國家生食標準設計，每批自主送檢\n• 檢驗報告透明公開，安心享受生食！\n\n備註：※ 綜合８入組：300g 安心雞*2、幼母貓/無骨雞*1、櫻桃鴨*1、澳洲羊*1、草飼牛*1、放牧鹿*1、羅曼鵝*1。\n※ 因超商取貨重量限制，冷凍包裹總重量需 ≦ 9.5公斤（約大包27包/小包65包），如超過請改用\n宅配\n方式配送。\n※ 生食經由冷凍保存，有些微結霜是正常的哦！",
+      "contentHash": "df1731182b438a0bfd6c06ce0dd03bfb37639afd",
       "sourceUrl": "http://localhost:3000/product/cathpprawfood",
       "locale": "zh-TW",
       "tags": [
@@ -1185,10 +1156,10 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 36,
+      "id": 35,
       "docKey": "PRODUCT:37",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
@@ -1214,10 +1185,10 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 37,
+      "id": 36,
       "docKey": "PRODUCT:38",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
@@ -1243,19 +1214,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 38,
+      "id": 37,
       "docKey": "PRODUCT:41",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "41",
-      "title": "犬用 慢烘鮮食蔬肉糧",
+      "title": "犬用慢烘鮮食蔬肉糧",
       "summary": "最接近鮮食的天然慢烘糧！",
-      "content": "商品名稱：犬用 慢烘鮮食蔬肉糧\n\n寵物類型：狗\n\n商品分類：主食\n\n價格：NT$229\n\n標語：最接近鮮食的天然慢烘糧！\n\n說明：• 慢烘原肉糧+凍乾蔬肉粒，肉菜機能一次滿足！\n• 85%新鮮原肉+12%蔬果食材+3%機能保健\n• 無人工添加物，開袋就是食材天然鮮香\n\n備註：※ 原肉糧與蔬肉粒顏色因未添加人工色素，易受季節食材及製程批次影響，深淺請以實物為準\n※一磅(lb)約等於454克\n【咬咬零食新上市！】",
-      "contentHash": "e87815802f19f209c0043ca10bc1ad7713cf89cb",
+      "content": "商品名稱：犬用慢烘鮮食蔬肉糧\n\n寵物類型：狗\n\n商品分類：主食\n\n價格：NT$229\n\n標語：最接近鮮食的天然慢烘糧！\n\n說明：• 慢烘原肉糧 + 凍乾蔬肉粒，肉菜機能一次滿足！\n• 85%新鮮原肉 + 12%蔬果食材 + 3%機能保健\n• 無人工添加物，開袋就是食材天然鮮香\n\n備註：※ 原肉糧與蔬肉粒顏色因未添加人工色素，易受季節食材及製程批次影響，深淺請以實物為準\n※一磅(lb)約等於454克",
+      "contentHash": "000eaedfc6450325200c48307c2048b4370557ff",
       "sourceUrl": "http://localhost:3000/product/dog_freshfood",
       "locale": "zh-TW",
       "tags": [
@@ -1272,19 +1243,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 39,
+      "id": 38,
       "docKey": "PRODUCT:42",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "42",
       "title": "玩具總動員系列 罐罐專用湯匙-三入組",
-      "summary": "汪喵雙11",
-      "content": "商品名稱：玩具總動員系列 罐罐專用湯匙-三入組\n\n寵物類型：狗\n\n商品分類：生活用品\n\n價格：NT$327\n\n標語：汪喵雙11\n\n說明：🎁 全館汪喵幣 3 倍送！\n🎁 直購享好禮 7 重送！\n滿 $799 送限量宇宙屋型箱\n滿 $1,600 折\n滿 $3,000 折\n滿 $6,000 折\n滿 $8,000 折\n滿 $12,000 折\n* 直購限定，寄倉服務另有獨立優惠\n* 不可累折，最多使用單一門檻折扣\n主食罐\n｜\n保健品\n｜\n貓砂\n｜\n凍乾主食\n｜\n迪士尼\n\n備註：3款超人氣角色，閃亮登場！\n► 玩具總動員超人氣款！\n• 304不鏽鋼材質，耐用、好清洗\n• 經SGS食品器具檢驗，開心吃更放心\n• 小匙面超好挖，把罐罐挖乾淨！\n☑ Disney 迪士尼正版授權\n> 前往「迪士尼專區」",
-      "contentHash": "c69bd877ae39e16d6301d6523e3bc9c4a297e2cf",
+      "summary": "Disney 迪士尼正版授權!",
+      "content": "商品名稱：玩具總動員系列 罐罐專用湯匙-三入組\n\n寵物類型：狗\n\n商品分類：生活用品\n\n價格：NT$327\n\n標語：Disney 迪士尼正版授權!\n\n說明：3款超人氣角色，閃亮登場！\n► 玩具總動員超人氣款！\n• 304不鏽鋼材質，耐用、好清洗\n• 經SGS食品器具檢驗，開心吃更放心\n• 小匙面超好挖，把罐罐挖乾淨！",
+      "contentHash": "e6e7254b16abb100abb9f3df536c22ff478b1c39",
       "sourceUrl": "http://localhost:3000/product/spoonset",
       "locale": "zh-TW",
       "tags": [
@@ -1301,19 +1272,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 40,
+      "id": 39,
       "docKey": "PRODUCT:43",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "43",
-      "title": "MOFU 減壓胸背帶",
+      "title": "MOFU減壓胸背帶",
       "summary": "前胸彈性設計 毛孩暴衝不壓氣管",
-      "content": "商品名稱：MOFU 減壓胸背帶\n\n寵物類型：狗\n\n商品分類：牽引用品\n\n價格：NT$1380\n\n標語：前胸彈性設計 毛孩暴衝不壓氣管\n\n說明：• 獨特雙層結構，防止毛孩輕易掙脫\n• 前胸Y字＋彈性面料，毛孩暴衝不壓氣管\n• 快速好穿脫，簡單３步驟，輕鬆出門\n►\n\n備註：※ 產品頁的黃金獵犬－飯糰為３５公斤，穿Ｌ號\n※ 產品頁的柴犬－波尼為１３公斤，穿Ｍ號",
-      "contentHash": "eb024283cb602a1e915220c33c215e0111bfe66d",
+      "content": "商品名稱：MOFU減壓胸背帶\n\n寵物類型：狗\n\n商品分類：牽引用品\n\n價格：NT$1380\n\n標語：前胸彈性設計 毛孩暴衝不壓氣管\n\n說明：• 獨特雙層結構，防止毛孩輕易掙脫\n• 前胸Y字＋彈性面料，毛孩暴衝不壓氣管\n• 快速好穿脫，簡單３步驟，輕鬆出門\n►\n\n備註：※ 產品頁的黃金獵犬－飯糰為３５公斤，穿Ｌ號\n※ 產品頁的柴犬－波尼為１３公斤，穿Ｍ號",
+      "contentHash": "966f592ebbdeb1c1e0bb5784d8470d6ba82899f3",
       "sourceUrl": "http://localhost:3000/product/dogharness",
       "locale": "zh-TW",
       "tags": [
@@ -1330,19 +1301,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 41,
+      "id": 40,
       "docKey": "PRODUCT:44",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "44",
-      "title": "MOFU 多功能緩衝牽繩",
+      "title": "MOFU多功能緩衝牽繩",
       "summary": "兩段式緩衝設計，降低毛孩暴衝拉力！",
-      "content": "商品名稱：MOFU 多功能緩衝牽繩\n\n寵物類型：狗\n\n商品分類：牽引用品\n\n價格：NT$1020\n\n標語：兩段式緩衝設計，降低毛孩暴衝拉力！\n\n說明：► 榮獲 2025 德國 iF 設計獎！\n• 兩段式緩衝，不怕被毛孩瞬間拉走\n• 多場景適用，可短牽、長牽、斜背\n• 親膚不磨手，安全又舒適\n►",
-      "contentHash": "ebe0024ddebb05020e078f67aa1bea06c28581ea",
+      "content": "商品名稱：MOFU多功能緩衝牽繩\n\n寵物類型：狗\n\n商品分類：牽引用品\n\n價格：NT$1020\n\n標語：兩段式緩衝設計，降低毛孩暴衝拉力！\n\n說明：► 榮獲 2025 德國 iF 設計獎！\n• 兩段式緩衝，不怕被毛孩瞬間拉走\n• 多場景適用，可短牽、長牽、斜背\n• 親膚不磨手，安全又舒適\n►",
+      "contentHash": "4c450c1b0b91aac5fd071c5267b7f3084bbb89c2",
       "sourceUrl": "http://localhost:3000/product/dogleash",
       "locale": "zh-TW",
       "tags": [
@@ -1359,19 +1330,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 42,
+      "id": 41,
       "docKey": "PRODUCT:48",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "48",
-      "title": "狗狗 90%鮮肉主食餐包",
+      "title": "90%鮮肉主食餐包",
       "summary": "狗狗就該大口吃肉！",
-      "content": "商品名稱：狗狗 90%鮮肉主食餐包\n\n寵物類型：狗\n\n商品分類：主食\n\n價格：NT$85\n\n標語：狗狗就該大口吃肉！\n\n說明：• 90%鮮肉ｘ四色蔬果，天然機能食補\n• 鮮食免加熱，開封即食超方便！\n• 依據 AAFCO/NRC 主食營養標準設計\n\n備註：※ 綜合 12 包組：含 4 口味 3 包。\n※ 固定組合無法更換，如需不同口味可自行搭配下單。\n※ 商品圖片僅供參考，請以實物為準。\n※ 本產品以整塊原肉製作，保留豐富口感與營養。製程中偶有細小骨碎殘留，建議毛拔麻於餵食時稍加留意。若毛拔麻對產品有任何疑問，歡迎聯繫汪喵客服。\n【咬咬零食新上市！】",
-      "contentHash": "01590ffea27baad237991c6c9522126de13ded72",
+      "content": "商品名稱：90%鮮肉主食餐包\n\n寵物類型：狗\n\n商品分類：主食\n\n價格：NT$85\n\n標語：狗狗就該大口吃肉！\n\n說明：• 90%鮮肉ｘ四色蔬果，天然機能食補\n• 鮮食免加熱，開封即食超方便！\n• 依據 AAFCO/NRC 主食營養標準設計\n\n備註：※ 綜合 12 包組：含 4 口味 3 包。\n※ 固定組合無法更換，如需不同口味可自行搭配下單。\n※ 商品圖片僅供參考，請以實物為準。\n※ 本產品以整塊原肉製作，保留豐富口感與營養。製程中偶有細小骨碎殘留，建議毛拔麻於餵食時稍加留意。若毛拔麻對產品有任何疑問，歡迎聯繫汪喵客服。\n【咬咬零食新上市！】",
+      "contentHash": "cec54e5a03851e76aac8b1c1e515df8014874de5",
       "sourceUrl": "http://localhost:3000/product/dogfreshfood",
       "locale": "zh-TW",
       "tags": [
@@ -1388,19 +1359,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:11.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 43,
+      "id": 42,
       "docKey": "PRODUCT:49",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "49",
-      "title": "銀養罐｜熟齡犬無膠銀養主食罐",
+      "title": "熟齡犬無膠銀養主食罐",
       "summary": "滋補食材入罐，食慾體態都健康！",
-      "content": "商品名稱：銀養罐｜熟齡犬無膠銀養主食罐\n\n寵物類型：狗\n\n商品分類：主食\n\n價格：NT$48\n\n標語：滋補食材入罐，食慾體態都健康！\n\n說明：• 慕斯質地易舔食，好消化吸收\n• 低鎂低鈉配方，保健心血管與腎臟\n• 95％超高肉含量，日常補充優質蛋白質\n• 完全無人工膠類、防腐劑等不良添加物\n\n備註：※ 小罐一箱 24 入；大罐一箱 12 入。\n※ 綜合一箱：(小) 三口味各8罐；(大) 三口味各 4 罐。\n※ 綜合一箱內含干貝鮭魚、滋補羊肉、元氣牛肉三個口味。\n【咬咬零食新上市！】",
-      "contentHash": "6864e8dd2bc0b56d9ba38feeaed317908241f102",
+      "content": "商品名稱：熟齡犬無膠銀養主食罐\n\n寵物類型：狗\n\n商品分類：主食\n\n價格：NT$48\n\n標語：滋補食材入罐，食慾體態都健康！\n\n說明：• 慕斯質地易舔食，好消化吸收\n• 低鎂低鈉配方，保健心血管與腎臟\n• 95％超高肉含量，日常補充優質蛋白質\n• 完全無人工膠類、防腐劑等不良添加物\n\n備註：※ 小罐一箱 24 入；大罐一箱 12 入。\n※ 綜合一箱：(小) 三口味各8罐；(大) 三口味各 4 罐。\n※ 綜合一箱內含干貝鮭魚、滋補羊肉、元氣牛肉三個口味。\n【咬咬零食新上市！】",
+      "contentHash": "189e06d143fd3231ce87149e60ec03d83be2a44f",
       "sourceUrl": "http://localhost:3000/product/seniordogcan",
       "locale": "zh-TW",
       "tags": [
@@ -1417,19 +1388,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:12.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 44,
+      "id": 43,
       "docKey": "PRODUCT:50",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "50",
-      "title": "營養罐｜幼母犬無膠營養主食罐",
+      "title": "幼母犬無膠營養主食罐",
       "summary": "適合幼犬、哺乳孕犬、術後犬作營養補充",
-      "content": "商品名稱：營養罐｜幼母犬無膠營養主食罐\n\n寵物類型：狗\n\n商品分類：主食\n\n價格：NT$48\n\n標語：適合幼犬、哺乳孕犬、術後犬作營養補充\n\n說明：• 專屬營養添加！幫助維持骨骼＆免疫健康\n• 慕斯質地易舔食，好進食與消化吸收\n• 亦適合術後修復、體質較弱犬作營養補充\n\n備註：※ 小罐一箱 24 入；大罐一箱 12 入。\n※ 綜合一箱：(小) 各口味 12 罐；(大) 各口味 6 罐。\n※ 6 罐綜合組：各口味 3 罐。\n※ 綜合組皆無法更換，如需不同口味可自行搭配下單。\n【咬咬零食新上市！】",
-      "contentHash": "44b75e8e04ae70332590026b3617efcc0ef8ea4a",
+      "content": "商品名稱：幼母犬無膠營養主食罐\n\n寵物類型：狗\n\n商品分類：主食\n\n價格：NT$48\n\n標語：適合幼犬、哺乳孕犬、術後犬作營養補充\n\n說明：• 專屬營養添加！幫助維持骨骼＆免疫健康\n• 慕斯質地易舔食，好進食與消化吸收\n• 亦適合術後修復、體質較弱犬作營養補充\n\n備註：※ 小罐一箱 24 入；大罐一箱 12 入。\n※ 綜合一箱：(小) 各口味 12 罐；(大) 各口味 6 罐。\n※ 6 罐綜合組：各口味 3 罐。\n※ 綜合組皆無法更換，如需不同口味可自行搭配下單。\n【咬咬零食新上市！】",
+      "contentHash": "a3afbb2c29786a175531ff4fee9acadca55f3ce3",
       "sourceUrl": "http://localhost:3000/product/puppycan",
       "locale": "zh-TW",
       "tags": [
@@ -1446,19 +1417,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:12.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 45,
+      "id": 44,
       "docKey": "PRODUCT:52",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "52",
-      "title": "鮮肉罐｜狗狗無膠鮮肉主食罐",
+      "title": "狗狗無膠鮮肉主食罐",
       "summary": "高含肉量+高適口性！",
-      "content": "商品名稱：鮮肉罐｜狗狗無膠鮮肉主食罐\n\n寵物類型：狗\n\n商品分類：主食\n\n價格：NT$46\n\n標語：高含肉量+高適口性！\n\n說明：• 95% 鮮肉及內臟＋5% 植物與必需營養素\n• 嚴選人用頂級食材、產地溯源\n• 完全無人工膠類、防腐劑等不良添加物\n\n備註：※ 小罐一箱 24 入；大罐一箱 12 入。\n※ 綜合一箱：(小) 各口味 6 罐；(大) 各口味 3 罐。\n※ 4 罐綜合組：各口味 1 罐。\n※ 綜合組皆無法更換，如需不同口味可自行搭配下單。\n【咬咬零食新上市！】",
-      "contentHash": "d6b16e9c8416c552b34f0970cda3afed7a06ec35",
+      "content": "商品名稱：狗狗無膠鮮肉主食罐\n\n寵物類型：狗\n\n商品分類：主食\n\n價格：NT$46\n\n標語：高含肉量+高適口性！\n\n說明：• 95% 鮮肉及內臟＋5% 植物與必需營養素\n• 嚴選人用頂級食材、產地溯源\n• 完全無人工膠類、防腐劑等不良添加物",
+      "contentHash": "16ea893e1dc7ac420eef9216d127f5331c24a7ef",
       "sourceUrl": "http://localhost:3000/product/fantasticdog",
       "locale": "zh-TW",
       "tags": [
@@ -1475,19 +1446,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:12.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 46,
+      "id": 45,
       "docKey": "PRODUCT:53",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "53",
-      "title": "狗狗凍乾主食餐（新包裝）",
-      "summary": "【首購限量優惠】",
-      "content": "商品名稱：狗狗凍乾主食餐（新包裝）\n\n寵物類型：狗\n\n商品分類：主食\n\n價格：NT$10\n\n標語：【首購限量優惠】\n\n說明：* 優惠僅限首購，一人僅用一次\n\n備註：直接吃、拌著吃或加水吃，輕鬆升級毛孩主餐！\n• 最符合狗狗生理需求的頂級營養主食\n• 95% 超高含肉量與原肉香氣，挑嘴毛孩也超愛\n• 新鮮肉塊低溫乾燥有效殺菌，常溫保存最方便\n√高適口性 √生食營養 √餵食多情境 √保存方便\n※ 因應環保，塑膠湯匙請視需求額外加購\n※ 凍乾主食以高比例鮮肉製成，無添加額外澱粉，因此產品質地較為鬆軟，若開袋有部分鬆狀屬正常現象\n※ 因應飼主反饋，自 2025/11 起，已針對產品進行質地優化，使其更成形而不易碎，但配方皆與原本相同 ( 新版凍乾主食已陸續出貨，相較原版會需要花費較長時間復水，建議毛拔麻可先將其壓碎以提升復水還原效率 )\n【咬咬零食新上市！】",
-      "contentHash": "55449bd80fbfa4d07fd38cd88a530e97bd27a2f6",
+      "title": "狗狗凍乾主食餐",
+      "summary": "直接吃、拌著吃或加水吃，輕鬆升級毛孩主餐！",
+      "content": "商品名稱：狗狗凍乾主食餐\n\n寵物類型：狗\n\n商品分類：主食\n\n價格：NT$10\n\n標語：直接吃、拌著吃或加水吃，輕鬆升級毛孩主餐！\n\n說明：• 最符合狗狗生理需求的頂級營養主食\n• 95% 超高含肉量與原肉香氣，挑嘴毛孩也超愛\n• 新鮮肉塊低溫乾燥有效殺菌，常溫保存最方便\n√高適口性 √生食營養 √餵食多情境 √保存方便\n\n備註：※ 凍乾主食以高比例鮮肉製成，無添加額外澱粉，因此產品質地較為鬆軟，若開袋有部分鬆狀屬正常現象\n※ 本產品需要花費較長時間復水，建議毛拔麻可先將其壓碎以提升復水還原效率",
+      "contentHash": "e05c8abc8661a7482ef862ca9873355019c04aab",
       "sourceUrl": "http://localhost:3000/product/dogfreezedriedrawfood",
       "locale": "zh-TW",
       "tags": [
@@ -1504,19 +1475,19 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:12.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 47,
+      "id": 46,
       "docKey": "PRODUCT:54",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
       "sourceTable": "products",
       "sourcePk": "54",
-      "title": "MOFU沙西米｜狗狗生食 生肉餐（主食）",
+      "title": "汪喵沙西米｜狗狗生肉主食餐",
       "summary": "低敏生食餐，更好消化吸收",
-      "content": "商品名稱：MOFU沙西米｜狗狗生食 生肉餐（主食）\n\n寵物類型：狗\n\n商品分類：主食\n\n價格：NT$120\n\n標語：低敏生食餐，更好消化吸收\n\n說明：•汪喵生食皆有經過 HPP 高壓滅菌處理\n• 依據最嚴格的國家生食標準設計，每批自主送檢\n• 檢驗報告透明公開，安心享受生食！\n\n備註：※ 300g 綜合 6 入組： 因山野鵪鶉售完，組合口味改為 鴨*1 + 牛*1 + 鹿*1 + 羊*2 + 雞*1。\n※ 因超商取貨重量限制，冷凍包裹總重量需 ≦ 9.5公斤（約27包），如超過請改用\n宅配\n方式配送。\n※ 生食經由冷凍保存，有些微結霜是正常的哦！",
-      "contentHash": "fe674f0dc3699f6f0d45df1200780d7c2b350904",
+      "content": "商品名稱：汪喵沙西米｜狗狗生肉主食餐\n\n寵物類型：狗\n\n商品分類：主食\n\n價格：NT$120\n\n標語：低敏生食餐，更好消化吸收\n\n說明：• 生食皆有經過 HPP 高壓滅菌處理\n• 依據最嚴格的國家生食標準設計，每批自主送檢\n• 檢驗報告透明公開，安心享受生食！\n\n備註：※ 因超商取貨重量限制，冷凍包裹總重量需 ≦ 9.5公斤（約27包），如超過請改用宅配方式配送。\n※ 生食經由冷凍保存，有些微結霜是正常的哦！",
+      "contentHash": "6caab9e5faebdda7de1087ee64d3d55b2f1de444",
       "sourceUrl": "http://localhost:3000/product/doghpprawfood",
       "locale": "zh-TW",
       "tags": [
@@ -1533,10 +1504,10 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:12.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     },
     {
-      "id": 48,
+      "id": 47,
       "docKey": "PRODUCT:55",
       "sourceType": "PRODUCT",
       "sourceSystem": "db",
@@ -1562,7 +1533,7 @@
       "retrievalWeight": 1.2,
       "freshnessScore": 1,
       "versionNo": 1,
-      "updatedAt": "2026-07-27T06:47:12.000Z"
+      "updatedAt": "2026-08-03T02:21:44.000Z"
     }
   ]
 }

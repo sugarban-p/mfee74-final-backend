@@ -4,13 +4,14 @@
 import pool from "../utils/connect-mysql.js";
 
 /**
- * AI 導購限定使用的 18 項展示商品。
+ * AI 導購限定使用的 24 項展示商品。
  *
  * 這只限制「寵物 AI 導購」的候選範圍，
  * 不會影響一般商品列表顯示其他商品。
  */
-export const DEMO_PRODUCT_IDS = Object.freeze([
+export const AI_PRODUCT_IDS = Object.freeze([
   4, 8, 10, 11, 12, 24, 25, 27, 29, 30, 31, 33, 34, 38, 41, 52, 53, 54,
+  28, 35, 36, 37, 48, 55,
 ]);
 
 /**
@@ -182,7 +183,7 @@ function splitGroupConcat(value) {
 }
 
 /**
- * 從固定 18 項商品中找出候選商品。
+ * 從固定 24 項商品中找出候選商品。
  *
  * petContext：
  * getOwnedPetRecommendationContext() 整理好的寵物資料。
@@ -233,13 +234,13 @@ export async function getPetCandidateProducts(petContext, needCode, userId) {
    *
    * 第一個 ?：目前登入會員 ID
    * 第二個 ?：健康情況 IDs
-   * 第三個 ?：固定 18 項商品 IDs
+   * 第三個 ?：固定 24 項商品 IDs
    * 第四個 ?：寵物物種 cat 或 dog
    */
   const sqlValues = [
     normalizedUserId,
     healthIdsForSql,
-    DEMO_PRODUCT_IDS,
+    AI_PRODUCT_IDS,
     petContext.speciesCode,
   ];
 
@@ -518,10 +519,10 @@ export async function getPetCandidateProducts(petContext, needCode, userId) {
    * 建立固定商品順序。
    *
    * 健康符合分數相同時，
-   * 按照 DEMO_PRODUCT_IDS 中的順序排列。
+   * 按照 AI_PRODUCT_IDS 中的順序排列。
    */
   const productOrder = new Map(
-    DEMO_PRODUCT_IDS.map((productId, index) => [productId, index]),
+    AI_PRODUCT_IDS.map((productId, index) => [productId, index]),
   );
 
   products.sort((firstProduct, secondProduct) => {

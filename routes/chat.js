@@ -33,6 +33,77 @@ const chatAttachmentMimeExtMap = {
   "text/plain": ".txt",
 };
 
+let ensureCaseReadsTablePromise = null;
+
+async function ensureChatCaseReadsTable() {
+  if (ensureCaseReadsTablePromise) return ensureCaseReadsTablePromise;
+
+  ensureCaseReadsTablePromise = pool
+    .execute(
+      `
+        CREATE TABLE IF NOT EXISTS chat_case_reads (
+          user_id BIGINT NOT NULL,
+          consultation_id BIGINT NOT NULL,
+          last_read_message_id BIGINT NOT NULL DEFAULT 0,
+          read_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (user_id, consultation_id),
+          INDEX idx_chat_case_reads_consultation (consultation_id)
+        ) ENGINE=InnoDB
+      `,
+    )
+    .catch((error) => {
+      ensureCaseReadsTablePromise = null;
+      throw error;
+    });
+
+  return ensureCaseReadsTablePromise;
+}
+
+async function markCaseReadByUser({ userId, consultationId }) {
+  await ensureChatCaseReadsTable();
+
+  const [rows] = await pool.execute(
+    `
+      SELECT MAX(id) AS lastReadMessageId
+      FROM chat_messages
+      WHERE consultation_id = ?
+        AND sender = 'SYSTEM'
+        AND JSON_UNQUOTE(JSON_EXTRACT(metadata, '$.event')) = 'SUPPORT_REPLY'
+    `,
+    [consultationId],
+  );
+
+  const lastReadMessageId = Number(rows?.[0]?.lastReadMessageId || 0);
+
+  await pool.execute(
+    `
+      INSERT INTO chat_case_reads
+      (user_id, consultation_id, last_read_message_id, read_at, created_at, updated_at)
+      VALUES (?, ?, ?, NOW(), NOW(), NOW())
+      ON DUPLICATE KEY UPDATE
+        last_read_message_id = GREATEST(last_read_message_id, VALUES(last_read_message_id)),
+        read_at = NOW(),
+        updated_at = NOW()
+    `,
+    [userId, consultationId, lastReadMessageId],
+  );
+}
+
+function normalizeAttachmentOriginalName(originalname) {
+  const raw = String(originalname || "attachment");
+
+  // Browsers / multipart parsers may pass UTF-8 bytes as latin1-decoded text.
+  // Try to restore UTF-8 first, then fall back to the raw value.
+  try {
+    const restored = Buffer.from(raw, "latin1").toString("utf8");
+    return restored.trim() || raw;
+  } catch {
+    return raw;
+  }
+}
+
 const chatUpload = multer({
   storage: multer.diskStorage({
     destination: async (req, file, cb) => {
@@ -44,13 +115,18 @@ const chatUpload = multer({
       }
     },
     filename: (req, file, cb) => {
-      const safeBase = String(file.originalname || "attachment")
+      const normalizedOriginalName = normalizeAttachmentOriginalName(
+        file.originalname,
+      );
+      file.originalname = normalizedOriginalName;
+
+      const safeBase = normalizedOriginalName
         .replace(/\.[^/.]+$/, "")
         .replace(/[^a-zA-Z0-9-_]/g, "-")
         .slice(0, 40);
       const mappedExt =
         chatAttachmentMimeExtMap[file.mimetype] ||
-        path.extname(file.originalname || "") ||
+        path.extname(normalizedOriginalName) ||
         ".bin";
       cb(
         null,
@@ -210,6 +286,8 @@ router.get("/history", requireAuth, async (req, res) => {
     const range = req.query.range || "today";
     const caseId = req.query.caseId;
 
+    await ensureChatCaseReadsTable();
+
     if (caseId) {
       const consultation = await findConsultationByCaseNo(
         user.id,
@@ -228,6 +306,11 @@ router.get("/history", requireAuth, async (req, res) => {
         `,
         [consultation.id],
       );
+
+      await markCaseReadByUser({
+        userId: user.id,
+        consultationId: consultation.id,
+      });
 
       return res.json({
         case: { caseId: consultation.caseNo, status: consultation.status },
@@ -261,6 +344,17 @@ router.get("/history", requireAuth, async (req, res) => {
           SELECT COUNT(*)
           FROM chat_messages m
           WHERE m.consultation_id = c.id
+            AND m.sender = 'SYSTEM'
+            AND JSON_UNQUOTE(JSON_EXTRACT(m.metadata, '$.event')) = 'SUPPORT_REPLY'
+            AND m.id > COALESCE(
+              (
+                SELECT r.last_read_message_id
+                FROM chat_case_reads r
+                WHERE r.user_id = c.user_id AND r.consultation_id = c.id
+                LIMIT 1
+              ),
+              0
+            )
         ) AS messageCount,
         (
           SELECT m2.content
@@ -284,13 +378,27 @@ router.get("/history", requireAuth, async (req, res) => {
         ? new Date(item.lastMessageAt).toISOString()
         : null,
       messageCount: Number(item.messageCount || 0),
+      unreadCount: Number(item.messageCount || 0),
       preview: item.preview || "",
     }));
 
-    return res.json({ cases });
+    const totalUnread = cases.reduce(
+      (sum, item) => sum + Number(item.messageCount || 0),
+      0,
+    );
+
+    return res.json({
+      cases,
+      totalUnread,
+      totalUnreadCount: totalUnread,
+    });
   } catch (error) {
     if (isTableMissingError(error)) {
-      return res.json({ cases: [] });
+      return res.json({
+        cases: [],
+        totalUnread: 0,
+        totalUnreadCount: 0,
+      });
     }
     console.error("[chat/history]", error);
     return res.status(500).json({ error: "INTERNAL_ERROR" });
@@ -347,6 +455,59 @@ router.post("/send", requireAuth, async (req, res) => {
         "UPDATE chat_consultations SET last_message_at = NOW(), updated_at = NOW() WHERE id = ?",
         [consultationId],
       );
+
+      const quickResult = await processMessage(content, {
+        userId: user.id,
+        allowAI: false,
+      });
+
+      const shouldReplyQuick =
+        quickResult.type !== "DEFERRED" &&
+        String(quickResult.reply || "").trim().length > 0;
+
+      if (shouldReplyQuick) {
+        const userMetaParsed = parseMessageMeta(userMeta);
+        const quickMeta = JSON.stringify({
+          ...userMetaParsed,
+          replyType: quickResult.type,
+          aiReason: quickResult?.meta?.reason || null,
+        });
+
+        const [quickInsert] = await pool.execute(
+          `
+            INSERT INTO chat_messages
+            (consultation_id, user_id, content, sender, type, metadata, created_at)
+            VALUES (?, ?, ?, ?, 'TEXT', ?, NOW())
+          `,
+          [
+            consultationId,
+            user.id,
+            quickResult.reply,
+            quickResult.type === "BLOCKED" ? "SYSTEM" : "AI",
+            quickMeta,
+          ],
+        );
+
+        const [createdRows] = await pool.execute(
+          "SELECT id, content, sender, type, created_at FROM chat_messages WHERE id IN (?, ?) ORDER BY id ASC",
+          [userInsert.insertId, quickInsert.insertId],
+        );
+
+        const userMessage = normalizeMessage(createdRows[0]);
+        const botMessage = normalizeMessage(createdRows[1]);
+
+        emitCaseMessage({ userId: user.id, caseId, message: userMessage });
+        emitCaseMessage({ userId: user.id, caseId, message: botMessage });
+        emitCaseUpdated({ userId: user.id, caseId, status: "OPEN" });
+
+        return res.json({
+          userMessage,
+          botMessage,
+          caseId,
+          caseStatus: "OPEN",
+          aiDeferred: false,
+        });
+      }
 
       const [createdRows] = await pool.execute(
         "SELECT id, content, sender, type, created_at FROM chat_messages WHERE id = ? LIMIT 1",
